@@ -258,7 +258,10 @@ class UserManagementController extends Controller
             $insertableData['business_id'] = auth()->user()->business_id;
 
             $insertableData['remember_token'] = Str::random(10);
+
             $user =  User::create($insertableData);
+            $user->email_verify_at = now();
+            $user->save();
 
             $user->assignRole($insertableData['role']);
 
@@ -559,6 +562,7 @@ class UserManagementController extends Controller
                 $otp = random_int(100000, 999999);
                 $user->email_verify_token = $otp;
                 $user->email_verify_token_expires = Carbon::now()->subDays(-1);
+                $user->email_verify_at = now();
                 $user->save();
 
 

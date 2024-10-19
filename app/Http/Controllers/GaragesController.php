@@ -757,6 +757,7 @@ if(!$user->hasRole('garage_owner')) {
 
      $user->email_verified_at = now();
      $user->business_id = $garage->id;
+     $user->email_verify_at = now();
      $user->save();
 
      $user->assignRole('garage_owner');

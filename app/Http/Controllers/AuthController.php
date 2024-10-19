@@ -47,7 +47,7 @@ class AuthController extends Controller
 {
     use ErrorUtil, GarageUtil, UserActivityUtil;
 
-        /**
+    /**
      *
      * @OA\Post(
      *      path="/activate-user",
@@ -100,63 +100,63 @@ class AuthController extends Controller
      *     )
      */
 
-     public function activateUser(Request $request)
-     {
-         // Validate the request
-         $request->validate([
-             'token' => 'required',
-         ]);
+    public function activateUser(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'token' => 'required',
+        ]);
 
-         $token = $request->input('token');
+        $token = $request->input('token');
 
-         // Find the user with the provided token and check if the token is still valid
-         $user = User::where('email_verify_token', $token)
-                     ->where('email_verify_token_expires', '>', now())
-                     ->first();
+        // Find the user with the provided token and check if the token is still valid
+        $user = User::where('email_verify_token', $token)
+            ->where('email_verify_token_expires', '>', now())
+            ->first();
 
-         if (!$user) {
-             return response()->json([
-                 'message' => 'Invalid Token or Token Expired',
-             ], 400);
-         }
+        if (!$user) {
+            return response()->json([
+                'message' => 'Invalid Token or Token Expired',
+            ], 400);
+        }
 
-         // Mark the email as verified
-         $user->email_verified_at = now();
-         $user->save();
+        // Mark the email as verified
+        $user->email_verified_at = now();
+        $user->save();
 
-         // Retrieve the welcome email template
-         $email_content = EmailTemplate::where([
-             'type' => 'welcome_message',
-             'is_active' => 1
-         ])->first();
+        // Retrieve the welcome email template
+        $email_content = EmailTemplate::where([
+            'type' => 'welcome_message',
+            'is_active' => 1
+        ])->first();
 
-         if (!$email_content) {
-             return response()->json([
-                 'message' => 'Email template not found',
-             ], 404);
-         }
+        if (!$email_content) {
+            return response()->json([
+                'message' => 'Email template not found',
+            ], 404);
+        }
 
-         // Replace placeholders with actual user data
-         $html_content = json_decode($email_content->template);
-         $html_content = str_replace('[FirstName]', $user->first_name, $html_content);
-         $html_content = str_replace('[LastName]', $user->last_name, $html_content);
-         $html_content = str_replace('[FullName]', $user->first_name . ' ' . $user->last_name, $html_content);
-         $html_content = str_replace('[AccountVerificationLink]', env('APP_URL').'/activate/'.$user->email_verify_token, $html_content);
-         $html_content = str_replace('[ForgotPasswordLink]', env('FRONT_END_URL').'/forget-password/'.$user->resetPasswordToken, $html_content);
+        // Replace placeholders with actual user data
+        $html_content = json_decode($email_content->template);
+        $html_content = str_replace('[FirstName]', $user->first_name, $html_content);
+        $html_content = str_replace('[LastName]', $user->last_name, $html_content);
+        $html_content = str_replace('[FullName]', $user->first_name . ' ' . $user->last_name, $html_content);
+        $html_content = str_replace('[AccountVerificationLink]', env('APP_URL') . '/activate/' . $user->email_verify_token, $html_content);
+        $html_content = str_replace('[ForgotPasswordLink]', env('FRONT_END_URL') . '/forget-password/' . $user->resetPasswordToken, $html_content);
 
-         // Get the email wrapper and wrap the content
-         $email_template_wrapper = EmailTemplateWrapper::where('id', $email_content->wrapper_id)->first();
+        // Get the email wrapper and wrap the content
+        $email_template_wrapper = EmailTemplateWrapper::where('id', $email_content->wrapper_id)->first();
 
-         if ($email_template_wrapper) {
-             $html_final = json_decode($email_template_wrapper->template);
-             $html_final = str_replace('[content]', $html_content, $html_final);
-         } else {
-             $html_final = $html_content;
-         }
+        if ($email_template_wrapper) {
+            $html_final = json_decode($email_template_wrapper->template);
+            $html_final = str_replace('[content]', $html_content, $html_final);
+        } else {
+            $html_final = $html_content;
+        }
 
-         // Return the final dynamic message as a view or response
-         return view('dynamic-welcome-message', ['html_content' => $html_final]);
-     }
+        // Return the final dynamic message as a view or response
+        return view('dynamic-welcome-message', ['html_content' => $html_final]);
+    }
 
 
 
@@ -230,7 +230,7 @@ class AuthController extends Controller
     public function register(AuthRegisterRequest $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             $insertableData = $request->validated();
 
             $insertableData['password'] = Hash::make($request['password']);
@@ -238,71 +238,71 @@ class AuthController extends Controller
             $insertableData['is_active'] = true;
             $user =  User::create($insertableData);
 
-              // verify email starts
-              $email_token = Str::random(30);
-              $otp = random_int(100000, 999999);
-              $user->email_verify_token = $otp;
-              $user->email_verify_token_expires = Carbon::now()->subDays(-1);
-              $user->save();
+
+            $otp = random_int(100000, 999999);
+            $user->email_verify_token = $otp;
+            $user->email_verify_token_expires = Carbon::now()->subDays(-1);
+            $user->email_verify_at = now();
+            $user->save();
 
 
-             $user->assignRole("customer");
+            $user->assignRole("customer");
 
             $user->token = $user->createToken('Laravel Password Grant Client')->accessToken;
             $user->permissions = $user->getAllPermissions()->pluck('name');
             $user->roles = $user->roles->pluck('name');
 
 
-            if(env("SEND_EMAIL") == true) {
+            if (env("SEND_EMAIL") == true) {
                 Mail::to($user->email)->send(new VerifyMail($user));
             }
 
-// verify email ends
+            // verify email ends
 
-UserTranslation::where([
-    "user_id" => $user->id
-])
-->delete();
+            UserTranslation::where([
+                "user_id" => $user->id
+            ])
+                ->delete();
 
-$first_name_query = Http::get('https://api.mymemory.translated.net/get', [
-    'q' => $user->first_Name,
-    'langpair' => 'en|ar'  // Set the correct source and target language
-]);
+            $first_name_query = Http::get('https://api.mymemory.translated.net/get', [
+                'q' => $user->first_Name,
+                'langpair' => 'en|ar'  // Set the correct source and target language
+            ]);
 
-             // Check for translation errors or unexpected responses
-if ($first_name_query['responseStatus'] !== 200) {
-throw new Exception('Translation failed');
-}
+            // Check for translation errors or unexpected responses
+            if ($first_name_query['responseStatus'] !== 200) {
+                throw new Exception('Translation failed');
+            }
 
-$first_name_translation = $first_name_query['responseData']['translatedText'];
+            $first_name_translation = $first_name_query['responseData']['translatedText'];
 
-$last_name_query = Http::get('https://api.mymemory.translated.net/get', [
-    'q' => $user->last_Name,
-    'langpair' => 'en|ar'  // Set the correct source and target language
-]);
+            $last_name_query = Http::get('https://api.mymemory.translated.net/get', [
+                'q' => $user->last_Name,
+                'langpair' => 'en|ar'  // Set the correct source and target language
+            ]);
 
-             // Check for translation errors or unexpected responses
-if ($last_name_query['responseStatus'] !== 200) {
-throw new Exception('Translation failed');
-}
-$last_name_translation = $last_name_query['responseData']['translatedText'];
+            // Check for translation errors or unexpected responses
+            if ($last_name_query['responseStatus'] !== 200) {
+                throw new Exception('Translation failed');
+            }
+            $last_name_translation = $last_name_query['responseData']['translatedText'];
 
 
-UserTranslation::create([
-    "user_id" => $user->id,
-    "language" => "ar",
-    "first_Name" => $first_name_translation,
-    "last_Name" => $last_name_translation
-]);
+            UserTranslation::create([
+                "user_id" => $user->id,
+                "language" => "ar",
+                "first_Name" => $first_name_translation,
+                "last_Name" => $last_name_translation
+            ]);
 
-$user->translation = $user->translation;
+            $user->translation = $user->translation;
 
 
 
             return response($user, 201);
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
 
@@ -369,7 +369,7 @@ $user->translation = $user->translation;
 
 
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             $loginData = $request->validate([
                 'email' => 'email|required',
                 'password' => 'required'
@@ -417,15 +417,14 @@ $user->translation = $user->translation;
 
             $user = auth()->user();
 
-            if(!$user->is_active) {
+            if (!$user->is_active) {
                 return response(['message' => 'User not active'], 403);
-
             }
             $now = time(); // or your date as well
-$user_created_date = strtotime($user->created_at);
-$datediff = $now - $user_created_date;
+            $user_created_date = strtotime($user->created_at);
+            $datediff = $now - $user_created_date;
 
-            if(!$user->email_verified_at && (($datediff / (60 * 60 * 24))>1)){
+            if (!$user->email_verified_at && (($datediff / (60 * 60 * 24)) > 1)) {
                 return response(['message' => 'please activate your email first'], 409);
             }
 
@@ -453,11 +452,11 @@ $datediff = $now - $user_created_date;
             return response()->json(['data' => $user,   "ok" => true], 200);
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
 
-  /**
+    /**
      *
      * @OA\Post(
      *      path="/v1.0/token-regenerate",
@@ -516,29 +515,29 @@ $datediff = $now - $user_created_date;
     {
 
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             $insertableData = $request->validated();
             $user = User::where([
                 "id" => $insertableData["user_id"],
             ])
-            ->first();
+                ->first();
 
 
 
-            $site_redirect_token_db = (json_decode($user->site_redirect_token,true));
+            $site_redirect_token_db = (json_decode($user->site_redirect_token, true));
 
-            if($site_redirect_token_db["token"] !== $insertableData["site_redirect_token"]) {
-               return response()
-               ->json([
-                  "message" => "invalid token"
-               ],409);
+            if ($site_redirect_token_db["token"] !== $insertableData["site_redirect_token"]) {
+                return response()
+                    ->json([
+                        "message" => "invalid token"
+                    ], 409);
             }
 
             $now = time(); // or your date as well
 
             $timediff = $now - $site_redirect_token_db["created_at"];
 
-            if ($timediff > 20){
+            if ($timediff > 20) {
                 return response(['message' => 'token expired'], 409);
             }
 
@@ -556,11 +555,11 @@ $datediff = $now - $user_created_date;
             return response()->json(['data' => $user,   "ok" => true], 200);
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
-   /**
-        *
+    /**
+     *
      * @OA\Post(
      *      path="/forgetpassword",
      *      operationId="storeToken",
@@ -610,44 +609,40 @@ $datediff = $now - $user_created_date;
      *     )
      */
 
-    public function storeToken(ForgetPasswordRequest $request) {
+    public function storeToken(ForgetPasswordRequest $request)
+    {
 
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             return DB::transaction(function () use (&$request) {
                 $insertableData = $request->validated();
 
-            $user = User::where(["email" => $insertableData["email"]])->first();
-            if (!$user) {
-                return response()->json(["message" => "no user found"], 404);
-            }
+                $user = User::where(["email" => $insertableData["email"]])->first();
+                if (!$user) {
+                    return response()->json(["message" => "no user found"], 404);
+                }
 
-            $token = Str::random(30);
+                $token = Str::random(30);
 
-            $user->resetPasswordToken = $token;
-            $user->resetPasswordExpires = Carbon::now()->subDays(-1);
-            $user->save();
+                $user->resetPasswordToken = $token;
+                $user->resetPasswordExpires = Carbon::now()->subDays(-1);
+                $user->save();
 
-            Mail::to($insertableData["email"])->send(new ForgetPasswordMail($user,$insertableData["client_site"]));
+                Mail::to($insertableData["email"])->send(new ForgetPasswordMail($user, $insertableData["client_site"]));
 
 
-            return response()->json([
-                "message" => "please check email"
-            ]);
+                return response()->json([
+                    "message" => "please check email"
+                ]);
             });
-
-
-
-
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
-
     }
 
-      /**
-        *
+    /**
+     *
      * @OA\Post(
      *      path="/resend-email-verify-mail",
      *      operationId="resendEmailVerifyToken",
@@ -695,60 +690,55 @@ $datediff = $now - $user_created_date;
      *     )
      */
 
-    public function resendEmailVerifyToken(EmailVerifyTokenRequest $request) {
+    public function resendEmailVerifyToken(EmailVerifyTokenRequest $request)
+    {
 
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             return DB::transaction(function () use (&$request) {
                 $insertableData = $request->validated();
 
-            $user = User::
-            where(["email" => $insertableData["email"]])->first();
-            if (!$user) {
-                return response()->json(["message" => "no user found"], 404);
-            }
+                $user = User::where(["email" => $insertableData["email"]])->first();
+                if (!$user) {
+                    return response()->json(["message" => "no user found"], 404);
+                }
 
 
 
-            $otp = random_int(100000, 999999);
-            $user->email_verify_token = $otp;
-            $user->email_verify_token_expires = Carbon::now()->subDays(-1);
-            if(env("SEND_EMAIL") == true) {
-                Mail::to($user->email)->send(new VerifyMail($user));
-            }
+                $otp = random_int(100000, 999999);
+                $user->email_verify_token = $otp;
+                $user->email_verify_token_expires = Carbon::now()->subDays(-1);
+                if (env("SEND_EMAIL") == true) {
+                    Mail::to($user->email)->send(new VerifyMail($user));
+                }
 
-            $user->save();
+                $user->save();
 
 
-            return response()->json([
-                "message" => "please check email"
-            ]);
+                return response()->json([
+                    "message" => "please check email"
+                ]);
             });
-
-
-
-
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
-
     }
 
 
-/**
-        *
+    /**
+     *
      * @OA\Patch(
      *      path="/forgetpassword/reset/{token}",
      *      operationId="changePasswordByToken",
      *      tags={"auth"},
      *  @OA\Parameter(
-* name="token",
-* in="path",
-* description="token",
-* required=true,
-* example="1"
-* ),
+     * name="token",
+     * in="path",
+     * description="token",
+     * required=true,
+     * example="1"
+     * ),
      *      summary="This method is to change password",
      *      description="This method is to change password",
 
@@ -799,8 +789,8 @@ $datediff = $now - $user_created_date;
     public function changePasswordByToken($token, ChangePasswordRequest $request)
     {
         try {
-            $this->storeActivity($request,"");
-            return DB::transaction(function () use (&$request,&$token) {
+            $this->storeActivity($request, "");
+            return DB::transaction(function () use (&$request, &$token) {
                 $insertableData = $request->validated();
                 $user = User::where([
                     "resetPasswordToken" => $token,
@@ -827,15 +817,10 @@ $datediff = $now - $user_created_date;
                     "message" => "password changed"
                 ], 200);
             });
-
-
-
-
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
-
     }
 
 
@@ -896,13 +881,13 @@ $datediff = $now - $user_created_date;
      *
      *      *    @OA\Property(property="times", type="string", format="array",example={
      *
-    *{"day":0,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-    *{"day":1,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-    *{"day":2,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
+     *{"day":0,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
+     *{"day":1,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
+     *{"day":2,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
      *{"day":3,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-    *{"day":4,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-    *{"day":5,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-    *{"day":6,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true}
+     *{"day":4,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
+     *{"day":5,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
+     *{"day":6,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true}
      *
      * }),
      *
@@ -973,7 +958,7 @@ $datediff = $now - $user_created_date;
     {
 
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             return DB::transaction(function () use (&$request) {
                 $insertableData = $request->validated();
                 // user info starts ##############
@@ -994,7 +979,6 @@ $datediff = $now - $user_created_date;
                 // end user info ##############
 
 
-
                 //  garage info ##############
                 $insertableData['garage']['status'] = "pending";
                 $insertableData['garage']['owner_id'] = $user->id;
@@ -1004,24 +988,24 @@ $datediff = $now - $user_created_date;
 
                 GarageTime::where([
                     "garage_id" => $garage->id
-                   ])
-                   ->delete();
-                   $timesArray = collect($insertableData["times"])->unique("day");
-                   foreach($timesArray as $garage_time) {
+                ])
+                    ->delete();
+                $timesArray = collect($insertableData["times"])->unique("day");
+                foreach ($timesArray as $garage_time) {
                     GarageTime::create([
                         "garage_id" => $garage->id,
-                        "day"=> $garage_time["day"],
-                        "opening_time"=> $garage_time["opening_time"],
-                        "closing_time"=> $garage_time["closing_time"],
-                        "is_closed"=> $garage_time["is_closed"],
+                        "day" => $garage_time["day"],
+                        "opening_time" => $garage_time["opening_time"],
+                        "closing_time" => $garage_time["closing_time"],
+                        "is_closed" => $garage_time["is_closed"],
                     ]);
-                   }
+                }
 
-                if(!empty($insertableData["images"])) {
-                    foreach($insertableData["images"] as $garage_images){
+                if (!empty($insertableData["images"])) {
+                    foreach ($insertableData["images"] as $garage_images) {
                         GarageGallery::create([
                             "image" => $garage_images,
-                            "garage_id" =>$garage->id,
+                            "garage_id" => $garage->id,
                         ]);
                     }
                 }
@@ -1029,104 +1013,104 @@ $datediff = $now - $user_created_date;
 
                 // end garage info ##############
 
-           // create services
-             $serviceUpdate =  $this->createGarageServices($insertableData['service'],$garage->id,true);
+                // create services
+                $serviceUpdate =  $this->createGarageServices($insertableData['service'], $garage->id, true);
 
-                    if(!$serviceUpdate["success"]){
-                        $error =  [
-                            "message" => "The given data was invalid.",
-                            "errors" => [("service".$serviceUpdate["type"])=>[$serviceUpdate["message"]]]
-                     ];
-                        throw new Exception(json_encode($error),422);
-
-                     }
-
+                if (!$serviceUpdate["success"]) {
+                    $error =  [
+                        "message" => "The given data was invalid.",
+                        "errors" => [("service" . $serviceUpdate["type"]) => [$serviceUpdate["message"]]]
+                    ];
+                    throw new Exception(json_encode($error), 422);
+                }
 
 
 
-               $user->business_id = $garage->id;
 
-               $otp = random_int(100000, 999999);
-               $user->email_verify_token = $otp;
-               $user->email_verify_token_expires = Carbon::now()->subDays(-1);
-               $user->save();
+                $user->business_id = $garage->id;
 
-                if(env("SEND_EMAIL") == true) {
+                $otp = random_int(100000, 999999);
+                $user->email_verify_token = $otp;
+                $user->email_verify_token_expires = Carbon::now()->subDays(-1);
+                $user->email_verify_at = now();
+                $user->save();
+
+                if (env("SEND_EMAIL") == true) {
                     Mail::to($user->email)->send(new VerifyMail($user));
                 }
 
-// verify email ends
+                // verify email ends
 
 
 
-$user->token = $user->createToken('Laravel Password Grant Client')->accessToken;
-$user->permissions = $user->getAllPermissions()->pluck('name');
-$user->roles = $user->roles->pluck('name');
+                $user->token = $user->createToken('Laravel Password Grant Client')->accessToken;
+                $user->permissions = $user->getAllPermissions()->pluck('name');
+                $user->roles = $user->roles->pluck('name');
 
-$this->storeQuestion($garage->id);
-
-
-UserTranslation::where([
-    "user_id" => $user->id
-])
-->delete();
-
-$first_name_query = Http::get('https://api.mymemory.translated.net/get', [
-    'q' => $user->first_Name,
-    'langpair' => 'en|ar'  // Set the correct source and target language
-]);
-
-             // Check for translation errors or unexpected responses
-if ($first_name_query['responseStatus'] !== 200) {
-throw new Exception('Translation failed');
-}
-
-$first_name_translation = $first_name_query['responseData']['translatedText'];
-
-$last_name_query = Http::get('https://api.mymemory.translated.net/get', [
-    'q' => $user->last_Name,
-    'langpair' => 'en|ar'  // Set the correct source and target language
-]);
-
-             // Check for translation errors or unexpected responses
-if ($last_name_query['responseStatus'] !== 200) {
-throw new Exception('Translation failed');
-}
-$last_name_translation = $last_name_query['responseData']['translatedText'];
+                $this->storeQuestion($garage->id);
 
 
-UserTranslation::create([
-    "user_id" => $user->id,
-    "language" => "ar",
-    "first_Name" => $first_name_translation,
-    "last_Name" => $last_name_translation
-]);
+                UserTranslation::where([
+                    "user_id" => $user->id
+                ])
+                    ->delete();
+
+                $first_name_query = Http::get('https://api.mymemory.translated.net/get', [
+                    'q' => $user->first_Name,
+                    'langpair' => 'en|ar'  // Set the correct source and target language
+                ]);
+
+                // Check for translation errors or unexpected responses
+                if ($first_name_query['responseStatus'] !== 200) {
+                    throw new Exception('Translation failed');
+                }
+
+                $first_name_translation = $first_name_query['responseData']['translatedText'];
+
+                $last_name_query = Http::get('https://api.mymemory.translated.net/get', [
+                    'q' => $user->last_Name,
+                    'langpair' => 'en|ar'  // Set the correct source and target language
+                ]);
+
+                // Check for translation errors or unexpected responses
+                if ($last_name_query['responseStatus'] !== 200) {
+                    throw new Exception('Translation failed');
+                }
+                $last_name_translation = $last_name_query['responseData']['translatedText'];
+
+
+                UserTranslation::create([
+                    "user_id" => $user->id,
+                    "language" => "ar",
+                    "first_Name" => $first_name_translation,
+                    "last_Name" => $last_name_translation
+                ]);
 
 
 
 
                 return response([
-                     "user" => $user,
-                     "garage" => $garage,
-                     "success" => true
+                    "user" => $user,
+                    "garage" => $garage,
+                    "success" => true
                 ], 201);
             });
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
 
 
 
 
- /**
-        *
+    /**
+     *
      * @OA\Get(
      *      path="/v1.0/user",
      *      operationId="getUser",
      *      tags={"auth"},
-    *       security={
+     *       security={
      *           {"bearerAuth": {}}
      *       },
 
@@ -1170,33 +1154,33 @@ UserTranslation::create([
      */
 
 
-public function getUser (Request $request) {
-    try{
-        $this->storeActivity($request,"");
-        $user = $request->user();
-        $user->token = auth()->user()->createToken('authToken')->accessToken;
-        $user->permissions = $user->getAllPermissions()->pluck('name');
-        $user->roles = $user->roles->pluck('name');
+    public function getUser(Request $request)
+    {
+        try {
+            $this->storeActivity($request, "");
+            $user = $request->user();
+            $user->token = auth()->user()->createToken('authToken')->accessToken;
+            $user->permissions = $user->getAllPermissions()->pluck('name');
+            $user->roles = $user->roles->pluck('name');
 
-        $user->default_background_image = ("/".  config("setup-config.garage_background_image_location_full"));
+            $user->default_background_image = ("/" .  config("setup-config.garage_background_image_location_full"));
 
-        return response()->json(
-            $user,
-            200
-        );
-    }catch(Exception $e) {
-        return $this->sendError($e, 500,$request);
+            return response()->json(
+                $user,
+                200
+            );
+        } catch (Exception $e) {
+            return $this->sendError($e, 500, $request);
+        }
     }
 
-}
-
-  /**
-        *
+    /**
+     *
      * @OA\Post(
      *      path="/auth/check/email",
      *      operationId="checkEmail",
      *      tags={"auth"},
-    *       security={
+     *       security={
      *           {"bearerAuth": {}}
      *       },
      *      summary="This method is to check user",
@@ -1244,34 +1228,33 @@ public function getUser (Request $request) {
      */
 
 
-     public function checkEmail(Request $request) {
-        try{
-            $this->storeActivity($request,"");
-            $user = User::
-            when(request()->filled("id"), function($query) {
-                $query->whereNotIn("id",[request()->input("id")]);
-            })
+    public function checkEmail(Request $request)
+    {
+        try {
+            $this->storeActivity($request, "");
+            $user = User::when(request()->filled("id"), function ($query) {
+                    $query->whereNotIn("id", [request()->input("id")]);
+                })
 
-            ->where([
-                "email" => $request->email
-               ])->first();
-               if($user) {
-       return response()->json(["data" => true],200);
-               }
-               return response()->json(["data" => false],200);
-        }catch(Exception $e) {
-            return $this->sendError($e, 500,$request);
+                ->where([
+                    "email" => $request->email
+                ])->first();
+            if ($user) {
+                return response()->json(["data" => true], 200);
+            }
+            return response()->json(["data" => false], 200);
+        } catch (Exception $e) {
+            return $this->sendError($e, 500, $request);
         }
+    }
 
- }
-
-  /**
-        *
+    /**
+     *
      * @OA\Post(
      *      path="/auth/check/business-email",
      *      operationId="checkBusinessEmail",
      *      tags={"auth"},
-    *       security={
+     *       security={
      *           {"bearerAuth": {}}
      *       },
      *      summary="This method is to check business email",
@@ -1319,42 +1302,41 @@ public function getUser (Request $request) {
      */
 
 
-    public function checkBusinessEmail(Request $request) {
-        try{
-            $this->storeActivity($request,"");
-            $user = Garage::
-            when(request()->filled("id"), function($query) {
-                $query->whereNotIn("id",[request()->input("id")]);
-            })
+    public function checkBusinessEmail(Request $request)
+    {
+        try {
+            $this->storeActivity($request, "");
+            $user = Garage::when(request()->filled("id"), function ($query) {
+                    $query->whereNotIn("id", [request()->input("id")]);
+                })
 
-            ->where([
-                "email" => $request->email
-               ])->first();
-               if($user) {
-       return response()->json(["data" => true],200);
-               }
-               return response()->json(["data" => false],200);
-        }catch(Exception $e) {
-            return $this->sendError($e, 500,$request);
+                ->where([
+                    "email" => $request->email
+                ])->first();
+            if ($user) {
+                return response()->json(["data" => true], 200);
+            }
+            return response()->json(["data" => false], 200);
+        } catch (Exception $e) {
+            return $this->sendError($e, 500, $request);
         }
-
- }
-
+    }
 
 
 
 
 
-  /**
-        *
+
+    /**
+     *
      * @OA\Patch(
      *      path="/auth/changepassword",
      *      operationId="changePassword",
      *      tags={"auth"},
- *
+     *
      *      summary="This method is to change password",
      *      description="This method is to change password",
-    *       security={
+     *       security={
      *           {"bearerAuth": {}}
      *       },
      *  @OA\RequestBody(
@@ -1363,7 +1345,7 @@ public function getUser (Request $request) {
      *            required={"password","cpassword"},
      *
      *     @OA\Property(property="password", type="string", format="string",* example="aaaaaaaa"),
-    *  * *  @OA\Property(property="password_confirmation", type="string", format="string",example="aaaaaaaa"),
+     *  * *  @OA\Property(property="password_confirmation", type="string", format="string",example="aaaaaaaa"),
      *     @OA\Property(property="current_password", type="string", format="string",* example="aaaaaaaa"),
      *         ),
      *      ),
@@ -1404,52 +1386,51 @@ public function getUser (Request $request) {
 
     public function changePassword(PasswordChangeRequest $request)
     {
-try{
-    $this->storeActivity($request,"");
-    $client_request = $request->validated();
+        try {
+            $this->storeActivity($request, "");
+            $client_request = $request->validated();
 
-    $user = $request->user();
+            $user = $request->user();
 
 
 
-    if (!Hash::check($client_request["current_password"],$user->password)) {
-        return response()->json([
-            "message" => "Invalid password"
-        ], 400);
+            if (!Hash::check($client_request["current_password"], $user->password)) {
+                return response()->json([
+                    "message" => "Invalid password"
+                ], 400);
+            }
+
+            $password = Hash::make($client_request["password"]);
+            $user->password = $password;
+
+
+
+            $user->login_attempts = 0;
+            $user->last_failed_login_attempt_at = null;
+            $user->save();
+
+
+
+            return response()->json([
+                "message" => "password changed"
+            ], 200);
+        } catch (Exception $e) {
+            return $this->sendError($e, 500, $request);
+        }
     }
 
-    $password = Hash::make($client_request["password"]);
-    $user->password = $password;
-
-
-
-    $user->login_attempts = 0;
-    $user->last_failed_login_attempt_at = null;
-    $user->save();
-
-
-
-    return response()->json([
-        "message" => "password changed"
-    ], 200);
-}catch(Exception $e) {
-    return $this->sendError($e,500,$request);
-}
-
-    }
 
 
 
 
 
-
- /**
-        *
+    /**
+     *
      * @OA\Put(
      *      path="/v1.0/update-user-info",
      *      operationId="updateUserInfo",
      *      tags={"auth"},
-    *       security={
+     *       security={
      *           {"bearerAuth": {}}
      *       },
      *      summary="This method is to update user by user",
@@ -1514,40 +1495,40 @@ try{
     public function updateUserInfo(UserInfoUpdateRequest $request)
     {
 
-        try{
-            $this->storeActivity($request,"");
+        try {
+            $this->storeActivity($request, "");
             $updatableData = $request->validated();
 
 
-            if(!empty($updatableData['password'])) {
+            if (!empty($updatableData['password'])) {
                 $updatableData['password'] = Hash::make($updatableData['password']);
             } else {
                 unset($updatableData['password']);
             }
             $updatableData['is_active'] = true;
             $updatableData['remember_token'] = Str::random(10);
-            $user  =  tap(User::where(["id" => $request->user()->id]))->update(collect($updatableData)->only([
-                'first_Name' ,
-                'last_Name',
-                'password',
-                'phone',
-                'address_line_1',
-                'address_line_2',
-                'country',
-                'city',
-                'postcode',
-                "lat",
-                "long",
-            ])->toArray()
+            $user  =  tap(User::where(["id" => $request->user()->id]))->update(
+                collect($updatableData)->only([
+                    'first_Name',
+                    'last_Name',
+                    'password',
+                    'phone',
+                    'address_line_1',
+                    'address_line_2',
+                    'country',
+                    'city',
+                    'postcode',
+                    "lat",
+                    "long",
+                ])->toArray()
             )
                 // ->with("somthing")
 
                 ->first();
-                if(!$user) {
-                    return response()->json([
-                        "message" => "no user found"
-                        ]);
-
+            if (!$user) {
+                return response()->json([
+                    "message" => "no user found"
+                ]);
             }
 
 
@@ -1557,16 +1538,16 @@ try{
             UserTranslation::where([
                 "user_id" => $user->id
             ])
-            ->delete();
+                ->delete();
 
             $first_name_query = Http::get('https://api.mymemory.translated.net/get', [
                 'q' => $user->first_Name,
                 'langpair' => 'en|ar'  // Set the correct source and target language
             ]);
 
-                         // Check for translation errors or unexpected responses
+            // Check for translation errors or unexpected responses
             if ($first_name_query['responseStatus'] !== 200) {
-            throw new Exception('Translation failed');
+                throw new Exception('Translation failed');
             }
 
             $first_name_translation = $first_name_query['responseData']['translatedText'];
@@ -1576,9 +1557,9 @@ try{
                 'langpair' => 'en|ar'  // Set the correct source and target language
             ]);
 
-                         // Check for translation errors or unexpected responses
+            // Check for translation errors or unexpected responses
             if ($last_name_query['responseStatus'] !== 200) {
-            throw new Exception('Translation failed');
+                throw new Exception('Translation failed');
             }
             $last_name_translation = $last_name_query['responseData']['translatedText'];
 
@@ -1595,19 +1576,9 @@ try{
 
 
             return response($user, 200);
-        } catch(Exception $e){
+        } catch (Exception $e) {
             error_log($e->getMessage());
-        return $this->sendError($e,500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
-
-
-
-
-
-
-
-
-
-
 }

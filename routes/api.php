@@ -141,7 +141,7 @@ Route::post('/v1.0/shop-image-multiple', [ShopsController::class, "createShopIma
 // !!!!!!!@@@@@@@@@@@@$$$$$$$$$$$$%%%%%%%%%%%%%%%%^^^^^^^^^^
 // Protected Routes
 // !!!!!!!@@@@@@@@@@@@$$$$$$$$$$$$%%%%%%%%%%%%%%%%^^^^^^^^^^
-Route::middleware(['auth:api'])->group(function () {
+Route::middleware(['auth:api','verified'])->group(function () {
 
 
 
