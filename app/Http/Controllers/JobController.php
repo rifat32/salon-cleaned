@@ -26,6 +26,7 @@ use App\Models\JobSubService;
 use App\Models\Notification;
 use App\Models\NotificationTemplate;
 use App\Models\PreBooking;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -1097,203 +1098,238 @@ class JobController extends Controller
         }
     }
 
-/**
- * @OA\Get(
- *      path="/v1.0/jobs/payments/sum/{garage_id}",
- *      operationId="getJobPaymentsSum",
- *      tags={"job_management.payment"},
- *      security={
- *           {"bearerAuth": {}}
- *      },
- *      summary="This method is to get all job payments or payments for a specific job",
- *      description="This method is to get all job payments or payments for a specific job",
- *
- *      @OA\Parameter(
- *          name="booking_id",
- *          in="query",
- *          description="Optional Job ID to filter payments",
- *          required=false,
- *          example="1"
- *      ),
- *      @OA\Parameter(
- *          name="garage_id",
- *          in="path",
- *          description="Garage ID",
- *          required=true,
- *          example="1"
- *      ),
- *      @OA\Response(
- *          response=200,
- *          description="Successful operation",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=401,
- *          description="Unauthenticated",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=422,
- *          description="Unprocessable Content",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=403,
- *          description="Forbidden",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=400,
- *          description="Bad Request",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=404,
- *          description="Not Found",
- *          @OA\JsonContent(),
- *      )
- * )
- */
-public function getJobPaymentsSum($garage_id,Request $request)
-{
-    try {
-        $this->storeActivity($request, "Fetching job payments");
+    /**
+     * @OA\Get(
+     *      path="/v1.0/jobs/payments/sum/{garage_id}",
+     *      operationId="getJobPaymentsSum",
+     *      tags={"job_management.payment"},
+     *      security={
+     *           {"bearerAuth": {}}
+     *      },
+     *      summary="This method is to get all job payments or payments for a specific job",
+     *      description="This method is to get all job payments or payments for a specific job",
+     *
+     *      @OA\Parameter(
+     *          name="booking_id",
+     *          in="query",
+     *          description="Optional Job ID to filter payments",
+     *          required=false,
+     *          example="1"
+     *      ),
+     *      @OA\Parameter(
+     *          name="garage_id",
+     *          in="path",
+     *          description="Garage ID",
+     *          required=true,
+     *          example="1"
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Unprocessable Content",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not Found",
+     *          @OA\JsonContent(),
+     *      )
+     * )
+     */
+    public function getJobPaymentsSum($garage_id, Request $request)
+    {
+        try {
+            $this->storeActivity($request, "Fetching job payments");
 
-        if (!$request->user()->hasPermissionTo('job_view')) {
-            return response()->json([
-                "message" => "You cannot perform this action"
-            ], 401);
+            if (!$request->user()->hasPermissionTo('job_view')) {
+                return response()->json([
+                    "message" => "You cannot perform this action"
+                ], 401);
+            }
+
+
+
+            // Check if job_id is provided
+            $query = JobPayment:: whereHas("bookings", function ($query) use ($garage_id, $request) {
+                $query->where("bookings.garage_id", $garage_id)
+                    ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                        $query->where('bookings.expert_id', auth()->user()->id);
+                    });
+                // Additional date filters using date_filter
+                if ($request->date_filter === 'today') {
+                    $query = $query->whereDate('bookings.job_start_date', Carbon::today());
+                } elseif ($request->date_filter === 'this_week') {
+                    $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                } elseif ($request->date_filter === 'previous_week') {
+                    $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                } elseif ($request->date_filter === 'next_week') {
+                    $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                } elseif ($request->date_filter === 'this_month') {
+                    $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                        ->whereYear('bookings.job_start_date', Carbon::now()->year);
+                } elseif ($request->date_filter === 'previous_month') {
+                    $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                        ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+                } elseif ($request->date_filter === 'next_month') {
+                    $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                        ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                }
+            })
+                ->when($request->has('booking_id'), function ($query) {
+                    $query->where('booking_id', request()->input("booking_id"));
+                });
+
+
+
+            // Fetch payments
+            $job_payments = $query->get()->sum("amount");
+
+
+
+            return response()->json($job_payments, 200);
+        } catch (Exception $e) {
+            return $this->sendError($e, 500, $request);
         }
-
-        // Validate ownership of the garage
-        if (!$this->garageOwnerCheck($garage_id)) {
-            return response()->json([
-                "message" => "You are not the owner of the garage or the requested garage does not exist."
-            ], 401);
-        }
-
-        // Check if job_id is provided
-        $query = JobPayment::
-        whereHas("bookings", function($query) use($garage_id) {
-               $query->where("bookings.garage_id",$garage_id);
-        })
-        ->when($request->has('booking_id'), function($query) {
-            $query->where('booking_id', request()->input("booking_id"));
-        });
-
-
-
-        // Fetch payments
-        $job_payments = $query->get()->sum("amount");
-
-
-
-        return response()->json($job_payments, 200);
-    } catch (Exception $e) {
-        return $this->sendError($e, 500, $request);
     }
-}
 
-/**
- * @OA\Get(
- *      path="/v1.0/jobs/payments/{garage_id}",
- *      operationId="getJobPayments",
- *      tags={"job_management.payment"},
- *      security={
- *           {"bearerAuth": {}}
- *      },
- *      summary="This method is to get all job payments or payments for a specific job",
- *      description="This method is to get all job payments or payments for a specific job",
- *
- *      @OA\Parameter(
- *          name="job_id",
- *          in="query",
- *          description="Optional Job ID to filter payments",
- *          required=false,
- *          example="1"
- *      ),
- *      @OA\Parameter(
- *          name="garage_id",
- *          in="path",
- *          description="Garage ID",
- *          required=true,
- *          example="1"
- *      ),
- *      @OA\Response(
- *          response=200,
- *          description="Successful operation",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=401,
- *          description="Unauthenticated",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=422,
- *          description="Unprocessable Content",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=403,
- *          description="Forbidden",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=400,
- *          description="Bad Request",
- *          @OA\JsonContent(),
- *      ),
- *      @OA\Response(
- *          response=404,
- *          description="Not Found",
- *          @OA\JsonContent(),
- *      )
- * )
- */
-public function getJobPayments($garage_id,Request $request)
-{
-    try {
-        $this->storeActivity($request, "Fetching job payments");
+    /**
+     * @OA\Get(
+     *      path="/v1.0/jobs/payments/{garage_id}",
+     *      operationId="getJobPayments",
+     *      tags={"job_management.payment"},
+     *      security={
+     *           {"bearerAuth": {}}
+     *      },
+     *      summary="This method is to get all job payments or payments for a specific job",
+     *      description="This method is to get all job payments or payments for a specific job",
+     *
+     *      @OA\Parameter(
+     *          name="job_id",
+     *          in="query",
+     *          description="Optional Job ID to filter payments",
+     *          required=false,
+     *          example="1"
+     *      ),
+     *      @OA\Parameter(
+     *          name="garage_id",
+     *          in="path",
+     *          description="Garage ID",
+     *          required=true,
+     *          example="1"
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=422,
+     *          description="Unprocessable Content",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request",
+     *          @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not Found",
+     *          @OA\JsonContent(),
+     *      )
+     * )
+     */
+    public function getJobPayments($garage_id, Request $request)
+    {
+        try {
+            $this->storeActivity($request, "Fetching job payments");
 
-        if (!$request->user()->hasPermissionTo('job_view')) {
-            return response()->json([
-                "message" => "You cannot perform this action"
-            ], 401);
+            if (!$request->user()->hasPermissionTo('job_view')) {
+                return response()->json([
+                    "message" => "You cannot perform this action"
+                ], 401);
+            }
+
+
+
+            // Check if job_id is provided
+            $query = JobPayment::
+            whereHas("bookings", function ($query) use ($garage_id, $request) {
+                    $query->where("bookings.garage_id", $garage_id)
+                        ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                            $query->where('bookings.expert_id', auth()->user()->id);
+                        });
+                    // Additional date filters using date_filter
+                    if ($request->date_filter === 'today') {
+                        $query = $query->whereDate('bookings.job_start_date', Carbon::today());
+                    } elseif ($request->date_filter === 'this_week') {
+                        $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'previous_week') {
+                        $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'next_week') {
+                        $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'this_month') {
+                        $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->year);
+                    } elseif ($request->date_filter === 'previous_month') {
+                        $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+                    } elseif ($request->date_filter === 'next_month') {
+                        $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                    }
+                })
+                ->when($request->has('booking_id'), function ($query) {
+                    $query->where('booking_id', request()->input("booking_id"));
+                });
+
+
+
+
+
+            // Fetch payments
+            $job_payments = $query->get();
+
+            if ($job_payments->isEmpty()) {
+                return response()->json([
+                    "message" => "No payments found"
+                ], 404);
+            }
+
+            return response()->json($job_payments, 200);
+        } catch (Exception $e) {
+            return $this->sendError($e, 500, $request);
         }
-
-        // Validate ownership of the garage
-        if (!$this->garageOwnerCheck($garage_id)) {
-            return response()->json([
-                "message" => "You are not the owner of the garage or the requested garage does not exist."
-            ], 401);
-        }
-
-        // Check if job_id is provided
-        $query = JobPayment::
-        whereHas("job", function($query) use($garage_id) {
-               $query->where("jobs.garage_id",$garage_id);
-        })
-        ->when($request->has('job_id'), function($query) {
-            $query->where('job_id', request()->input("job_id"));
-        });
-
-
-
-        // Fetch payments
-        $job_payments = $query->get();
-
-        if ($job_payments->isEmpty()) {
-            return response()->json([
-                "message" => "No payments found"
-            ], 404);
-        }
-
-        return response()->json($job_payments, 200);
-    } catch (Exception $e) {
-        return $this->sendError($e, 500, $request);
     }
-}
 
 
 
@@ -1391,7 +1427,7 @@ public function getJobPayments($garage_id,Request $request)
                     ], 404);
                 }
 
-                if($booking->payment_status == "completed") {
+                if ($booking->payment_status == "completed") {
                     return response()->json([
                         "message" => "Already paid"
                     ], 409);
