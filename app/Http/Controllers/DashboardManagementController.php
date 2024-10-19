@@ -1953,7 +1953,7 @@ class DashboardManagementController extends Controller
                 ->select(
                     'users.*',
                     DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as this_month_revenue'),
-                    DB::raw('SUM(CASE WHEN job_payments.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as last_month_revenue')
+                    DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as last_month_revenue')
                 ) // Sum the amount field for both this month and last month
                 ->whereHas('roles', function ($query) {
                     $query->where('roles.name', 'business_experts');
