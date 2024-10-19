@@ -1905,9 +1905,9 @@ class DashboardManagementController extends Controller
         try {
             $this->storeActivity($request, "");
 
-            if (!$request->user()->hasRole('superadmin')) {
+            if (empty(auth()->user()->business_id)) {
                 return response()->json([
-                    "message" => "You are not a superadmin"
+                    "message" => "You are not a business user"
                 ], 401);
             }
 
