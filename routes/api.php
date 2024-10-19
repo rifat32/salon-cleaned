@@ -1222,6 +1222,7 @@ Route::get('/v1.0/client/available-experts', [ClientBookingController::class, "g
 
 
 Route::post('/v1.0/client/bookings', [ClientBookingController::class, "createBookingClient"]);
+
 Route::put('/v1.0/client/bookings', [ClientBookingController::class, "updateBookingClient"]);
 Route::patch('/v1.0/client/bookings/change-status', [ClientBookingController::class, "changeBookingStatusClient"]);
 Route::get('/v1.0/client/bookings/{perPage}', [ClientBookingController::class, "getBookingsClient"]);

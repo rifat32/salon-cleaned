@@ -281,6 +281,76 @@ class ClientBookingController extends Controller
                 // ));
                 // }
 
+                if($booking->payment_method="stripe") {
+ // Stripe settings retrieval based on business or garage ID
+ $stripeSetting = StripeSetting::where('business_id', $booking->garage_id)->first();
+
+ if (!$stripeSetting) {
+     return response()->json([
+         "message" => "Stripe is not enabled"
+     ], 403);
+ }
+
+ // Set Stripe client
+ $stripe = new \Stripe\StripeClient($stripeSetting->STRIPE_SECRET);
+
+ $discount = $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
+ $coupon_discount = $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+
+ $total_discount = $discount + $coupon_discount;
+
+
+ // Prepare payment intent data
+ $paymentIntentData = [
+     'amount' => ($booking->price) * 100, // Adjusted amount in cents
+     'currency' => 'usd',
+     'payment_method_types' => ['card'],
+     'metadata' => [
+         'booking_id' => $booking->id,
+         'our_url' => route('stripe.webhook'), // Webhook URL for tracking
+     ],
+ ];
+
+ // Handle discounts (if applicable)
+ if ($total_discount > 0) {
+     $coupon = $stripe->coupons->create([
+         'amount_off' => $total_discount * 100, // Amount in cents
+         'currency' => 'usd',
+         'duration' => 'once',
+         'name' => 'Discount',
+     ]);
+
+     $paymentIntentData['discounts'] = [
+         [
+             'coupon' => $coupon->id,
+         ],
+     ];
+ }
+
+ // Create payment intent
+ $paymentIntent = $stripe->paymentIntents->create($paymentIntentData);
+
+ JobPayment::create([
+     "booking_id" => $booking->id,
+     "amount" => $booking->final_price,
+ ]);
+
+     Booking::where([
+         "id" => $booking->id
+     ])
+         ->update([
+             "payment_status" => "complete",
+             "payment_method" => "stripe"
+         ]);
+
+  // Save the payment intent ID to the booking record
+$booking->payment_intent_id = $paymentIntent->id; // Assuming there's a `payment_intent_id` column in the `bookings` table
+$booking->save();
+
+$booking->clientSecret = $paymentIntent->client_secret;
+
+                }
+
                 return response($booking, 201);
             });
         } catch (Exception $e) {
