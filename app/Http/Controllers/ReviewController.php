@@ -7,7 +7,7 @@ use App\Http\Utils\UserActivityUtil;
 use App\Models\Booking;
 use App\Models\Garage;
 use App\Models\GuestUser;
-use App\Models\Job;
+
 use App\Models\Question;
 use App\Models\QusetionStar;
 use App\Models\ReviewNew;
@@ -3041,13 +3041,13 @@ $data2["total_comment"] = $data2["total_comment"]->get();
      /**
         *
      * @OA\Post(
-     *      path="/review-new/{jobId}",
+     *      path="/review-new/{bookingId}",
      *      operationId="storeReview",
      *      tags={"review"},
      *    *  @OA\Parameter(
-* name="jobId",
+* name="bookingId",
 * in="path",
-* description="jobId",
+* description="bookingId",
 * required=true,
 * example="1"
 * ),
@@ -3112,7 +3112,7 @@ $data2["total_comment"] = $data2["total_comment"]->get();
      *     )
      */
 
-    public function storeReview($jobId,  Request $request)
+    public function storeReview($bookingId,  Request $request)
     {
         $this->storeActivity($request,"");
         try{
@@ -3121,22 +3121,22 @@ $data2["total_comment"] = $data2["total_comment"]->get();
                     "message" => "You can not perform this action"
                 ], 401);
             }
-        $job =   Job::where([
-                "id" => $jobId,
+        $booking =   Booking::where([
+                "id" => $bookingId,
                 "customer_id" => $request->user()->id,
         ])
         ->first();
-        if(!$job) {
+        if(!$booking) {
     return response()->json([
-        "message" => "job does not exist or you did not complete the job"
+        "message" => "Booking does not exist or you did not complete the booking"
     ],404);
 
         }
 
                 $review = [
                     'description' => $request["description"],
-                    'job_id' => $job->job_id,
-                    'garage_id' => $job->garage_id,
+                    'booking_id' => $booking->id,
+                    'garage_id' => $booking->garage_id,
                     'rate' => $request["rate"],
                     'user_id' => $request->user()->id,
                     'comment' => $request["comment"],

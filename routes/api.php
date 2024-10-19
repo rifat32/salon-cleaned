@@ -578,7 +578,7 @@ Route::get('/review-new/getavg/review/{garageId}/{start}/{end}', [ReviewControll
 Route::get('/review-new/getreview/{garageId}/{rate}/{start}/{end}', [ReviewController::class, "filterReview"]);
 
 Route::get('/review-new/getcustomerreview/{garageId}/{start}/{end}', [ReviewController::class, "getCustommerReview"]);
-Route::post('/review-new/{jobId}', [ReviewController::class, "storeReview"]);
+Route::post('/review-new/{bookingId}', [ReviewController::class, "storeReview"]);
 
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

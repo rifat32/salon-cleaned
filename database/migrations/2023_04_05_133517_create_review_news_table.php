@@ -17,7 +17,7 @@ class CreateReviewNewsTable extends Migration
             $table->id();
             $table->string("description")->nullable();
             $table->unsignedBigInteger("garage_id")->nullable();
-            $table->unsignedBigInteger("job_id")->nullable();
+            $table->unsignedBigInteger("booking_id")->nullable();
             $table->string("rate")->nullable();
             $table->unsignedBigInteger("user_id")->nullable();
             $table->string("comment")->nullable();

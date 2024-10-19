@@ -9,7 +9,7 @@ class ReviewNew extends Model
 {
     use HasFactory;
     protected $fillable = [
-        "job_id",
+        "booking_id",
         'description',
         'garage_id',
         'rate',
