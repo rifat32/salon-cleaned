@@ -7,6 +7,7 @@ return [
             "permissions" => [
                 "global_garage_background_image_create",
                 "global_garage_background_image_view",
+
                 "user_create",
                 "user_update",
                 "user_view",
@@ -403,7 +404,7 @@ return [
         [
             "role" => "business_experts",
             "permissions" => [
-
+ "user_view",
 
                 "sub_service_price_create",
                 "sub_service_price_update",

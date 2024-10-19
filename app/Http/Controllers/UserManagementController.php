@@ -557,7 +557,6 @@ class UserManagementController extends Controller
             }
             else {
                 $user =  User::create($insertableData);
-
                 // verify email starts
                 $otp = random_int(100000, 999999);
                 $user->email_verify_token = $otp;
