@@ -68,4 +68,9 @@ class User extends Authenticatable
     public function rota(){
         return $this->hasMany(ExpertRota::class,'expert_id', 'id');
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'customer_id', 'id');
+    }
 }

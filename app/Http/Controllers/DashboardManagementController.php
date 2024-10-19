@@ -1693,8 +1693,7 @@ class DashboardManagementController extends Controller
 
     public function bookings($range = 'today')
     {
-        return Booking::where("garage_id", auth()->user()->business_id)
-            ->when($range === 'today', function ($query) {
+        return Booking::when($range === 'today', function ($query) {
                 $query->whereDate('job_start_date', Carbon::today());
             })
             ->when($range === 'this_week', function ($query) {
@@ -1735,6 +1734,7 @@ class DashboardManagementController extends Controller
 
         foreach ($statuses as $status) {
             $counts[$status] = $this->bookings($range)
+            ->where("garage_id", auth()->user()->business_id)
                 ->when($status != "all", function ($query) use ($status) {
                     $query->where('status', $status);
                 })
@@ -1789,7 +1789,68 @@ class DashboardManagementController extends Controller
         // Fetch payments and sum the amount
         return $query->sum('amount');
     }
+    public function getCustomersByPeriod($period)
+    {
+        // Determine date range based on the period
+        switch ($period) {
+            case 'today':
+                $start = Carbon::today();
+                $end = Carbon::today();
+                break;
+            case 'this_week':
+                $start = Carbon::now()->startOfWeek();
+                $end = Carbon::now()->endOfWeek();
+                break;
+            case 'this_month':
+                $start = Carbon::now()->startOfMonth();
+                $end = Carbon::now()->endOfMonth();
+                break;
+            case 'next_week':
+                $start = Carbon::now()->addWeek()->startOfWeek();
+                $end = Carbon::now()->addWeek()->endOfWeek();
+                break;
+            case 'next_month':
+                $start = Carbon::now()->addMonth()->startOfMonth();
+                $end = Carbon::now()->addMonth()->endOfMonth();
+                break;
+            case 'previous_week':
+                $start = Carbon::now()->subWeek()->startOfWeek();
+                $end = Carbon::now()->subWeek()->endOfWeek();
+                break;
+            case 'previous_month':
+                $start = Carbon::now()->subMonth()->startOfMonth();
+                $end = Carbon::now()->subMonth()->endOfMonth();
+                break;
+            default:
+            $start = Carbon::now()->subMonth()->startOfMonth();
+            $end = Carbon::now()->subMonth()->endOfMonth();
+        }
 
+
+        return User::whereHas('bookings', function($query) use ($start, $end) {
+            $query->whereBetween('job_start_date', [$start, $end])
+            ->where("garage_id", auth()->user()->business_id)
+            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                $query->where('bookings.expert_id', auth()->user()->id);
+            })
+    ;
+        })->distinct()->get();
+    }
+
+    public function getRepeatedCustomers()
+    {
+        return User::
+        whereHas('bookings', function($query) {
+            $query->select('customer_id', DB::raw('COUNT(id) as bookings_count'))
+                  ->groupBy('customer_id')
+                  ->where("garage_id", auth()->user()->business_id)
+                  ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                      $query->where('bookings.expert_id', auth()->user()->id);
+                  })
+
+                  ->having('bookings_count', '>', 1);
+        })->get();
+    }
 
     /**
      *
@@ -1849,6 +1910,19 @@ class DashboardManagementController extends Controller
                     "message" => "You are not a superadmin"
                 ], 401);
             }
+
+            // Call the method with different time periods
+        $data["today_customers"] = $this->getCustomersByPeriod('today');
+        $data["this_week_customers"] = $this->getCustomersByPeriod('this_week');
+        $data["this_month_customers"] = $this->getCustomersByPeriod('this_month');
+
+        $data["next_week_customers"] = $this->getCustomersByPeriod('next_week');
+        $data["next_month_customers"] = $this->getCustomersByPeriod('next_month');
+
+        $data["previous_week_customers"] = $this->getCustomersByPeriod('previous_week');
+        $data["previous_month_customers"] = $this->getCustomersByPeriod('previous_month');
+
+        $data["repeated_customers"] = $this->getRepeatedCustomers();
 
             $data["today_bookings"] = $this->bookingsByStatus('today');
             $data["this_week_bookings"] = $this->bookingsByStatus('this_week');

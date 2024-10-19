@@ -798,14 +798,9 @@ Route::delete('/v1.0/bookings/{garage_id}/{id}', [BookingController::class, "del
 Route::patch('/v1.0/jobs/booking-to-job', [JobController::class, "bookingToJob"]);
 Route::put('/v1.0/jobs', [JobController::class, "updateJob"]);
 Route::put('/v1.0/jobs/change-status', [JobController::class, "changeJobStatus"]);
-
-
 Route::get('/v1.0/jobs/{garage_id}/{perPage}', [JobController::class, "getJobs"]);
 Route::get('/v1.0/jobs/single/{garage_id}/{id}', [JobController::class, "getJobById"]);
-
 Route::delete('/v1.0/jobs/{garage_id}/{id}', [JobController::class, "deleteJobById"]);
-
-
 Route::patch('/v1.0/jobs/payment', [JobController::class, "addPayment"]);
 Route::delete('/v1.0/jobs/payment/{garage_id}/{id}', [JobController::class, "deletePaymentById"]);
 Route::get('/v1.0/jobs/payments/{garage_id}', [JobController::class, "getJobPayments"]);
