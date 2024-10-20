@@ -1068,7 +1068,7 @@ $job_bid->save();
                         "price" => $job_bid->price,
                         "final_price" => $job_bid->price,
                         "status" => "pending",
-                        "payment_status" => "due",
+                        "payment_status" => "pending",
                         "created_by" => $insertableData["created_by"]
 
 

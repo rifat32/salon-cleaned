@@ -803,8 +803,8 @@ Route::get('/v1.0/jobs/single/{garage_id}/{id}', [JobController::class, "getJobB
 Route::delete('/v1.0/jobs/{garage_id}/{id}', [JobController::class, "deleteJobById"]);
 Route::patch('/v1.0/jobs/payment', [JobController::class, "addPayment"]);
 Route::delete('/v1.0/jobs/payment/{garage_id}/{id}', [JobController::class, "deletePaymentById"]);
-Route::get('/v1.0/jobs/payments/{garage_id}', [JobController::class, "getJobPayments"]);
-Route::get('/v1.0/jobs/payments/sum/{garage_id}', [JobController::class, "getJobPaymentsSum"]);
+Route::get('/v1.0/jobs-payments/{garage_id}', [JobController::class, "getJobPayments"]);
+Route::get('/v1.0/jobs-payments-sum/{garage_id}', [JobController::class, "getJobPaymentsSum"]);
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // job management section

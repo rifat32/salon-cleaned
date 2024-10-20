@@ -1100,7 +1100,7 @@ class JobController extends Controller
 
     /**
      * @OA\Get(
-     *      path="/v1.0/jobs/payments/sum/{garage_id}",
+     *      path="/v1.0/jobs-payments-sum/{garage_id}",
      *      operationId="getJobPaymentsSum",
      *      tags={"job_management.payment"},
      *      security={
@@ -1170,7 +1170,13 @@ class JobController extends Controller
 
             // Check if job_id is provided
             $query = JobPayment:: whereHas("bookings", function ($query) use ($garage_id, $request) {
-                $query->where("bookings.garage_id", $garage_id)
+                $query
+                ->when(request()->filled("status"), function($query) {
+                    $statusArray = explode(',', request()->input("status"));
+                    // If status is provided, include the condition in the query
+                    $query->whereIn("status", $statusArray);
+                })
+                ->where("bookings.garage_id", $garage_id)
                     ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                         $query->where('bookings.expert_id', auth()->user()->id);
                     });
@@ -1213,7 +1219,7 @@ class JobController extends Controller
 
     /**
      * @OA\Get(
-     *      path="/v1.0/jobs/payments/{garage_id}",
+     *      path="/v1.0/jobs-payments/{garage_id}",
      *      operationId="getJobPayments",
      *      tags={"job_management.payment"},
      *      security={
@@ -1236,6 +1242,14 @@ class JobController extends Controller
      *          required=true,
      *          example="1"
      *      ),
+     *  *      @OA\Parameter(
+     *          name="date_filter",
+     *          in="path",
+     *          description="date_filter",
+     *          required=true,
+     *          example=""
+     *      ),
+     *
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
@@ -1284,7 +1298,13 @@ class JobController extends Controller
             // Check if job_id is provided
             $query = JobPayment::
             whereHas("bookings", function ($query) use ($garage_id, $request) {
-                    $query->where("bookings.garage_id", $garage_id)
+                    $query
+                    ->when(request()->filled("status"), function($query) {
+                        $statusArray = explode(',', request()->input("status"));
+                        // If status is provided, include the condition in the query
+                        $query->whereIn("status", $statusArray);
+                    })
+                    ->where("bookings.garage_id", $garage_id)
                         ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                             $query->where('bookings.expert_id', auth()->user()->id);
                         });
