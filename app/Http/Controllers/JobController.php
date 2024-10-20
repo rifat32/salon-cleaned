@@ -1169,7 +1169,8 @@ class JobController extends Controller
 
 
             // Check if job_id is provided
-            $query = JobPayment:: whereHas("bookings", function ($query) use ($garage_id, $request) {
+            $query = JobPayment::with("bookings")
+            ->whereHas("bookings", function ($query) use ($garage_id, $request) {
                 $query
                 ->when(request()->filled("status"), function($query) {
                     $statusArray = explode(',', request()->input("status"));
@@ -1296,8 +1297,8 @@ class JobController extends Controller
 
 
             // Check if job_id is provided
-            $query = JobPayment::
-            whereHas("bookings", function ($query) use ($garage_id, $request) {
+            $query = JobPayment::with("bookings")
+            ->whereHas("bookings", function ($query) use ($garage_id, $request) {
                     $query
                     ->when(request()->filled("status"), function($query) {
                         $statusArray = explode(',', request()->input("status"));
