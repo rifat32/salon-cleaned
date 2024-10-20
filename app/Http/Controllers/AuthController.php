@@ -242,7 +242,7 @@ class AuthController extends Controller
             $otp = random_int(100000, 999999);
             $user->email_verify_token = $otp;
             $user->email_verify_token_expires = Carbon::now()->subDays(-1);
-            $user->email_verify_at = now();
+            $user->email_verified_at = now();
             $user->save();
 
 
@@ -1032,7 +1032,7 @@ class AuthController extends Controller
                 $otp = random_int(100000, 999999);
                 $user->email_verify_token = $otp;
                 $user->email_verify_token_expires = Carbon::now()->subDays(-1);
-                $user->email_verify_at = now();
+                $user->email_verified_at = now();
                 $user->save();
 
                 if (env("SEND_EMAIL") == true) {

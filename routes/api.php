@@ -1223,6 +1223,9 @@ Route::patch('/v1.0/client/bookings/change-status', [ClientBookingController::cl
 Route::get('/v1.0/client/bookings/{perPage}', [ClientBookingController::class, "getBookingsClient"]);
 Route::get('/v1.0/client/bookings/single/{id}', [ClientBookingController::class, "getBookingByIdClient"]);
 Route::delete('/v1.0/client/bookings/{id}', [ClientBookingController::class, "deleteBookingByIdClient"]);
+Route::delete('/v1.0/client/bookings-stripe-error/{id}', [ClientBookingController::class, "deleteBookingStripeErrorByIdClient"]);
+
+
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // booking management section
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

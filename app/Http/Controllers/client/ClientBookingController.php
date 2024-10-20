@@ -1486,10 +1486,7 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
 
 
 
-
-
-
-    /**
+   /**
      *
      *     @OA\Delete(
      *      path="/v1.0/client/bookings/{id}",
@@ -1543,7 +1540,121 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
      *     )
      */
 
-    public function deleteBookingByIdClient($id, Request $request)
+     public function deleteBookingByIdClient($id, Request $request)
+     {
+
+         try {
+             $this->storeActivity($request, "");
+             $booking =  Booking::where([
+                 "id" => $id,
+                 "customer_id" => $request->user()->id
+             ])->first();
+             if (!$booking) {
+                 return response()->json(
+                     [
+                         "message" => "no booking found"
+                     ],
+                     404
+                 );
+             }
+
+
+             if ($booking->status != "pending") {
+                 // Return an error response indicating that the status cannot be updated
+                 return response()->json(["message" => "only pending booking can be deleted"], 422);
+             }
+
+             $jobStartDate = Carbon::parse($booking->job_start_date);
+
+             if (Carbon::now()->gte($jobStartDate) || Carbon::now()->diffInHours($jobStartDate, false) < 24) {
+                 return response()->json(['error' => 'Booking cannot be deleted within 24 hours of the job start time or if the time has already passed'], 409);
+             }
+
+
+             $booking->delete();
+
+             $notification_template = NotificationTemplate::where([
+                 "type" => "booking_deleted_by_client"
+             ])
+                 ->first();
+             Notification::create([
+                 "sender_id" => $request->user()->id,
+                 "receiver_id" => $booking->garage->owner_id,
+                 "customer_id" => $booking->customer_id,
+                 "garage_id" => $booking->garage_id,
+                 "booking_id" => $booking->id,
+                 "notification_template_id" => $notification_template->id,
+                 "status" => "unread",
+             ]);
+             //     if(env("SEND_EMAIL") == true) {
+             //         Mail::to($booking->customer->email)->send(new DynamicMail(
+             //         $booking,
+             //         "booking_deleted_by_client"
+             //     ));
+             // }
+
+             return response()->json(["ok" => true], 200);
+         } catch (Exception $e) {
+             return $this->sendError($e, 500, $request);
+         }
+     }
+
+
+    /**
+     *
+     *     @OA\Delete(
+     *      path="/v1.0/client/bookings-stripe-error/{id}",
+     *      operationId="deleteBookingStripeErrorByIdClient",
+     *      tags={"client.booking"},
+     *       security={
+     *           {"bearerAuth": {}}
+     *       },
+     *              @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="id",
+     *         required=true,
+     *  example="1"
+     *      ),
+     *      summary="This method is to delete booking by id",
+     *      description="This method is to delete booking by id",
+     *
+
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
+
+    public function deleteBookingStripeErrorByIdClient($id, Request $request)
     {
 
         try {
@@ -1567,38 +1678,17 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
                 return response()->json(["message" => "only pending booking can be deleted"], 422);
             }
 
-            $jobStartDate = Carbon::parse($booking->job_start_date);
-
-            if (Carbon::now()->gte($jobStartDate) || Carbon::now()->diffInHours($jobStartDate, false) < 24) {
-                return response()->json(['error' => 'Booking cannot be deleted within 24 hours of the job start time or if the time has already passed'], 409);
-            }
 
 
             $booking->delete();
 
-            $notification_template = NotificationTemplate::where([
-                "type" => "booking_deleted_by_client"
-            ])
-                ->first();
-            Notification::create([
-                "sender_id" => $request->user()->id,
-                "receiver_id" => $booking->garage->owner_id,
-                "customer_id" => $booking->customer_id,
-                "garage_id" => $booking->garage_id,
-                "booking_id" => $booking->id,
-                "notification_template_id" => $notification_template->id,
-                "status" => "unread",
-            ]);
-            //     if(env("SEND_EMAIL") == true) {
-            //         Mail::to($booking->customer->email)->send(new DynamicMail(
-            //         $booking,
-            //         "booking_deleted_by_client"
-            //     ));
-            // }
+           
 
             return response()->json(["ok" => true], 200);
         } catch (Exception $e) {
             return $this->sendError($e, 500, $request);
         }
     }
+
+
 }
