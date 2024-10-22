@@ -311,7 +311,7 @@ class BusinessSettingController extends Controller
            $busunessSetting = BusinessSetting::first();
 
            return response()->json($busunessSetting, 200);
-           
+
        } catch (Exception $e) {
 
            return $this->sendError($e, 500, $request);
