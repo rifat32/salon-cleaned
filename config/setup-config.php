@@ -283,7 +283,7 @@ return [
             "role" => "business_receptionist",
             "permissions" => [
 
-
+                "review_manage",
                 "user_create",
                 "user_update",
                 "user_view",
@@ -533,8 +533,6 @@ return [
                 "review_update",
                 "review_view",
                 "review_delete",
-
-
                 "questions_view",
 
 
@@ -555,7 +553,7 @@ return [
 
     ],
     "permissions" => [
-
+        "review_manage",
 
         "sub_service_price_create",
         "sub_service_price_update",

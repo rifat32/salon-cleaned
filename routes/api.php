@@ -574,10 +574,16 @@ Route::patch('/review-new/owner/update/questions', [ReviewController::class, "up
 
 
 Route::get('/review-new/getavg/review/{garageId}/{start}/{end}', [ReviewController::class, "getAverage"]);
+
 Route::get('/review-new/getreview/{garageId}/{rate}/{start}/{end}', [ReviewController::class, "filterReview"]);
 
 Route::get('/review-new/getcustomerreview/{garageId}/{start}/{end}', [ReviewController::class, "getCustommerReview"]);
+
 Route::post('/review-new/{bookingId}', [ReviewController::class, "storeReview"]);
+
+Route::post('/review-action/{reviewId}', [ReviewController::class, "reviewAction"]);
+
+
 
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

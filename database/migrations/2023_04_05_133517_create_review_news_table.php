@@ -21,6 +21,7 @@ class CreateReviewNewsTable extends Migration
             $table->string("rate")->nullable();
             $table->unsignedBigInteger("user_id")->nullable();
             $table->string("comment")->nullable();
+            $table->enum('status', ['pending', 'approved', 'canceled'])->default('pending');
             $table->timestamps();
         });
     }

@@ -756,6 +756,7 @@ class ReviewController extends Controller
                 "garage_id" => $garage->id,
                 // "guest_id" => NULL,
             ])
+            ->where("status","approved")
                 ->whereNotNull("comment");
             if (!empty($request->start_date) && !empty($request->end_date)) {
 
@@ -1043,6 +1044,7 @@ class ReviewController extends Controller
                     // "guest_id" => NULL,
                     "review_news.user_id" => $users->items()[$i]->id
                 ])
+                ->where("status","approved")
                     ->whereNotNull("comment");
                 if (!empty($request->start_date) && !empty($request->end_date)) {
 
@@ -2467,6 +2469,7 @@ class ReviewController extends Controller
             $reviews = ReviewNew::where([
                 "garage_id" => $garage_id
             ])
+            ->where("status","approved")
                 ->whereBetween('created_at', [$start, $end])
                 ->with("question")
                 ->get();
@@ -2590,6 +2593,7 @@ class ReviewController extends Controller
                 "garage_id" => $garage_id,
                 "rate" => $rate
             ])
+            ->where("status","approved")
                 ->with("garage", "value")
                 ->whereBetween('created_at', [$start, $end])
                 ->get();
@@ -2664,6 +2668,7 @@ class ReviewController extends Controller
             )->where([
                 "garage_id" => $garage_id,
             ])
+            ->where("status","approved")
                 ->get();
 
             $info = [];
@@ -2782,6 +2787,7 @@ class ReviewController extends Controller
             )->where([
                 "garage_id" => $garage_id,
             ])
+            ->where("status","approved")
                 ->paginate($perPage);
 
 
@@ -2873,6 +2879,7 @@ class ReviewController extends Controller
                 "garage_id" => $garage_id,
             ])
                 ->whereBetween('created_at', [$start, $end])
+                ->where("status","approved")
                 ->get();
             $data["total"]   = $data["reviews"]->count();
             $data["one"]   = 0;
@@ -3012,6 +3019,7 @@ class ReviewController extends Controller
             // Check if the review already exists
             $existingReview = ReviewNew::where('booking_id', $booking->id)
                 ->where('user_id', $request->user()->id)
+                ->where("status","approved")
                 ->first();
 
             if ($existingReview) {
@@ -3068,4 +3076,107 @@ class ReviewController extends Controller
             return $this->sendError($e, 500, $request);
         }
     }
+
+
+
+    /**
+ *
+ * @OA\Post(
+ *      path="/review-action/{reviewId}",
+ *      operationId="reviewAction",
+ *      tags={"review"},
+ *      @OA\Parameter(
+ *          name="reviewId",
+ *          in="path",
+ *          description="ID of the review to approve or cancel",
+ *          required=true,
+ *          example="1"
+ *      ),
+ *      security={
+ *          {"bearerAuth": {}}
+ *      },
+ *      summary="Approve or cancel a review",
+ *      description="This method is to approve or cancel a review based on action",
+ *      @OA\RequestBody(
+ *          required=true,
+ *          @OA\JsonContent(
+ *              required={"action"},
+ *              @OA\Property(property="action", type="string", enum={"approve", "cancel"}, example="approve"),
+ *          )
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Successful operation",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="Unauthenticated",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=403,
+ *          description="Forbidden",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Review not found",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=400,
+ *          description="Bad Request",
+ *          @OA\JsonContent(),
+ *      )
+ * )
+ */
+public function reviewAction($reviewId, Request $request)
+{
+    try {
+        // Check user permission
+        if (!$request->user()->hasPermissionTo('review_manage')) {
+            return response()->json([
+                "message" => "You cannot perform this action"
+            ], 403);
+        }
+
+        // Find the review
+        $review = ReviewNew::
+        find($reviewId);
+        if (empty($review)) {
+            return response()->json([
+                "message" => "Review not found."
+            ], 404);
+        }
+
+        // Validate the action
+        $action = $request->input('action');
+        if (!in_array($action, ['approve', 'cancel'])) {
+            return response()->json([
+                "message" => "Invalid action. Use 'approve' or 'cancel'."
+            ], 400);
+        }
+
+        // Perform action based on the input
+        if ($action === 'approve') {
+            $review->status = 'approved'; // Assuming 'approved' is a valid status
+            $message = "Review approved successfully.";
+        } elseif ($action === 'cancel') {
+            $review->status = 'canceled'; // Assuming 'canceled' is a valid status
+            $message = "Review canceled successfully.";
+        }
+
+        // Save the updated review
+        $review->save();
+
+        return response()->json(["message" => $message], 200);
+    } catch (Exception $e) {
+        return $this->sendError($e, 500, $request);
+    }
+}
+
+
+
+
 }

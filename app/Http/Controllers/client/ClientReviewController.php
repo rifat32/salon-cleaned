@@ -309,15 +309,18 @@ if($starTag->question_id == $question->id) {
     }
     else {
     $data2["total_rating"] = 0;
-
     }
 
-    $data2["total_comment"] = ReviewNew::with("user","guest_user")->where([
+    $data2["total_comment"] = ReviewNew::
+    with("user","guest_user")
+    ->where("status","approved")
+    ->where([
     "garage_id" => $garage->id,
     // "guest_id" => NULL,
     ])
     ->whereNotNull("comment")
     ->get();
+
 
     return response([
         "part1" =>  $data2,
