@@ -271,8 +271,8 @@ return [
 
                 "global_garage_background_image_view",
 
-                "stripe_setting_update",
-                "system_setting_view",
+                "business_setting_update",
+                "business_setting_view",
 
 
 
@@ -389,8 +389,8 @@ return [
 
                 "global_garage_background_image_view",
 
-                "stripe_setting_update",
-                "system_setting_view",
+                "business_setting_update",
+                "business_setting_view",
 
 
 
@@ -572,8 +572,8 @@ return [
 
 
 
-        "stripe_setting_update",
-        "system_setting_view",
+        "business_setting_update",
+        "business_setting_view",
 
 
         "global_garage_background_image_create",

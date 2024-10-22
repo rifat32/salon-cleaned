@@ -2,27 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UpdateStripeSettingRequest;
+use App\Http\Requests\UpdateBusinessSettingRequest;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
-use App\Models\StripeSetting;
+use App\Models\BusinessSetting;
 use Exception;
 use Illuminate\Http\Request;
 
-class StripeSettingController extends Controller
+class BusinessSettingController extends Controller
 {
     use ErrorUtil,UserActivityUtil;
     /**
    *
    * @OA\Put(
-   *      path="/v1.0/stripe-settings",
-   *      operationId="updateStripeSetting",
-   *      tags={"stripe_setting"},
+   *      path="/v1.0/business-settings",
+   *      operationId="updateBusinessSetting",
+   *      tags={"business_setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },
-   *      summary="This method is to update stripe setting",
-   *      description="This method is to update stripe setting",
+   *      summary="This method is to update busuness setting",
+   *      description="This method is to update busuness setting",
    *
    *  @OA\RequestBody(
    *         required=true,
@@ -30,6 +30,18 @@ class StripeSettingController extends Controller
    *
    * *         @OA\Property(property="STRIPE_KEY", type="string", format="string",example="STRIPE_KEY"),
    *           @OA\Property(property="STRIPE_SECRET", type="string", format="string",example="STRIPE_SECRET"),
+   *  *   @OA\Property(property="stripe_enabled", type="boolean", example=true),
+ *   @OA\Property(property="allow_pay_after_service", type="boolean", example=false),
+ *   @OA\Property(property="allow_expert_booking", type="boolean", example=true),
+ *   @OA\Property(property="allow_expert_self_busy", type="boolean", example=true),
+ *   @OA\Property(property="allow_expert_booking_cancel", type="boolean", example=false),
+ *   @OA\Property(property="allow_expert_view_revenue", type="boolean", example=true),
+ *   @OA\Property(property="allow_expert_view_customer_details", type="boolean", example=false),
+ *   @OA\Property(property="allow_receptionist_add_question", type="boolean", example=true),
+ *   @OA\Property(property="default_currency", type="string", format="string", example="USD"),
+ *   @OA\Property(property="default_language", type="string", format="string", example="en"),
+ *   @OA\Property(property="vat_enabled", type="boolean", example=true),
+ *   @OA\Property(property="vat_percentage", type="number", format="float", example=15.00)
    *
    *
    *         ),
@@ -68,12 +80,12 @@ class StripeSettingController extends Controller
    *     )
    */
 
-   public function updateStripeSetting(UpdateStripeSettingRequest $request)
+   public function updateBusinessSetting(UpdateBusinessSettingRequest $request)
    {
 
        try {
            $this->storeActivity($request, "DUMMY activity","DUMMY description");
-           if (!$request->user()->hasPermissionTo('stripe_setting_update')) {
+           if (!$request->user()->hasPermissionTo('busuness_setting_update')) {
                return response()->json([
                    "message" => "You can not perform this action"
                ], 401);
@@ -81,31 +93,43 @@ class StripeSettingController extends Controller
            $request_data = $request->validated();
 
 
-          $stripeSetting = StripeSetting::
+          $busunessSetting = BusinessSetting::
           where([
             "business_id" => auth()->user()->business_id
         ])
         ->first();
 
-          if (!$stripeSetting) {
+          if (!$busunessSetting) {
               return response()->json([
-                  "message" => "no system setting found"
+                  "message" => "no business setting found"
               ], 404);
           }
 
-              $stripeSetting->fill(collect($request_data)->only([
-                  'business_id',
-                  'STRIPE_KEY',
-                  "STRIPE_SECRET",
+              $busunessSetting->fill(collect($request_data)->only([
+                'STRIPE_KEY',
+                "STRIPE_SECRET",
+                "business_id",
+                'stripe_enabled',
+                'allow_pay_after_service',
+                'allow_expert_booking',
+                'allow_expert_self_busy',
+                'allow_expert_booking_cancel',
+                'allow_expert_view_revenue',
+                'allow_expert_view_customer_details',
+                'allow_receptionist_add_question',
+                'default_currency',
+                'default_language',
+                'vat_enabled',
+                'vat_percentage'
               ])->toArray());
-              $stripeSetting->save();
+              $busunessSetting->save();
 
-              $stripeSettingArray = $stripeSetting->toArray();
+              $busunessSettingArray = $busunessSetting->toArray();
 
-              $stripeSettingArray["STRIPE_KEY"] = $stripeSetting->STRIPE_KEY;
-              $stripeSettingArray["STRIPE_SECRET"] = $stripeSetting->STRIPE_SECRET;
+              $busunessSettingArray["STRIPE_KEY"] = $busunessSetting->STRIPE_KEY;
+              $busunessSettingArray["STRIPE_SECRET"] = $busunessSetting->STRIPE_SECRET;
 
-           return response()->json($stripeSettingArray, 200);
+           return response()->json($busunessSettingArray, 200);
        } catch (Exception $e) {
            error_log($e->getMessage());
            return $this->sendError($e, 500, $request);
@@ -115,14 +139,14 @@ class StripeSettingController extends Controller
 /**
    *
    * @OA\Get(
-   *      path="/v1.0/system-settings",
-   *      operationId="getStripeSetting",
-   *      tags={"stripe_setting"},
+   *      path="/v1.0/business-settings",
+   *      operationId="getBusinessSetting",
+   *      tags={"business_setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },
-   *      summary="This method is to get stripe _setting",
-   *      description="This method is to get stripe setting",
+   *      summary="This method is to get busuness _setting",
+   *      description="This method is to get busuness setting",
    *
    *      @OA\Response(
    *          response=200,
@@ -158,30 +182,30 @@ class StripeSettingController extends Controller
    *     )
    */
 
-   public function getStripeSetting(Request $request)
+   public function getBusinessSetting(Request $request)
    {
        try {
            $this->storeActivity($request, "DUMMY activity","DUMMY description");
-           if (!$request->user()->hasPermissionTo('system_setting_view')) {
+           if (!$request->user()->hasPermissionTo('business_setting_view')) {
                return response()->json([
                    "message" => "You can not perform this action"
                ], 401);
            }
 
 
-           $stripeSetting = StripeSetting::
+           $busunessSetting = BusinessSetting::
            where([
                "business_id" => auth()->user()->business_id
            ])
            ->first();
 
-           $stripeSettingArray = $stripeSetting->toArray();
+           $busunessSettingArray = $busunessSetting->toArray();
 
-           $stripeSettingArray["STRIPE_KEY"] = $stripeSetting->STRIPE_KEY;
-           $stripeSettingArray["STRIPE_SECRET"] = $stripeSetting->STRIPE_SECRET;
+           $busunessSettingArray["STRIPE_KEY"] = $busunessSetting->STRIPE_KEY;
+           $busunessSettingArray["STRIPE_SECRET"] = $busunessSetting->STRIPE_SECRET;
 
 
-           return response()->json($stripeSettingArray, 200);
+           return response()->json($busunessSettingArray, 200);
        } catch (Exception $e) {
 
            return $this->sendError($e, 500, $request);
@@ -191,9 +215,9 @@ class StripeSettingController extends Controller
 /**
    *
    * @OA\Get(
-   *      path="/v1.0/client/system-settings",
-   *      operationId="getSystemSettingSettingClient",
-   *      tags={"system_setting"},
+   *      path="/v1.0/client/business-settings",
+   *      operationId="getBusinessSettingSettingClient",
+   *      tags={"business_setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },
@@ -241,8 +265,8 @@ class StripeSettingController extends Controller
    * example="ASC"
    * ),
 
-   *      summary="This method is to get system_setting",
-   *      description="This method is to get system_setting",
+   *      summary="This method is to get Business_setting",
+   *      description="This method is to get Business_setting",
    *
 
    *      @OA\Response(
@@ -279,14 +303,15 @@ class StripeSettingController extends Controller
    *     )
    */
 
-   public function getSystemSettingSettingClient(Request $request)
+   public function getBusinessSettingSettingClient(Request $request)
    {
        try {
            $this->storeActivity($request, "DUMMY activity","DUMMY description");
 
-           $stripeSetting = StripeSetting::first();
+           $busunessSetting = BusinessSetting::first();
 
-           return response()->json($stripeSetting, 200);
+           return response()->json($busunessSetting, 200);
+           
        } catch (Exception $e) {
 
            return $this->sendError($e, 500, $request);
