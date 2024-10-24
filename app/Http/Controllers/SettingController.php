@@ -15,8 +15,8 @@ class SettingController extends Controller
     /**
    *
    * @OA\Put(
-   *      path="/v1.0/business-settings",
-   *      operationId="updateBusinessSetting",
+   *      path="/v1.0/business-settingss",
+   *      operationId="updateBusinessSettings",
    *      tags={"setting"},
    *       security={
    *           {"bearerAuth": {}}
@@ -81,7 +81,7 @@ class SettingController extends Controller
    *     )
    */
 
-   public function updateBusinessSetting(UpdateBusinessSettingRequest $request)
+   public function updateBusinessSettings(UpdateBusinessSettingRequest $request)
    {
 
        try {
@@ -142,8 +142,8 @@ class SettingController extends Controller
 /**
    *
    * @OA\Get(
-   *      path="/v1.0/business-settings",
-   *      operationId="getBusinessSetting",
+   *      path="/v1.0/business-settingss",
+   *      operationId="getBusinessSettings",
    *      tags={"setting"},
    *       security={
    *           {"bearerAuth": {}}
@@ -185,7 +185,7 @@ class SettingController extends Controller
    *     )
    */
 
-   public function getBusinessSetting(Request $request)
+   public function getBusinessSettings(Request $request)
    {
        try {
            $this->storeActivity($request, "DUMMY activity","DUMMY description");
@@ -218,8 +218,8 @@ class SettingController extends Controller
 /**
    *
    * @OA\Get(
-   *      path="/v1.0/client/business-settings",
-   *      operationId="getBusinessSettingSettingClient",
+   *      path="/v1.0/client/business-settingss",
+   *      operationId="getBusinessSettingSettingsClient",
    *      tags={"setting"},
    *       security={
    *           {"bearerAuth": {}}
@@ -306,7 +306,7 @@ class SettingController extends Controller
    *     )
    */
 
-   public function getBusinessSettingSettingClient(Request $request)
+   public function getBusinessSettingSettingsClient(Request $request)
    {
        try {
            $this->storeActivity($request, "DUMMY activity","DUMMY description");

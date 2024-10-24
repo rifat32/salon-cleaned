@@ -264,8 +264,8 @@ Route::post('/v1.0/users', [UserManagementController::class, "createUser"]);
     // system  management section
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    Route::put('/v1.0/business-settings', [SettingController::class, "updateBusinessSetting"]);
-    Route::get('/v1.0/business-settings', [SettingController::class, "getBusinessSetting"]);
+    Route::put('/v1.0/business-settingss', [SettingController::class, "updateBusinessSettings"]);
+    Route::get('/v1.0/business-settingss', [SettingController::class, "getBusinessSettings"]);
 
 
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -753,6 +753,8 @@ Route::put('/v1.0/bookings/change-statuses', [BookingController::class, "changeM
 
 Route::get('/v1.0/bookings/{garage_id}/{perPage}', [BookingController::class, "getBookings"]);
 
+Route::get('/v1.0/customers', [BookingController::class, "getCustomers"]);
+
 
 Route::get('/v1.0/upcoming-bookings', [BookingController::class, "getUpcomingBookings"]);
 
@@ -1119,7 +1121,7 @@ Route::delete('/v1.0/products/{id}', [ProductController::class, "deleteProductBy
 // client routes
 // !!!!!!!@@@@@@@@@@@@$$$$$$$$$$$$%%%%%%%%%%%%%%%%^^^^^^^^^^
 
-Route::get('/v1.0/client/business-settings', [SettingController::class, "getBusinessSettingSettingClient"]);
+Route::get('/v1.0/client/business-settings', [SettingController::class, "getBusinessSettingsSettingClient"]);
 
 Route::get('/v1.0/garage-packages/get/all/{garage_id}', [GaragePackageController::class, "getGaragePackagesAll"]);
 Route::get('/v1.0/client/garage-packages/single/{garage_id}/{id}', [GaragePackageController::class, "getGaragePackageByIdClient"]);
