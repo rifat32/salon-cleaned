@@ -1561,6 +1561,31 @@ class UserManagementController extends Controller
         }
 
     }
+
+    // Add a method to handle the date filtering logic
+protected function applyDateFilter($query, $date_filter) {
+    switch ($date_filter) {
+        case 'today':
+            return $query->whereDate('bookings.job_start_date', Carbon::today());
+        case 'this_week':
+            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+        case 'previous_week':
+            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+        case 'next_week':
+            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+        case 'this_month':
+            return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                         ->whereYear('bookings.job_start_date', Carbon::now()->year);
+        case 'previous_month':
+            return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                         ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+        case 'next_month':
+            return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                         ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+        default:
+            return;
+    }
+}
    /**
         *
      * @OA\Get(
@@ -1635,33 +1660,43 @@ class UserManagementController extends Controller
             $this->storeActivity($request,"");
 
             $usersQuery = User::
-            withCount(["expert_bookings" => function($query) use($request) {
-               $query->where("bookings.status","converted_to_job")
-               ->when($request->date_filter === 'today', function($query) {
-                return $query->whereDate('bookings.job_start_date', Carbon::today());
-            })
-            ->when($request->date_filter === 'this_week', function($query) {
-                return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-            })
-            ->when($request->date_filter === 'previous_week', function($query) {
-                return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-            })
-            ->when($request->date_filter === 'next_week', function($query) {
-                return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
-            })
-            ->when($request->date_filter === 'this_month', function($query) {
-                return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
-                             ->whereYear('bookings.job_start_date', Carbon::now()->year);
-            })
-            ->when($request->date_filter === 'previous_month', function($query) {
-                return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
-                             ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
-            })
-            ->when($request->date_filter === 'next_month', function($query) {
-                return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
-                             ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
-            });
-            }])
+            withCount([
+                "expert_bookings as completed_bookings" => function($query) use($request) {
+                    $query->where("bookings.status", "converted_to_job")
+                        ->when($request->date_filter, function($query) use ($request) {
+                            $this->applyDateFilter($query, $request->date_filter);
+                        });
+                },
+                "expert_bookings as arrived_bookings" => function($query) use($request) {
+                    $query->where("bookings.status", "arrived")
+                        ->when($request->date_filter, function($query) use ($request) {
+                            $this->applyDateFilter($query, $request->date_filter);
+                        });
+                },
+                "expert_bookings as check_in_bookings" => function($query) use($request) {
+                    $query->where("bookings.status", "check_in")
+                        ->when($request->date_filter, function($query) use ($request) {
+                            $this->applyDateFilter($query, $request->date_filter);
+                        });
+                },
+                "expert_bookings as confirmed_bookings" => function($query) use($request) {
+                    $query->where("bookings.status", "confirmed")
+                        ->when($request->date_filter, function($query) use ($request) {
+                            $this->applyDateFilter($query, $request->date_filter);
+                        });
+                },
+                "expert_bookings as pending_bookings" => function($query) use($request) {
+                    $query->where("bookings.status", "pending")
+                        ->when($request->date_filter, function($query) use ($request) {
+                            $this->applyDateFilter($query, $request->date_filter);
+                        });
+                },
+                'expert_bookings as total_customers' => function ($query) use ($request) {
+                    $query->distinct('customer_id'); // Ensure distinct customer IDs
+                }
+            ])
+
+
             ->withSum(['expert_bookings as total_payment_amount' => function($query) use ($request) {
                 $query->where('bookings.status', 'converted_to_job')
                       ->join('job_payments', 'bookings.id', '=', 'job_payments.booking_id')
@@ -1691,12 +1726,31 @@ class UserManagementController extends Controller
                     });
             }], 'job_payments.amount')
             ->with("translation")
+
+            ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
+            ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id') // Join job_payments on
+            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                $query->where('users.id', auth()->user()->id);
+            })
+            ->select(
+                'users.*',
+                DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as this_month_revenue'),
+                DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as last_month_revenue')
+            ) // Sum the amount field for both this month and last month
+            ->whereHas('roles', function ($query) {
+                $query->where('roles.name', 'business_experts');
+            })
+            ->where("business_id", auth()->user()->business_id)
+            ->groupBy('users.id') // Group by user ID (expert)
+
+
             ->whereHas('roles', function($query) {
                 $query->where('roles.name', 'business_experts');
             })
             ->when(request()->filled("business_id"), function($query){
                 $query->where("business_id", request()->input("business_id"));
-            });
+            })
+           // Order by this ;
 
 
 
@@ -1723,7 +1777,7 @@ class UserManagementController extends Controller
                 $usersQuery = $usersQuery->where('created_at', "<=", $request->end_date);
             }
 
-            $users = $usersQuery->orderByDesc("id")->get();
+            $users = $usersQuery->orderBy('this_month_revenue', 'desc') ->get();
             return response()->json($users, 200);
         } catch(Exception $e){
 

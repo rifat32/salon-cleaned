@@ -1618,7 +1618,7 @@ public function changeMultipleBookingStatuses(Request $request)
      *     )
      */
 
-     public function getCustomerss( Request $request)
+     public function getCustomers( Request $request)
      {
          try {
              $this->storeActivity($request, "");
@@ -1633,7 +1633,7 @@ public function changeMultipleBookingStatuses(Request $request)
                 $query->join('booking_sub_services', 'bookings.id', '=', 'booking_sub_services.booking_id')
                     ->join('sub_services', 'booking_sub_services.sub_service_id', '=', 'sub_services.id')
                     ->where('bookings.garage_id', auth()->user()->business_id)
-                    ->select('bookings.user_id', 'sub_services.name')
+                    ->select('bookings.customer_id', 'sub_services.id', 'sub_services.name')
                     ->distinct();  // Ensure unique sub-services per booking
             }])
             ->whereHas("bookings", function($query) use($request) {

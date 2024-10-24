@@ -1717,7 +1717,7 @@ class DashboardManagementController extends Controller
     }
 
     // Method to get counts for each status
-    public function bookingsByStatus($range = 'today', $expert_id = NULL)
+    public function bookingsByStatusCount($range = 'today', $expert_id = NULL)
     {
         $statuses = [
             "all",
@@ -1753,7 +1753,41 @@ class DashboardManagementController extends Controller
         return $counts;
     }
 
+    public function bookingsByStatus($range = 'today', $expert_id = NULL)
+    {
+        $statuses = [
+            "all",
+            "pending",
+            "confirmed",
+            "check_in",
+            "rejected_by_client",
+            "rejected_by_garage_owner",
+            "arrived",
+            "converted_to_job"
+        ];
 
+        $data = [];
+
+        foreach ($statuses as $status) {
+            $data[$status] = $this->bookings($range)
+            ->where("garage_id", auth()->user()->business_id)
+                ->when($status != "all", function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
+                ->when(!empty($expert_id), function ($query) use ($expert_id) {
+                    $query->where('expert_id', $expert_id);
+                })
+
+                ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                    $query->where('bookings.expert_id', auth()->user()->id);
+                })
+
+
+                ->get();
+        }
+
+        return $data;
+    }
     public function revenue($range = 'today')
     {
         $garage_id = auth()->user()->business_id; // Get the garage ID
@@ -1852,7 +1886,6 @@ class DashboardManagementController extends Controller
                   ->having('bookings_count', '>', 1);
         })->get();
     }
-
     /**
      *
      * @OA\Get(
@@ -1901,7 +1934,222 @@ class DashboardManagementController extends Controller
      *     )
      */
 
-    public function getBusinessOwnerDashboardData(Request $request)
+     public function getBusinessOwnerDashboardData(Request $request)
+     {
+         try {
+             $this->storeActivity($request, "");
+
+             if (empty(auth()->user()->business_id)) {
+                 return response()->json([
+                     "message" => "You are not a business user"
+                 ], 401);
+             }
+
+             // Call the method with different time periods
+         $data["today_customers"] = $this->getCustomersByPeriod('today');
+         $data["this_week_customers"] = $this->getCustomersByPeriod('this_week');
+         $data["this_month_customers"] = $this->getCustomersByPeriod('this_month');
+
+         $data["next_week_customers"] = $this->getCustomersByPeriod('next_week');
+         $data["next_month_customers"] = $this->getCustomersByPeriod('next_month');
+
+         $data["previous_week_customers"] = $this->getCustomersByPeriod('previous_week');
+         $data["previous_month_customers"] = $this->getCustomersByPeriod('previous_month');
+
+
+
+         $data["repeated_customers"] = $this->getRepeatedCustomers();
+
+             $data["today_bookings"] = $this->bookingsByStatusCount('today');
+             $data["this_week_bookings"] = $this->bookingsByStatusCount('this_week');
+             $data["this_month_bookings"] = $this->bookingsByStatusCount('this_month');
+             $data["next_week_bookings"] = $this->bookingsByStatusCount('next_week');
+             $data["next_month_bookings"] = $this->bookingsByStatusCount('next_month');
+             $data["previous_week_bookings"] = $this->bookingsByStatusCount('previous_week');
+             $data["previous_month_bookings"] = $this->bookingsByStatusCount('previous_month');
+
+
+
+             //  $experts = User::with("translation")
+             //  ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
+             //  ->select('users.*', DB::raw('count(bookings.id) as total_bookings'))
+             //  ->whereHas('roles', function ($query) {
+             //      $query->where('roles.name', 'business_experts');
+             //  })
+             //  ->where("business_id", auth()->user()->business_id)
+             //  ->groupBy('experts.id') // Group by expert ID
+             //  ->orderBy('total_bookings', 'desc')
+             //  ->get();
+
+             $experts = User::with("translation")
+                 ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
+                 ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id') // Join job_payments on
+                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                     $query->where('users.id', auth()->user()->id);
+                 })
+                 ->select(
+                     'users.*',
+                     DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as this_month_revenue'),
+                     DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as last_month_revenue')
+                 ) // Sum the amount field for both this month and last month
+                 ->whereHas('roles', function ($query) {
+                     $query->where('roles.name', 'business_experts');
+                 })
+                 ->where("business_id", auth()->user()->business_id)
+                 ->groupBy('users.id') // Group by user ID (expert)
+                 ->orderBy('this_month_revenue', 'desc') // Order by this month's revenue
+                 ->get();
+
+             foreach ($experts as $expert) {
+
+                 $upcoming_bookings = collect();
+
+                 // Get all bookings for the provided date except the rejected ones
+                 $expert_bookings = Booking::whereDate("bookings.job_start_date", today())
+                     ->whereIn("status", ["pending"])
+                     ->where([
+                         "expert_id" => $expert->id
+                     ])
+                     ->get();
+
+                 foreach ($expert_bookings as $expert_booking) {
+
+
+                     $booked_slots = $expert_booking->booked_slots;
+
+                     // Convert time strings into Carbon objects
+                     $booked_times = array_map(function ($time) {
+                         return Carbon::parse($time);
+                     }, $booked_slots);
+
+                     // Get the smallest time
+                     $smallest_time = min($booked_times);
+
+                     // Get the current time or the input "current_slot"
+                     $current_time = request()->input("current_slot")
+                         ? Carbon::parse(request()->input("current_slot"))
+                         : Carbon::now(); // Use the current time if no input is provided
+
+                     // Compare the smallest booked time with the current time
+                     if ($smallest_time->greaterThan($current_time)) {
+                         $upcoming_bookings->push($expert_booking);
+                     }
+
+                 }
+
+                 $expert["upcoming_bookings_today"] = $upcoming_bookings->toArray();
+
+
+                 // Get all upcoming bookings for future dates except the rejected ones
+                 $expert["upcoming_bookings"] = Booking::whereDate("bookings.job_start_date", '>', today())
+                     ->whereIn("status", ["pending"])
+                     ->where("expert_id", $expert->id)
+                     ->get();
+
+
+                 $expert["today_bookings"] = $this->bookingsByStatusCount('today', $expert->id);
+                 $expert["this_week_bookings"] = $this->bookingsByStatusCount('this_week', $expert->id);
+                 $expert["this_month_bookings"] = $this->bookingsByStatusCount('this_month', $expert->id);
+                 $expert["next_week_bookings"] = $this->bookingsByStatusCount('next_week', $expert->id);
+                 $expert["next_month_bookings"] = $this->bookingsByStatusCount('next_month', $expert->id);
+                 $expert["previous_week_bookings"] = $this->bookingsByStatusCount('previous_week', $expert->id);
+                 $expert["previous_month_bookings"] = $this->bookingsByStatusCount('previous_month', $expert->id);
+
+             }
+
+
+             $data["top_experts"] = $experts;
+
+             $data["today_revenue"] = $this->revenue('today');
+             $data["this_week_revenue"] = $this->revenue('this_week');
+             $data["this_month_revenue"] = $this->revenue('this_month');
+             $data["next_week_revenue"] = $this->revenue('next_week');
+             $data["next_month_revenue"] = $this->revenue('next_month');
+             $data["previous_week_revenue"] = $this->revenue('previous_week');
+             $data["previous_month_revenue"] = $this->revenue('previous_month');
+
+
+
+             $data["top_services"] = SubService::withCount([
+                 'bookingSubServices as this_month_sales' => function ($query) {
+                     $query->whereHas('booking', function ($query) {
+                         $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+                         ->when(auth()->user()->hasRole("business_experts"), function($query)  {
+                             $query->where('bookings.expert_id', auth()->user()->id);
+                        })
+                             ->whereBetween('bookings.job_start_date', [now()->startOfMonth(), now()->endOfMonth()]); // Sales this month
+                     });
+                 },
+                 'bookingSubServices as last_month_sales' => function ($query) {
+                     $query->whereHas('booking', function ($query) {
+                         $query->where('bookings.status', 'converted_to_job') // Filter for converted
+                         ->when(auth()->user()->hasRole("business_experts"), function($query)  {
+                             $query->where('bookings.expert_id', auth()->user()->id);
+                        })
+                             ->whereBetween('bookings.job_start_date', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()]); // Sales last month
+                     });
+                 }
+             ])
+                 ->orderBy('this_month_sales', 'desc') // Sort by this month's sales
+                 ->get();
+
+
+
+             return response()->json($data, 200);
+         } catch (Exception $e) {
+             return $this->sendError($e, 500, $request);
+         }
+     }
+
+    /**
+     *
+     * @OA\Get(
+     *      path="/v1.0/expert-report",
+     *      operationId="getExpertReport",
+     *      tags={"dashboard_management"},
+     *       security={
+     *           {"bearerAuth": {}}
+     *       },
+
+     *      summary="get all dashboard data combined",
+     *      description="get all dashboard data combined",
+     *
+
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
+
+    public function getExpertReport(Request $request)
     {
         try {
             $this->storeActivity($request, "");
@@ -1912,41 +2160,6 @@ class DashboardManagementController extends Controller
                 ], 401);
             }
 
-            // Call the method with different time periods
-        $data["today_customers"] = $this->getCustomersByPeriod('today');
-        $data["this_week_customers"] = $this->getCustomersByPeriod('this_week');
-        $data["this_month_customers"] = $this->getCustomersByPeriod('this_month');
-
-        $data["next_week_customers"] = $this->getCustomersByPeriod('next_week');
-        $data["next_month_customers"] = $this->getCustomersByPeriod('next_month');
-
-        $data["previous_week_customers"] = $this->getCustomersByPeriod('previous_week');
-        $data["previous_month_customers"] = $this->getCustomersByPeriod('previous_month');
-
-
-
-        $data["repeated_customers"] = $this->getRepeatedCustomers();
-
-            $data["today_bookings"] = $this->bookingsByStatus('today');
-            $data["this_week_bookings"] = $this->bookingsByStatus('this_week');
-            $data["this_month_bookings"] = $this->bookingsByStatus('this_month');
-            $data["next_week_bookings"] = $this->bookingsByStatus('next_week');
-            $data["next_month_bookings"] = $this->bookingsByStatus('next_month');
-            $data["previous_week_bookings"] = $this->bookingsByStatus('previous_week');
-            $data["previous_month_bookings"] = $this->bookingsByStatus('previous_month');
-
-
-
-            //  $experts = User::with("translation")
-            //  ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
-            //  ->select('users.*', DB::raw('count(bookings.id) as total_bookings'))
-            //  ->whereHas('roles', function ($query) {
-            //      $query->where('roles.name', 'business_experts');
-            //  })
-            //  ->where("business_id", auth()->user()->business_id)
-            //  ->groupBy('experts.id') // Group by expert ID
-            //  ->orderBy('total_bookings', 'desc')
-            //  ->get();
 
             $experts = User::with("translation")
                 ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
@@ -1969,51 +2182,6 @@ class DashboardManagementController extends Controller
 
             foreach ($experts as $expert) {
 
-                $upcoming_bookings = collect();
-
-                // Get all bookings for the provided date except the rejected ones
-                $expert_bookings = Booking::whereDate("bookings.job_start_date", today())
-                    ->whereIn("status", ["pending"])
-                    ->where([
-                        "expert_id" => $expert->id
-                    ])
-                    ->get();
-
-                foreach ($expert_bookings as $expert_booking) {
-
-
-                    $booked_slots = $expert_booking->booked_slots;
-
-                    // Convert time strings into Carbon objects
-                    $booked_times = array_map(function ($time) {
-                        return Carbon::parse($time);
-                    }, $booked_slots);
-
-                    // Get the smallest time
-                    $smallest_time = min($booked_times);
-
-                    // Get the current time or the input "current_slot"
-                    $current_time = request()->input("current_slot")
-                        ? Carbon::parse(request()->input("current_slot"))
-                        : Carbon::now(); // Use the current time if no input is provided
-
-                    // Compare the smallest booked time with the current time
-                    if ($smallest_time->greaterThan($current_time)) {
-                        $upcoming_bookings->push($expert_booking);
-                    }
-
-                }
-
-                $expert["upcoming_bookings_today"] = $upcoming_bookings->toArray();
-
-
-                // Get all upcoming bookings for future dates except the rejected ones
-                $expert["upcoming_bookings"] = Booking::whereDate("bookings.job_start_date", '>', today())
-                    ->whereIn("status", ["pending"])
-                    ->where("expert_id", $expert->id)
-                    ->get();
-
-
                 $expert["today_bookings"] = $this->bookingsByStatus('today', $expert->id);
                 $expert["this_week_bookings"] = $this->bookingsByStatus('this_week', $expert->id);
                 $expert["this_month_bookings"] = $this->bookingsByStatus('this_month', $expert->id);
@@ -2027,38 +2195,7 @@ class DashboardManagementController extends Controller
 
             $data["top_experts"] = $experts;
 
-            $data["today_revenue"] = $this->revenue('today');
-            $data["this_week_revenue"] = $this->revenue('this_week');
-            $data["this_month_revenue"] = $this->revenue('this_month');
-            $data["next_week_revenue"] = $this->revenue('next_week');
-            $data["next_month_revenue"] = $this->revenue('next_month');
-            $data["previous_week_revenue"] = $this->revenue('previous_week');
-            $data["previous_month_revenue"] = $this->revenue('previous_month');
 
-
-
-            $data["top_services"] = SubService::withCount([
-                'bookingSubServices as this_month_sales' => function ($query) {
-                    $query->whereHas('booking', function ($query) {
-                        $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
-                        ->when(auth()->user()->hasRole("business_experts"), function($query)  {
-                            $query->where('bookings.expert_id', auth()->user()->id);
-                       })
-                            ->whereBetween('bookings.job_start_date', [now()->startOfMonth(), now()->endOfMonth()]); // Sales this month
-                    });
-                },
-                'bookingSubServices as last_month_sales' => function ($query) {
-                    $query->whereHas('booking', function ($query) {
-                        $query->where('bookings.status', 'converted_to_job') // Filter for converted
-                        ->when(auth()->user()->hasRole("business_experts"), function($query)  {
-                            $query->where('bookings.expert_id', auth()->user()->id);
-                       })
-                            ->whereBetween('bookings.job_start_date', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()]); // Sales last month
-                    });
-                }
-            ])
-                ->orderBy('this_month_sales', 'desc') // Sort by this month's sales
-                ->get();
 
 
 

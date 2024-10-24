@@ -1459,8 +1459,9 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
     {
         try {
             $this->storeActivity($request, "");
+
             $booking = Booking::with(
-                "sub_services.translation",
+     "sub_services.translation",
                 "sub_services.service",
                 "sub_services.service.translation",
                 "booking_packages.garage_package",
