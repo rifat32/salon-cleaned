@@ -5134,6 +5134,101 @@
                 ]
             }
         },
+        "/v1.0/customers": {
+            "get": {
+                "tags": [
+                    "booking_management"
+                ],
+                "summary": "This method is to get  bookings ",
+                "description": "This method is to get bookings",
+                "operationId": "getCustomers",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "per_page",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "search_key",
+                        "in": "query",
+                        "description": "search_key",
+                        "required": true,
+                        "example": "search_key"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1.0/upcoming-bookings": {
             "get": {
                 "tags": [
@@ -6624,6 +6719,71 @@
                 "summary": "get all dashboard data combined",
                 "description": "get all dashboard data combined",
                 "operationId": "getBusinessOwnerDashboardData",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/expert-report": {
+            "get": {
+                "tags": [
+                    "dashboard_management"
+                ],
+                "summary": "get all dashboard data combined",
+                "description": "get all dashboard data combined",
+                "operationId": "getExpertReport",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -24209,14 +24369,14 @@
                 ]
             }
         },
-        "/v1.0/business-settings": {
+        "/v1.0/business-settingss": {
             "get": {
                 "tags": [
                     "setting"
                 ],
                 "summary": "This method is to get busuness _setting",
                 "description": "This method is to get busuness setting",
-                "operationId": "getBusinessSetting",
+                "operationId": "getBusinessSettings",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -24279,7 +24439,7 @@
                 ],
                 "summary": "This method is to update busuness setting",
                 "description": "This method is to update busuness setting",
-                "operationId": "updateBusinessSetting",
+                "operationId": "updateBusinessSettings",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -24297,6 +24457,10 @@
                                         "example": "STRIPE_SECRET"
                                     },
                                     "stripe_enabled": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "is_expert_price": {
                                         "type": "boolean",
                                         "example": true
                                     },
@@ -24410,14 +24574,14 @@
                 ]
             }
         },
-        "/v1.0/client/business-settings": {
+        "/v1.0/client/business-settingss": {
             "get": {
                 "tags": [
                     "setting"
                 ],
                 "summary": "This method is to get Business_setting",
                 "description": "This method is to get Business_setting",
-                "operationId": "getBusinessSettingSettingClient",
+                "operationId": "getBusinessSettingSettingsClient",
                 "parameters": [
                     {
                         "name": "per_page",
@@ -27578,6 +27742,94 @@
                 ]
             }
         },
+        "/v2.0/expert-users": {
+            "get": {
+                "tags": [
+                    "user_management"
+                ],
+                "summary": "This method is to get user",
+                "description": "This method is to get user",
+                "operationId": "getExpertUsersV2",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "search_key",
+                        "in": "query",
+                        "description": "search_key",
+                        "required": true,
+                        "example": "search_key"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1.0/users/get-by-id/{id}": {
             "get": {
                 "tags": [
@@ -29059,7 +29311,7 @@
                     "client.booking"
                 ],
                 "summary": "This method is to change booking status",
-                "description": "This method is to change booking status.\r\n     * if status is accepted. the booking will be converted to a job.  and the status of the job will be pending ",
+                "description": "This method is to change booking status.\n     * if status is accepted. the booking will be converted to a job.  and the status of the job will be pending ",
                 "operationId": "changeBookingStatusClient",
                 "requestBody": {
                     "required": true,

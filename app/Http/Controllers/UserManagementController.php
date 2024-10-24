@@ -1659,7 +1659,7 @@ protected function applyDateFilter($query, $date_filter) {
         try{
             $this->storeActivity($request,"");
 
-            $usersQuery = User::
+            $users = User::
             withCount([
                 "expert_bookings as completed_bookings" => function($query) use($request) {
                     $query->where("bookings.status", "converted_to_job")
@@ -1750,34 +1750,14 @@ protected function applyDateFilter($query, $date_filter) {
             ->when(request()->filled("business_id"), function($query){
                 $query->where("business_id", request()->input("business_id"));
             })
-           // Order by this ;
+            ->when(!empty($request->start_date), function ($query) use ($request) {
+                $query->where('created_at', ">=", $request->start_date);
+            })
+            ->when(!empty($request->end_date), function ($query) use ($request) {
+                $query->where('created_at', "<=", $request->end_date);
+            })
 
-
-
-            // ->whereHas('roles', function ($query) {
-            //     // return $query->where('name','!=', 'customer');
-            // });
-
-
-            if(!empty($request->search_key)) {
-                $usersQuery = $usersQuery->where(function($query) use ($request){
-                    $term = $request->search_key;
-                    $query->where("first_Name", "like", "%" . $term . "%");
-                    $query->orWhere("last_Name", "like", "%" . $term . "%");
-                    $query->orWhere("email", "like", "%" . $term . "%");
-                    $query->orWhere("phone", "like", "%" . $term . "%");
-                });
-
-            }
-
-            if (!empty($request->start_date)) {
-                $usersQuery = $usersQuery->where('created_at', ">=", $request->start_date);
-            }
-            if (!empty($request->end_date)) {
-                $usersQuery = $usersQuery->where('created_at', "<=", $request->end_date);
-            }
-
-            $users = $usersQuery->orderBy('this_month_revenue', 'desc') ->get();
+           ->orderBy('this_month_revenue', 'desc') ->get();
             return response()->json($users, 200);
         } catch(Exception $e){
 
