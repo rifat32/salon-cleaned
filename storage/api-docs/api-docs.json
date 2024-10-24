@@ -14,7 +14,7 @@
     },
     "servers": [
         {
-            "url": "https://quickreview.app/saloon/api",
+            "url": "http://my-default-host.com",
             "description": "Demo API Server"
         }
     ],
@@ -5398,316 +5398,6 @@
                 ]
             }
         },
-        "/v1.0/business-settings": {
-            "get": {
-                "tags": [
-                    "business_setting"
-                ],
-                "summary": "This method is to get busuness _setting",
-                "description": "This method is to get busuness setting",
-                "operationId": "getBusinessSetting",
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocesseble Content",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "put": {
-                "tags": [
-                    "business_setting"
-                ],
-                "summary": "This method is to update busuness setting",
-                "description": "This method is to update busuness setting",
-                "operationId": "updateBusinessSetting",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "STRIPE_KEY": {
-                                        "type": "string",
-                                        "format": "string",
-                                        "example": "STRIPE_KEY"
-                                    },
-                                    "STRIPE_SECRET": {
-                                        "type": "string",
-                                        "format": "string",
-                                        "example": "STRIPE_SECRET"
-                                    },
-                                    "stripe_enabled": {
-                                        "type": "boolean",
-                                        "example": true
-                                    },
-                                    "allow_pay_after_service": {
-                                        "type": "boolean",
-                                        "example": false
-                                    },
-                                    "allow_expert_booking": {
-                                        "type": "boolean",
-                                        "example": true
-                                    },
-                                    "allow_expert_self_busy": {
-                                        "type": "boolean",
-                                        "example": true
-                                    },
-                                    "allow_expert_booking_cancel": {
-                                        "type": "boolean",
-                                        "example": false
-                                    },
-                                    "allow_expert_view_revenue": {
-                                        "type": "boolean",
-                                        "example": true
-                                    },
-                                    "allow_expert_view_customer_details": {
-                                        "type": "boolean",
-                                        "example": false
-                                    },
-                                    "allow_receptionist_add_question": {
-                                        "type": "boolean",
-                                        "example": true
-                                    },
-                                    "default_currency": {
-                                        "type": "string",
-                                        "format": "string",
-                                        "example": "USD"
-                                    },
-                                    "default_language": {
-                                        "type": "string",
-                                        "format": "string",
-                                        "example": "en"
-                                    },
-                                    "vat_enabled": {
-                                        "type": "boolean",
-                                        "example": true
-                                    },
-                                    "vat_percentage": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 15
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocesseble Content",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/v1.0/client/business-settings": {
-            "get": {
-                "tags": [
-                    "business_setting"
-                ],
-                "summary": "This method is to get Business_setting",
-                "description": "This method is to get Business_setting",
-                "operationId": "getBusinessSettingSettingClient",
-                "parameters": [
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "per_page",
-                        "required": true,
-                        "example": "6"
-                    },
-                    {
-                        "name": "start_date",
-                        "in": "query",
-                        "description": "start_date",
-                        "required": true,
-                        "example": "2019-06-29"
-                    },
-                    {
-                        "name": "end_date",
-                        "in": "query",
-                        "description": "end_date",
-                        "required": true,
-                        "example": "2019-06-29"
-                    },
-                    {
-                        "name": "search_key",
-                        "in": "query",
-                        "description": "search_key",
-                        "required": true,
-                        "example": "search_key"
-                    },
-                    {
-                        "name": "business_tier_id",
-                        "in": "query",
-                        "description": "business_tier_id",
-                        "required": true,
-                        "example": "1"
-                    },
-                    {
-                        "name": "order_by",
-                        "in": "query",
-                        "description": "order_by",
-                        "required": true,
-                        "example": "ASC"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocesseble Content",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/v1.0/coupons": {
             "put": {
                 "tags": [
@@ -7130,7 +6820,7 @@
                 "description": "This method is to update email template",
                 "operationId": "updateEmailTemplate",
                 "requestBody": {
-                    "description": "use [FirstName],[LastName],[FullName],[AccountVerificationLink],[ForgotPasswordLink]\n     * [customer_FirstName],[customer_LastName],[customer_FullName],[garage_owner_FirstName],[garage_owner_LastName],[garage_owner_FullName],[automobile_make],[automobile_model],[car_registration_no],[car_registration_year],[status],[payment_status],[additional_information],[discount_type],[discount_amount],[price],[job_start_date],[job_start_time],[job_end_time],[coupon_code],[fuel],[transmission]\n     *  in the template",
+                    "description": "use [FirstName],[LastName],[FullName],[AccountVerificationLink],[ForgotPasswordLink]\r\n     * [customer_FirstName],[customer_LastName],[customer_FullName],[garage_owner_FirstName],[garage_owner_LastName],[garage_owner_FullName],[automobile_make],[automobile_model],[car_registration_no],[car_registration_year],[status],[payment_status],[additional_information],[discount_type],[discount_amount],[price],[job_start_date],[job_start_time],[job_end_time],[coupon_code],[fuel],[transmission]\r\n     *  in the template",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -18038,7 +17728,7 @@
                 "description": "This method is to update notification template",
                 "operationId": "updateNotificationTemplate",
                 "requestBody": {
-                    "description": "use [customer_name],[garage_owner_name],[garage_name],\n     *  in the template and use [customer_id], [pre_booking_id],[booking_id],[job_id],[garage_id],[bid_id] in link",
+                    "description": "use [customer_name],[garage_owner_name],[garage_name],\r\n     *  in the template and use [customer_id], [pre_booking_id],[booking_id],[job_id],[garage_id],[bid_id] in link",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -21882,6 +21572,95 @@
                 ]
             }
         },
+        "/review-action/{reviewId}": {
+            "post": {
+                "tags": [
+                    "review"
+                ],
+                "summary": "Approve or cancel a review",
+                "description": "This method is to approve or cancel a review based on action",
+                "operationId": "reviewAction",
+                "parameters": [
+                    {
+                        "name": "reviewId",
+                        "in": "path",
+                        "description": "ID of the review to approve or cancel",
+                        "required": true,
+                        "example": "1"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "action"
+                                ],
+                                "properties": {
+                                    "action": {
+                                        "type": "string",
+                                        "enum": [
+                                            "approve",
+                                            "cancel"
+                                        ],
+                                        "example": "approve"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Review not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1.0/roles": {
             "put": {
                 "tags": [
@@ -24371,6 +24150,316 @@
                         "description": "ids",
                         "required": true,
                         "example": "1,2,3"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/business-settings": {
+            "get": {
+                "tags": [
+                    "setting"
+                ],
+                "summary": "This method is to get busuness _setting",
+                "description": "This method is to get busuness setting",
+                "operationId": "getBusinessSetting",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "setting"
+                ],
+                "summary": "This method is to update busuness setting",
+                "description": "This method is to update busuness setting",
+                "operationId": "updateBusinessSetting",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "STRIPE_KEY": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "STRIPE_KEY"
+                                    },
+                                    "STRIPE_SECRET": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "STRIPE_SECRET"
+                                    },
+                                    "stripe_enabled": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "allow_pay_after_service": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "allow_expert_booking": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "allow_expert_self_busy": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "allow_expert_booking_cancel": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "allow_expert_view_revenue": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "allow_expert_view_customer_details": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "allow_receptionist_add_question": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "default_currency": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "USD"
+                                    },
+                                    "default_language": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "en"
+                                    },
+                                    "vat_enabled": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "vat_percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/client/business-settings": {
+            "get": {
+                "tags": [
+                    "setting"
+                ],
+                "summary": "This method is to get Business_setting",
+                "description": "This method is to get Business_setting",
+                "operationId": "getBusinessSettingSettingClient",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "per_page",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "search_key",
+                        "in": "query",
+                        "description": "search_key",
+                        "required": true,
+                        "example": "search_key"
+                    },
+                    {
+                        "name": "business_tier_id",
+                        "in": "query",
+                        "description": "business_tier_id",
+                        "required": true,
+                        "example": "1"
+                    },
+                    {
+                        "name": "order_by",
+                        "in": "query",
+                        "description": "order_by",
+                        "required": true,
+                        "example": "ASC"
                     }
                 ],
                 "responses": {
@@ -28970,7 +29059,7 @@
                     "client.booking"
                 ],
                 "summary": "This method is to change booking status",
-                "description": "This method is to change booking status.\n     * if status is accepted. the booking will be converted to a job.  and the status of the job will be pending ",
+                "description": "This method is to change booking status.\r\n     * if status is accepted. the booking will be converted to a job.  and the status of the job will be pending ",
                 "operationId": "changeBookingStatusClient",
                 "requestBody": {
                     "required": true,
@@ -31266,10 +31355,6 @@
             "description": "booking_management"
         },
         {
-            "name": "business_setting",
-            "description": "business_setting"
-        },
-        {
             "name": "coupon_management",
             "description": "coupon_management"
         },
@@ -31448,6 +31533,10 @@
         {
             "name": "service_prices",
             "description": "service_prices"
+        },
+        {
+            "name": "setting",
+            "description": "setting"
         },
         {
             "name": "shop_section.shop_gallery_management",

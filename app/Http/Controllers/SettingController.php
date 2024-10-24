@@ -9,7 +9,7 @@ use App\Models\BusinessSetting;
 use Exception;
 use Illuminate\Http\Request;
 
-class BusinessSettingController extends Controller
+class SettingController extends Controller
 {
     use ErrorUtil,UserActivityUtil;
     /**
@@ -17,7 +17,7 @@ class BusinessSettingController extends Controller
    * @OA\Put(
    *      path="/v1.0/business-settings",
    *      operationId="updateBusinessSetting",
-   *      tags={"business_setting"},
+   *      tags={"setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },
@@ -31,6 +31,7 @@ class BusinessSettingController extends Controller
    * *         @OA\Property(property="STRIPE_KEY", type="string", format="string",example="STRIPE_KEY"),
    *           @OA\Property(property="STRIPE_SECRET", type="string", format="string",example="STRIPE_SECRET"),
    *  *   @OA\Property(property="stripe_enabled", type="boolean", example=true),
+   *      @OA\Property(property="is_expert_price", type="boolean", example=true),
  *   @OA\Property(property="allow_pay_after_service", type="boolean", example=false),
  *   @OA\Property(property="allow_expert_booking", type="boolean", example=true),
  *   @OA\Property(property="allow_expert_self_busy", type="boolean", example=true),
@@ -110,6 +111,7 @@ class BusinessSettingController extends Controller
                 "STRIPE_SECRET",
                 "business_id",
                 'stripe_enabled',
+                'is_expert_price',
                 'allow_pay_after_service',
                 'allow_expert_booking',
                 'allow_expert_self_busy',
@@ -141,7 +143,7 @@ class BusinessSettingController extends Controller
    * @OA\Get(
    *      path="/v1.0/business-settings",
    *      operationId="getBusinessSetting",
-   *      tags={"business_setting"},
+   *      tags={"setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },
@@ -217,7 +219,7 @@ class BusinessSettingController extends Controller
    * @OA\Get(
    *      path="/v1.0/client/business-settings",
    *      operationId="getBusinessSettingSettingClient",
-   *      tags={"business_setting"},
+   *      tags={"setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },

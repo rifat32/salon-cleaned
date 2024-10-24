@@ -109,7 +109,7 @@ class SetUpController extends Controller
 
     }
     public function swaggerRefresh() {
-
+        Artisan::call('optimize:clear');
 Artisan::call('l5-swagger:generate');
 return "swagger generated ...............";
     }

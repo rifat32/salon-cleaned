@@ -24,6 +24,7 @@ class CreateStripeSettingsTable extends Migration
 
                 // Stripe settings
     $table->boolean('stripe_enabled')->default(false); // Whether Stripe is enabled
+    $table->boolean('is_expert_price')->default(false);
 
 
     // Business settings

@@ -27,6 +27,7 @@ class UpdateBusinessSettingRequest extends FormRequest
         'stripe_enabled' => 'boolean',
         'STRIPE_KEY' => 'string|nullable|required_if:stripe_enabled,true',
         'STRIPE_SECRET' => 'string|nullable|required_if:stripe_enabled,true',
+        'is_expert_price' => 'boolean',
         'allow_pay_after_service' => 'boolean',
         'allow_expert_booking' => 'boolean',
         'allow_expert_self_busy' => 'boolean',

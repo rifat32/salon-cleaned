@@ -15,6 +15,7 @@ class BusinessSetting extends Model
         "STRIPE_SECRET",
         "business_id",
         'stripe_enabled',
+        'is_expert_price',
         'allow_pay_after_service',
         'allow_expert_booking',
         'allow_expert_self_busy',
