@@ -831,9 +831,9 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 "sub_services.service",
                 "sub_services.service.translation",
                 "booking_packages.garage_package",
-                "customer",
+                "customer.translation",
                 "garage",
-                "expert"
+                "expert.translation"
             )
                 ->where([
                     "customer_id" => $request->user()->id
