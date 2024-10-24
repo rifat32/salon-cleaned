@@ -1546,7 +1546,7 @@ public function changeMultipleBookingStatuses(Request $request)
      *
      * @OA\Get(
      *      path="/v1.0/customers",
-     *      operationId="getBookings",
+     *      operationId="getCustomers",
      *      tags={"booking_management"},
      *       security={
      *           {"bearerAuth": {}}
@@ -1618,7 +1618,7 @@ public function changeMultipleBookingStatuses(Request $request)
      *     )
      */
 
-     public function getBookings($garage_id, $perPage, Request $request)
+     public function getCustomerss( Request $request)
      {
          try {
              $this->storeActivity($request, "");
@@ -1636,18 +1636,52 @@ public function changeMultipleBookingStatuses(Request $request)
                     ->select('bookings.user_id', 'sub_services.name')
                     ->distinct();  // Ensure unique sub-services per booking
             }])
-            ->whereHas("bookings", function($query) {
-                $query->where("bookings.garage_id", auth()->user()->business_id);
+            ->whereHas("bookings", function($query) use($request) {
+                $query->where("bookings.garage_id", auth()->user()->business_id)
+                ->when(request()->input("expert_id"), function ($query) {
+                    $query->where([
+                        "expert_id" => request()->input("expert_id")
+                    ]);
+                })
+                ->when(!empty($request->status), function($query) use ($request) {
+                    $statusArray = explode(',', $request->status);
+                    return $query->whereIn("status", $statusArray);
+                })
+                ->when(!empty($request->payment_status), function($query) use ($request) {
+                    $statusArray = explode(',', $request->payment_status);
+                    return $query->whereIn("payment_status", $statusArray);
+                })
+                ->when($request->date_filter === 'today', function($query) {
+                    return $query->whereDate('bookings.job_start_date', Carbon::today());
+                })
+                ->when($request->date_filter === 'this_week', function($query) {
+                    return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                })
+                ->when($request->date_filter === 'previous_week', function($query) {
+                    return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                })
+                ->when($request->date_filter === 'next_week', function($query) {
+                    return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                })
+                ->when($request->date_filter === 'this_month', function($query) {
+                    return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                                 ->whereYear('bookings.job_start_date', Carbon::now()->year);
+                })
+                ->when($request->date_filter === 'previous_month', function($query) {
+                    return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                                 ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+                })
+                ->when($request->date_filter === 'next_month', function($query) {
+                    return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                                 ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                });
             })
 
              ->when(!empty($request->start_date), function ($query) use ($request) {
-                 return $query->where('users.date', ">=", $request->start_date);
+                 return $query->where('users.created_at', ">=", $request->start_date);
              })
              ->when(!empty($request->end_date), function ($query) use ($request) {
-                 return $query->where('users.date', "<=", ($request->end_date . ' 23:59:59'));
-             })
-             ->when(!empty($request->expert_id), function ($query) use ($request) {
-                 return $query->where('users.expert_id', $request->expert_id);
+                 return $query->where('users.created_at', "<=", ($request->end_date . ' 23:59:59'));
              })
 
              ->when(!empty($request->search_key), function ($query) use ($request) {
@@ -1684,7 +1718,6 @@ public function changeMultipleBookingStatuses(Request $request)
          if ($request->filled("id") && empty($users)) {
              throw new Exception("No data found", 404);
          }
-
 
          return response()->json($users, 200);
 

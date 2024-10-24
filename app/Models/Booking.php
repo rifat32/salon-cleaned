@@ -48,7 +48,9 @@ class Booking extends Model
     public function customer(){
         return $this->belongsTo(User::class,'customer_id', 'id')->withTrashed();
     }
-
+    public function booking_payments(){
+        return $this->hasMany(JobPayment::class,'booking_id', 'id');
+    }
 
     public function booking_sub_services(){
         return $this->hasMany(BookingSubService::class,'booking_id', 'id');

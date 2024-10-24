@@ -827,7 +827,9 @@ $booking->clientSecret = $paymentIntent->client_secret;
         try {
             $this->storeActivity($request, "");
             $bookingQuery = Booking::with(
+                "sub_services.translation",
                 "sub_services.service",
+                "sub_services.service.translation",
                 "booking_packages.garage_package",
                 "customer",
                 "garage",
@@ -1458,7 +1460,9 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
         try {
             $this->storeActivity($request, "");
             $booking = Booking::with(
+                "sub_services.translation",
                 "sub_services.service",
+                "sub_services.service.translation",
                 "booking_packages.garage_package",
                 "customer",
                 "garage",
@@ -1682,7 +1686,7 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
 
             $booking->delete();
 
-           
+
 
             return response()->json(["ok" => true], 200);
         } catch (Exception $e) {
