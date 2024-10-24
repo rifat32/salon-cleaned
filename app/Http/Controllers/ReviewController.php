@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Models\Booking;
+use App\Models\BusinessSetting;
 use App\Models\Garage;
 use App\Models\GuestUser;
 
@@ -3027,6 +3028,16 @@ class ReviewController extends Controller
                     'message' => 'You have already reviewed this booking.',
                 ], 400); // Bad Request status
             }
+            $is_auto_booking_approve = false;
+            $businessSetting = BusinessSetting::where([
+                "business_id" => auth()->user()->business_id
+            ])
+            ->first();
+
+            if(!empty($businessSetting)) {
+               $is_auto_booking_approve = $businessSetting->is_auto_booking_approve;
+            }
+
 
             // Prepare the review data
             $review = [
@@ -3036,6 +3047,7 @@ class ReviewController extends Controller
                 'rate' => $request["rate"],
                 'user_id' => $request->user()->id,
                 'comment' => $request["comment"],
+                "is_auto_booking_approve" => ($is_auto_booking_approve?"approve":"cancel")
                 // 'question_id' => $singleReview["question_id"],
                 // 'tag_id' => $request->tag_id,
                 // 'star_id' => $request->star_id,

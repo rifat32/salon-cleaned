@@ -112,6 +112,7 @@ class SettingController extends Controller
                 "business_id",
                 'stripe_enabled',
                 'is_expert_price',
+                'is_auto_booking_approve',
                 'allow_pay_after_service',
                 'allow_expert_booking',
                 'allow_expert_self_busy',
