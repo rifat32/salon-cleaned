@@ -16,7 +16,7 @@ class CreateGarageTimesTable extends Migration
         Schema::create('garage_times', function (Blueprint $table) {
             $table->id();
             $table->integer("day");
-
+            $table->json('time_slots');
 
             $table->time("opening_time");
 

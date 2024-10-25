@@ -881,13 +881,13 @@ class AuthController extends Controller
      *
      *      *    @OA\Property(property="times", type="string", format="array",example={
      *
-     *{"day":0,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-     *{"day":1,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-     *{"day":2,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-     *{"day":3,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-     *{"day":4,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-     *{"day":5,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true},
-     *{"day":6,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true}
+     *{"day":0,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true,"time_slots":{}},
+     *{"day":1,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true,"time_slots":{}},
+     *{"day":2,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true,"time_slots":{}},
+     *{"day":3,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true,"time_slots":{}},
+     *{"day":4,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true,"time_slots":{}},
+     *{"day":5,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true,"time_slots":{}},
+     *{"day":6,"opening_time":"10:10:00","closing_time":"10:15:00","is_closed":true,"time_slots":{}}
      *
      * }),
      *
@@ -998,6 +998,8 @@ class AuthController extends Controller
                         "opening_time" => $garage_time["opening_time"],
                         "closing_time" => $garage_time["closing_time"],
                         "is_closed" => $garage_time["is_closed"],
+                        "time_slots" => $garage_time["time_slots"],
+
                     ]);
                 }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DB;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -72,6 +73,25 @@ class User extends Authenticatable
     public function bookings()
     {
         return $this->hasMany(Booking::class, 'customer_id', 'id');
+    }
+    public function lastBooking()
+    {
+        return $this->bookings()->latest()->limit(1);
+    }
+
+    public function services()
+    {
+        return $this->bookings()
+            ->join('booking_sub_services', 'bookings.id', '=', 'booking_sub_services.booking_id')
+            ->join('sub_services', 'booking_sub_services.sub_service_id', '=', 'sub_services.id')
+            ->where('bookings.garage_id', auth()->user()->business_id)
+            ->select(
+                'bookings.customer_id',
+                'sub_services.id',
+                'sub_services.name',
+                DB::raw('COUNT(sub_services.id) as selection_count')  // Count for each service
+            )
+            ->groupBy('sub_services.id', 'bookings.customer_id', 'sub_services.name');
     }
 
     public function expert_bookings()

@@ -27,13 +27,26 @@ class SubService extends Model
      {
         $price = $this->default_price;
         if(!empty(request()->input("expert_id"))) {
-             $subServicePrice = SubServicePrice::where([
-               "sub_service_id" => $this->id,
-               "expert_id" => request()->input("expert_id")
-             ])->first();
-             if(!empty($subServicePrice)) {
-                $price = $subServicePrice->price;
-             }
+            $user = User::where("id", request()->input("expert_id"))->first();
+
+            $businessSetting = BusinessSetting::where([
+                "business_id" => $user->business_id
+            ])->first();
+
+            if(!empty($businessSetting) && empty($businessSetting->is_expert_price)) {
+                $price = $this->default_price;
+            } else {
+                $subServicePrice = SubServicePrice::where([
+                    "sub_service_id" => $this->id,
+                    "expert_id" => request()->input("expert_id")
+                  ])->first();
+                  if(!empty($subServicePrice)) {
+                     $price = $subServicePrice->price;
+                  }
+            }
+
+
+
         }
          return number_format($price, 2); // Format as currency
      }
@@ -58,5 +71,42 @@ class SubService extends Model
     public function garage_automobile_sub_services () {
         return $this->hasMany(GarageSubService::class,"sub_service_id","id");
    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

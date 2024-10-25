@@ -1693,7 +1693,26 @@ class DashboardManagementController extends Controller
 
     public function bookings($range = 'today')
     {
-        return Booking::when($range === 'today', function ($query) {
+        return Booking::
+        with([
+            "sub_services" => function($query) {
+                $query->select(
+                    "sub_services.id",
+                    "sub_services.name"
+                );
+            },
+
+            "customer"=> function($query) {
+                $query->select(
+                    "id",
+                    "first_Name",
+                    "last_Name"
+                );
+            },
+        ])
+
+
+        ->when($range === 'today', function ($query) {
                 $query->whereDate('job_start_date', Carbon::today());
             })
             ->when($range === 'this_week', function ($query) {
@@ -1713,7 +1732,11 @@ class DashboardManagementController extends Controller
             })
             ->when($range === 'previous_month', function ($query) {
                 $query->whereBetween('job_start_date', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()]);
-            });
+            })
+            ->when($range === 'all' && request()->filled("start_date") && request()->filled("end_date"), function ($query) {
+                $query->whereBetween('job_start_date', [request()->start_date, request()->end_date]);
+            })
+            ;
     }
 
     // Method to get counts for each status
@@ -2189,6 +2212,12 @@ class DashboardManagementController extends Controller
                 $expert["next_month_bookings"] = $this->bookingsByStatus('next_month', $expert->id);
                 $expert["previous_week_bookings"] = $this->bookingsByStatus('previous_week', $expert->id);
                 $expert["previous_month_bookings"] = $this->bookingsByStatus('previous_month', $expert->id);
+
+                if(request()->filled("start_date") && request()->filled("end_date")){
+                    $expert["by_date"] = $this->bookingsByStatus('all', $expert->id);
+                }
+
+
 
             }
 

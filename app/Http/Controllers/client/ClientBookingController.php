@@ -29,7 +29,7 @@ use App\Models\JobPayment;
 use App\Models\Notification;
 use App\Models\NotificationTemplate;
 use App\Models\PreBooking;
-use App\Models\StripeSetting;
+use App\Models\BusinessSetting;
 use App\Models\SubService;
 use App\Models\User;
 use Carbon\Carbon;
@@ -285,13 +285,17 @@ class ClientBookingController extends Controller
 
                 if($booking->payment_method="stripe") {
  // Stripe settings retrieval based on business or garage ID
- $stripeSetting = StripeSetting::where('business_id', $booking->garage_id)->first();
+ $stripeSetting = BusinessSetting::where('business_id', $booking->garage_id)->first();
 
- if (!$stripeSetting) {
-     return response()->json([
-         "message" => "Stripe is not enabled"
-     ], 403);
- }
+ if (empty($stripeSetting)) {
+    throw new Exception("No stripe seting found",403);
+
+}
+
+if (empty($stripeSetting->stripe_enabled)) {
+    throw new Exception("Stripe is not enabled",403);
+
+}
 
  // Set Stripe client
  $stripe = new \Stripe\StripeClient($stripeSetting->STRIPE_SECRET);

@@ -83,6 +83,13 @@ class AuthRegisterGarageRequestClient extends FormRequest
                 'required', 'date_format:H:i', new TimeValidation, new TimeOrderRule
             ],
             "times.*.is_closed" => ['required', "boolean"],
+            'times.*.busy_slots' => [
+                'present',
+                'array',
+            ],
+            'times.*.busy_slots.*' => [
+                'date_format:g:i A',
+            ],
 
 
 

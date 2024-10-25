@@ -13649,43 +13649,50 @@
                                                 "day": 0,
                                                 "opening_time": "10:10:00",
                                                 "closing_time": "10:15:00",
-                                                "is_closed": true
+                                                "is_closed": true,
+                                                "time_slots": []
                                             },
                                             {
                                                 "day": 1,
                                                 "opening_time": "10:10:00",
                                                 "closing_time": "10:15:00",
-                                                "is_closed": true
+                                                "is_closed": true,
+                                                "time_slots": []
                                             },
                                             {
                                                 "day": 2,
                                                 "opening_time": "10:10:00",
                                                 "closing_time": "10:15:00",
-                                                "is_closed": true
+                                                "is_closed": true,
+                                                "time_slots": []
                                             },
                                             {
                                                 "day": 3,
                                                 "opening_time": "10:10:00",
                                                 "closing_time": "10:15:00",
-                                                "is_closed": true
+                                                "is_closed": true,
+                                                "time_slots": []
                                             },
                                             {
                                                 "day": 4,
                                                 "opening_time": "10:10:00",
                                                 "closing_time": "10:15:00",
-                                                "is_closed": true
+                                                "is_closed": true,
+                                                "time_slots": []
                                             },
                                             {
                                                 "day": 5,
                                                 "opening_time": "10:10:00",
                                                 "closing_time": "10:15:00",
-                                                "is_closed": true
+                                                "is_closed": true,
+                                                "time_slots": []
                                             },
                                             {
                                                 "day": 6,
                                                 "opening_time": "10:10:00",
                                                 "closing_time": "10:15:00",
-                                                "is_closed": true
+                                                "is_closed": true,
+                                                "time_slots": []
                                             }
                                         ]
                                     }

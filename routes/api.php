@@ -655,6 +655,8 @@ Route::patch('/v1.0/garage-times', [GarageTimesController::class, "updateGarageT
 Route::get('/v1.0/garage-times/{garage_id}', [GarageTimesController::class, "getGarageTimes"]);
 
 
+
+
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // Garage Background Image Management
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -756,6 +758,7 @@ Route::get('/v1.0/bookings/{garage_id}/{perPage}', [BookingController::class, "g
 
 Route::get('/v1.0/customers', [BookingController::class, "getCustomers"]);
 
+Route::get('/v2.0/customers', [BookingController::class, "getCustomersV2"]);
 
 Route::get('/v1.0/upcoming-bookings', [BookingController::class, "getUpcomingBookings"]);
 
@@ -1291,3 +1294,21 @@ Route::delete('/v1.0/client/pre-bookings/{id}', [ClientPreBookingController::cla
 
 
 Route::post('webhooks/stripe', [CustomWebhookController::class, "handleStripeWebhook"])->name("stripe.webhook");
+
+
+
+
+Route::get('/whatsapp', function(Request $request) {
+    $response = Http::withHeaders([
+        'Authorization' => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJhMWUxNzdlYS0yODc4LTQ3YTMtOGUxYi04N2E0Y2MxZTczM2YiLCJ1bmlxdWVfbmFtZSI6InJpZmF0YmlsYWxwaGlsaXBzQGdtYWlsLmNvbSIsIm5hbWVpZCI6InJpZmF0YmlsYWxwaGlsaXBzQGdtYWlsLmNvbSIsImVtYWlsIjoicmlmYXRiaWxhbHBoaWxpcHNAZ21haWwuY29tIiwiYXV0aF90aW1lIjoiMTAvMjUvMjAyNCAxMzowNToyNCIsInRlbmFudF9pZCI6IjM2MzMxNCIsImRiX25hbWUiOiJtdC1wcm9kLVRlbmFudHMiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBRE1JTklTVFJBVE9SIiwiZXhwIjoyNTM0MDIzMDA4MDAsImlzcyI6IkNsYXJlX0FJIiwiYXVkIjoiQ2xhcmVfQUkifQ.qPCV8OoqfFQrK9XGeFSx2Qa3Lb2tDG2l6tQvoA4hyb0",
+        'Content-Type' => 'application/json',
+    ])->post("https://live-mt-server.wati.io/363314", [
+        'to' => "+8801771034383",
+        'message' => "Hi!!",
+    ]);
+    if ($response->failed()) {
+        Log::error('Error response:', [$response->json()]);
+        return response()->json(['error' => 'Failed to send message', 'details' => $response->json()], 400);
+    }
+    return response()->json($response->json());
+} );

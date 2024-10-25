@@ -14,10 +14,12 @@ class GarageTime extends Model
         "opening_time",
         "closing_time",
         "garage_id",
-        "is_closed"
+        "is_closed",
+        "time_slots"
     ];
 
     protected  $casts = [
+        'time_slots' => 'array',
         'opening_time' => 'datetime:H:i',
         'closing_time' => 'datetime:H:i',
     ];

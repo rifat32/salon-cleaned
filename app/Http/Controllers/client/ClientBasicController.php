@@ -46,7 +46,11 @@ class ClientBasicController extends Controller
                         ->where([
                             "garage_times.day" => $dayNumber
                         ])
-                        ->select("garage_times.id", "garage_times.opening_time", "garage_times.closing_time", "garage_times.garage_id");
+                        ->select("garage_times.id", "garage_times.opening_time",
+                        "garage_times.time_slots",
+
+
+                        "garage_times.closing_time", "garage_times.garage_id");
                 }
 
             ]
@@ -1397,7 +1401,7 @@ class ClientBasicController extends Controller
                     $query->select('services.*');
                 },
                 'garage_times' => function ($query) {
-                    $query->select('id', 'garage_id', 'day', 'opening_time', 'closing_time', 'is_closed');
+                    $query->select('id', 'garage_id', 'day', 'opening_time', 'time_slots', 'closing_time', 'is_closed');
                 },
                 'garageGalleries' => function ($query) {
                     $query->select('garage_galleries.*');
