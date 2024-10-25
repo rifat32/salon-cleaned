@@ -52,6 +52,9 @@ class BookingUpdateRequestClient extends FormRequest
             'booking_garage_package_ids' => 'nullable|array',
             'booking_garage_package_ids.*' => 'nullable|numeric',
 
+            "payments" => "present|array",
+            "payments.*.payment_type" => "required|string",
+            "payments.*.amount" => "required|numeric",
         ];
     }
 }

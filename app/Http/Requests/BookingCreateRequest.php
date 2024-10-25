@@ -31,6 +31,7 @@ class BookingCreateRequest extends FormRequest
                 'numeric',
                  new ValidateExpert(NULL)
             ],
+            "payment_method" => "nullable|string",
 
    'booked_slots' => [
     'required',

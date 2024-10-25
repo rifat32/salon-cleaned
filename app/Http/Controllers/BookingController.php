@@ -463,7 +463,7 @@ class BookingController extends Controller
             $insertableData["created_by"] = $request->user()->id;
             $insertableData["created_from"] = "garage_owner_side";
             $insertableData["payment_status"] = "pending";
-            $insertableData["payment_method"] = "cash";
+
 
 
 

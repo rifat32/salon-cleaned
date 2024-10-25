@@ -734,6 +734,48 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 // ));}
 
 
+                if(!empty($$updatableData["payments"])) {
+                    $total_payable = $booking->final_price;
+
+
+                    $payments = collect($updatableData["payments"]);
+
+                    $payment_amount =  $payments->sum("amount");
+
+                    $job_payment_amount =  JobPayment::where([
+                        "booking_id" => $booking->id
+                    ])->sum("amount");
+
+                    $total_payment = $job_payment_amount + $payment_amount;
+
+                    if ($total_payable < $total_payment) {
+                        return response([
+                            "payment is greater than payable"
+                        ], 409);
+                    }
+
+                    foreach ($payments->all() as $payment) {
+
+                        JobPayment::create([
+                            "booking_id" => $booking->id,
+                            "payment_type" => $payment["payment_type"],
+                            "amount" => $payment["amount"],
+                        ]);
+                    }
+
+
+                    if ($total_payable == $total_payment) {
+                        Booking::where([
+                            "id" => $updatableData["booking_id"]
+                        ])
+                            ->update([
+                                "payment_status" => "complete",
+                                "payment_method" => "cash"
+                            ]);
+                    }
+
+                }
+
                 return response($booking, 201);
             });
         } catch (Exception $e) {

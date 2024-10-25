@@ -1380,8 +1380,8 @@ class JobController extends Controller
      * *    @OA\Property(property="booking_id", type="number", format="number",example="1"),
      *  * *    @OA\Property(property="garage_id", type="number", format="number",example="1"),
      *  * *    @OA\Property(property="payments", type="string", format="array",example={
-     * {"payment_type_id":1,"amount":50},
-     *  * {"payment_type_id":1,"amount":60},
+     * {"payment_type":"card","amount":50},
+     *  * {"payment_type":"card","amount":60},
      * }),
 
      *
@@ -1484,7 +1484,7 @@ class JobController extends Controller
 
                     JobPayment::create([
                         "booking_id" => $booking->id,
-                        "payment_type_id" => $payment["payment_type_id"],
+                        "payment_type" => $payment["payment_type"],
                         "amount" => $payment["amount"],
                     ]);
                 }

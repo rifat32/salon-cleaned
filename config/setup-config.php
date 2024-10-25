@@ -165,6 +165,10 @@ return [
             "role" => "garage_owner",
             "permissions" => [
 
+                "holiday_create",
+                "holiday_update",
+                "holiday_view",
+                "holiday_delete",
 
                 "user_create",
                 "user_update",
@@ -553,6 +557,13 @@ return [
 
     ],
     "permissions" => [
+"holiday_create",
+"holiday_update",
+"holiday_view",
+"holiday_delete",
+
+
+
         "review_manage",
 
         "sub_service_price_create",

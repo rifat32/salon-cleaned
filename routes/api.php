@@ -30,6 +30,7 @@ use App\Http\Controllers\GaragesController;
 use App\Http\Controllers\GarageServiceController;
 use App\Http\Controllers\GarageServicePriceController;
 use App\Http\Controllers\GarageTimesController;
+use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\JobBidController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\NotificationController;
@@ -1212,6 +1213,31 @@ Route::post('/v1.0/client/pre-bookings-video', [ClientPreBookingController::clas
 
 Route::middleware(['auth:api'])->group(function () {
 
+
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // holiday  management section
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+    Route::post('/v1.0/holidays', [HolidayController::class, "createHoliday"]);
+
+    Route::put('/v1.0/holidays', [HolidayController::class, "updateHoliday"]);
+
+
+
+    Route::get('/v1.0/holidays', [HolidayController::class, "getHolidays"]);
+
+
+    Route::get('/v1.0/holidays/{id}', [HolidayController::class, "getHolidayById"]);
+    
+    Route::delete('/v1.0/holidays/{ids}', [HolidayController::class, "deleteHolidaysByIds"]);
+
+
+
+
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // end holiday  management section
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     Route::get('/v1.0/client/favourite-sub-services/{perPage}', [ClientBasicController::class, "getFavouriteSubServices"]);
 
