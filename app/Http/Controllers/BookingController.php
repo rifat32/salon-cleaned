@@ -731,15 +731,10 @@ class BookingController extends Controller
                     ], 404);
                 }
 
-
-
-
-
                 if ($booking->status === "converted_to_job") {
                     // Return an error response indicating that the status cannot be updated
                     return response()->json(["message" => "Status cannot be updated because it is converted_to_job"], 422);
                 }
-
 
                 $booking->update(collect($updatableData)->only([
                     "status",
@@ -750,11 +745,6 @@ class BookingController extends Controller
                     "booked_slots",
                     "reason",
                 ])->toArray());
-
-
-
-
-
 
 
                 BookingSubService::where([
@@ -875,6 +865,48 @@ class BookingController extends Controller
                 //         "booking_updated_by_garage_owner"
                 //     ));
                 // }
+
+                if(!empty($$updatableData["payments"])) {
+                    $total_payable = $booking->final_price;
+
+
+                    $payments = collect($updatableData["payments"]);
+
+                    $payment_amount =  $payments->sum("amount");
+
+                    $job_payment_amount =  JobPayment::where([
+                        "booking_id" => $booking->id
+                    ])->sum("amount");
+
+                    $total_payment = $job_payment_amount + $payment_amount;
+
+                    if ($total_payable < $total_payment) {
+                        return response([
+                            "payment is greater than payable"
+                        ], 409);
+                    }
+
+                    foreach ($payments->all() as $payment) {
+
+                        JobPayment::create([
+                            "booking_id" => $booking->id,
+                            "payment_type" => $payment["payment_type"],
+                            "amount" => $payment["amount"],
+                        ]);
+                    }
+
+
+                    if ($total_payable == $total_payment) {
+                        Booking::where([
+                            "id" => $updatableData["booking_id"]
+                        ])
+                            ->update([
+                                "payment_status" => "complete",
+                                "payment_method" => "cash"
+                            ]);
+                    }
+
+                }
 
                 return response($booking, 201);
             });

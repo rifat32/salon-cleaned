@@ -22,7 +22,7 @@ class CreateHolidaysTable extends Migration
             $table->boolean('repeats_annually')->default(false);
             $table->boolean("is_active")->default(true);
             $table->unsignedBigInteger("business_id");
-            $table->foreign('business_id')->references('id')->on('businesses')->onDelete('cascade');
+            $table->foreign('business_id')->references('id')->on('garages')->onDelete('cascade');
 
             $table->unsignedBigInteger("created_by")->nullable();
             $table->foreign('created_by')
