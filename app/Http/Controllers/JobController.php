@@ -1346,11 +1346,7 @@ class JobController extends Controller
             // Fetch payments
             $job_payments = $query->get();
 
-            if ($job_payments->isEmpty()) {
-                return response()->json([
-                    "message" => "No payments found"
-                ], 404);
-            }
+
 
             return response()->json($job_payments, 200);
         } catch (Exception $e) {
