@@ -1126,7 +1126,7 @@ Route::delete('/v1.0/products/{id}', [ProductController::class, "deleteProductBy
 // client routes
 // !!!!!!!@@@@@@@@@@@@$$$$$$$$$$$$%%%%%%%%%%%%%%%%^^^^^^^^^^
 
-Route::get('/v1.0/client/business-settings', [SettingController::class, "getBusinessSettingsSettingClient"]);
+Route::get('/v1.0/client/business-settings', [SettingController::class, "getBusinessSettingsClient"]);
 
 Route::get('/v1.0/garage-packages/get/all/{garage_id}', [GaragePackageController::class, "getGaragePackagesAll"]);
 Route::get('/v1.0/client/garage-packages/single/{garage_id}/{id}', [GaragePackageController::class, "getGaragePackageByIdClient"]);
@@ -1229,7 +1229,7 @@ Route::middleware(['auth:api'])->group(function () {
 
 
     Route::get('/v1.0/holidays/{id}', [HolidayController::class, "getHolidayById"]);
-    
+
     Route::delete('/v1.0/holidays/{ids}', [HolidayController::class, "deleteHolidaysByIds"]);
 
 

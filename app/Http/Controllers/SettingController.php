@@ -219,7 +219,7 @@ class SettingController extends Controller
    *
    * @OA\Get(
    *      path="/v1.0/client/business-settingss",
-   *      operationId="getBusinessSettingSettingsClient",
+   *      operationId="getBusinessSettingsClient",
    *      tags={"setting"},
    *       security={
    *           {"bearerAuth": {}}
@@ -306,7 +306,7 @@ class SettingController extends Controller
    *     )
    */
 
-   public function getBusinessSettingSettingsClient(Request $request)
+   public function getBusinessSettingsClient(Request $request)
    {
        try {
            $this->storeActivity($request, "DUMMY activity","DUMMY description");
