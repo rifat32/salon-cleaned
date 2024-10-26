@@ -58,7 +58,7 @@ class BookingUpdateRequest extends FormRequest
             "total_price" => "nullable|numeric",
             "additional_information" => "nullable|string",
 
-            "status"=>"required|string|in:pending,confirmed,rejected_by_garage_owner",
+            "status" => "required|string|in:pending,rejected_by_garage_owner,check_in,arrived,converted_to_job",
             "job_start_date" => "required_if:status,confirmed|date",
 
         'booking_sub_service_ids' => 'nullable|array',
