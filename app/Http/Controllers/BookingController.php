@@ -929,7 +929,7 @@ class BookingController extends Controller
 
                     if ($total_payable < $total_payment) {
                         return response([
-                            "message" => "payment is greater than payable"
+                            "message" => "payment is greater than payable. You need to pay ".$total_payable." You are paying ". $total_payment
                         ], 409);
                     }
 
@@ -1563,7 +1563,8 @@ public function changeMultipleBookingStatuses(Request $request)
                 "booking_packages.garage_package",
                 "customer",
                 "garage",
-                "expert"
+                "expert",
+                "payments",
 
             )
                 ->when(!auth()->user()->hasRole("garage_owner") && !auth()->user()->hasRole("business_receptionist"), function ($query) {

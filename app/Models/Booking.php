@@ -56,6 +56,10 @@ class Booking extends Model
         return $this->hasMany(JobPayment::class,'booking_id', 'id');
     }
 
+    public function payments(){
+        return $this->hasMany(JobPayment::class,'booking_id', 'id');
+    }
+
     public function booking_sub_services(){
         return $this->hasMany(BookingSubService::class,'booking_id', 'id');
     }
