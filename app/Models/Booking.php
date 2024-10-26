@@ -27,8 +27,12 @@ class Booking extends Model
         "price",
         "discount_type",
         "discount_amount",
+        "tip_type",
+        "tip_amount",
         "created_by",
         "created_from"
+
+
 
     ];
     protected $casts = [

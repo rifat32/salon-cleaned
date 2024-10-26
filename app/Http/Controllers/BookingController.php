@@ -77,10 +77,16 @@ class BookingController extends Controller
 
         $total_discount = $discount + $coupon_discount;
 
+        $totalTip = $this->canculate_discounted_price(
+            $booking->price,
+            $booking->tip_type,
+            $booking->tip_amount
+        );
+
 
         // Prepare payment intent data
         $paymentIntentData = [
-            'amount' => ($booking->price) * 100, // Adjusted amount in cents
+            'amount' => ($booking->price + $totalTip) * 100, // Adjusted amount in cents
             'currency' => 'usd',
             'payment_method_types' => ['card'],
             'metadata' => [
@@ -275,7 +281,11 @@ class BookingController extends Controller
 
         $total_discount = $discount + $coupon_discount;
 
-
+        $totalTip = $this->canculate_discounted_price(
+            $booking->price,
+            $booking->tip_type,
+            $booking->tip_amount
+        );
 
         $session_data = [
             'payment_method_types' => ['card'],
@@ -291,7 +301,7 @@ class BookingController extends Controller
                         'product_data' => [
                             'name' => 'Your Service set up amount',
                         ],
-                        'unit_amount' => $booking->price * 100, // Amount in cents
+                        'unit_amount' => ($booking->price + $totalTip) * 100, // Amount in cents
                     ],
                     'quantity' => 1,
                 ]
@@ -589,6 +599,12 @@ class BookingController extends Controller
 
             $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
 
+            $booking->final_price += $this->canculate_discounted_price(
+                $booking->price,
+                $booking->tip_type,
+                $booking->tip_amount
+            );
+
             $booking->save();
 
 
@@ -871,7 +887,13 @@ class BookingController extends Controller
                 $booking->final_price = $booking->price;
                 $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
                 $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+                $booking->final_price += $this->canculate_discounted_price(
+                    $booking->price,
+                    $booking->tip_type,
+                    $booking->tip_amount
+                );
                 $booking->save();
+
 
                 $notification_template = NotificationTemplate::where([
                     "type" => "booking_updated_by_garage_owner"

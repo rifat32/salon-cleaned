@@ -55,6 +55,9 @@ class BookingUpdateRequestClient extends FormRequest
             "payments" => "present|array",
             "payments.*.payment_type" => "required|string",
             "payments.*.amount" => "required|numeric",
+
+            "tip_type" => "nullable|string|in:fixed,percentage",
+            "tip_amount" => "required_if:tip_type,!=,null|numeric|min:0",
         ];
     }
 }

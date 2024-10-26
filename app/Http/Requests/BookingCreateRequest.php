@@ -68,6 +68,8 @@ class BookingCreateRequest extends FormRequest
 "discount_type" => "nullable|string|in:fixed,percentage",
 "discount_amount" => "required_if:discount_type,!=,null|numeric|min:0",
 
+"tip_type" => "nullable|string|in:fixed,percentage",
+"tip_amount" => "required_if:tip_type,!=,null|numeric|min:0",
 
         ];
     }

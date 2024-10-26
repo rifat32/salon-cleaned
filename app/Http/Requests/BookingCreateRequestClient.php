@@ -61,6 +61,8 @@ class BookingCreateRequestClient extends FormRequest
     'booking_garage_package_ids' => 'nullable|array',
     'booking_garage_package_ids.*' => 'nullable|numeric',
 
+"tip_type" => "nullable|string|in:fixed,percentage",
+"tip_amount" => "required_if:tip_type,!=,null|numeric|min:0",
 
 
         ];

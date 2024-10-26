@@ -42,6 +42,11 @@ class CreateBookingsTable extends Migration
             $table->enum("discount_type",['fixed', 'percentage'])->default("fixed")->nullable();
             $table->double("discount_amount")->nullable()->default(0);
 
+            $table->enum("tip_type",['fixed', 'percentage'])->default("fixed")->nullable();
+            $table->double("tip_amount")->nullable()->default(0);
+
+
+
             $table->double("price")->default(0);
 
             $table->double("final_price")->default(0);

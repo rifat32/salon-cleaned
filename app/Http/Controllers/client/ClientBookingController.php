@@ -271,6 +271,13 @@ class ClientBookingController extends Controller
 
                     $booking->coupon_discount_amount
                 );
+                $booking->final_price += $this->canculate_discounted_price(
+                    $booking->price,
+                    $booking->tip_type,
+                    $booking->tip_amount
+                );
+
+
                 $booking->save();
 
 
@@ -318,10 +325,15 @@ if (empty($stripeSetting->stripe_enabled)) {
 
  $total_discount = $discount + $coupon_discount;
 
+ $tipAmount = $this->canculate_discounted_price(
+    $booking->price,
+    $booking->tip_type,
+    $booking->tip_amount
+);
 
  // Prepare payment intent data
  $paymentIntentData = [
-     'amount' => ($booking->price) * 100, // Adjusted amount in cents
+     'amount' => ($booking->price + $tipAmount) * 100, // Adjusted amount in cents
      'currency' => 'usd',
      'payment_method_types' => ['card'],
      'metadata' => [
@@ -735,7 +747,17 @@ $booking->clientSecret = $paymentIntent->client_secret;
 
                 $booking->final_price = $booking->price;
                 $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
+
                 $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+
+                $booking->final_price += $this->canculate_discounted_price(
+                    $booking->price,
+                    $booking->tip_type,
+                    $booking->tip_amount
+                );
+
+
+
                 $booking->save();
 
 
