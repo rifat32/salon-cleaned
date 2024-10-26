@@ -2114,6 +2114,7 @@ class DashboardManagementController extends Controller
                  }
              ])
                  ->orderBy('this_month_sales', 'desc') // Sort by this month's sales
+                 ->limit(5)
                  ->get();
 
 
