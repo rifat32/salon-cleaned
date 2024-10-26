@@ -36,7 +36,7 @@ class BookingUpdateMail extends Mailable
         $services = $this->booking->booking_sub_services;
 
         $business_id = $salon->id ?? null;
-        $is_default =  0;
+        $is_default = empty($business_id) ? 1 : 0;
 
         $email_content = EmailTemplate::where([
             "type" => "booking_update",
