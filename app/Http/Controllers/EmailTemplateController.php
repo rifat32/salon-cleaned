@@ -7,6 +7,7 @@ use App\Http\Requests\EmailTemplateUpdateRequest;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Models\EmailTemplate;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -80,7 +81,7 @@ class EmailTemplateController extends Controller
     public function createEmailTemplate(EmailTemplateCreateRequest $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "DUMMY activity","DUMMY description");
             return    DB::transaction(function () use (&$request) {
                 if (!$request->user()->hasPermissionTo('template_create')) {
                     return response()->json([
@@ -90,20 +91,37 @@ class EmailTemplateController extends Controller
 
                 $request_data = $request->validated();
                 $request_data["wrapper_id"]  = !empty($request_data["wrapper_id"])?$request_data["wrapper_id"]:1;
+                // $request_data["template"] = json_encode($request_data["template"]);
+
+                $request_data["is_active"] = 1;
+                $request_data["is_default"] = 0;
+                $request_data["created_by"] = auth()->user()->id;
+                $request_data["business_id"] = auth()->user()->business_id;
+
+                if (empty(auth()->user()->business_id)) {
+                    $request_data["business_id"] = NULL;
+                    if ($request->user()->hasRole('superadmin')) {
+                        $request_data["is_default"] = 1;
+                    }
+                }
+
+
+
+
                 $template =  EmailTemplate::create($request_data);
 
 
 
 //  if the template is active then other templates of this type will deactive
-                if ($template->is_active) {
-                    EmailTemplate::where("id", "!=", $template->id)
-                        ->where([
-                            "type" => $template->type
-                        ])
-                        ->update([
-                            "is_active" => false
-                        ]);
-                }
+                // if ($template->is_active) {
+                //     EmailTemplate::where("id", "!=", $template->id)
+                //         ->where([
+                //             "type" => $template->type
+                //         ])
+                //         ->update([
+                //             "is_active" => false
+                //         ]);
+                // }
 
 
                 return response($template, 201);
@@ -128,7 +146,7 @@ class EmailTemplateController extends Controller
      *  @OA\RequestBody(
      *         required=true,
      *  description="use [FirstName],[LastName],[FullName],[AccountVerificationLink],[ForgotPasswordLink]
-     * [customer_FirstName],[customer_LastName],[customer_FullName],[garage_owner_FirstName],[garage_owner_LastName],[garage_owner_FullName],[automobile_make],[automobile_model],[car_registration_no],[car_registration_year],[status],[payment_status],[additional_information],[discount_type],[discount_amount],[price],[job_start_date],[job_start_time],[job_end_time],[coupon_code],[fuel],[transmission]
+     * [customer_FirstName],[customer_LastName],[customer_FullName],[business_owner_FirstName],[business_owner_LastName],[business_owner_FullName],[automobile_make],[automobile_model],[car_registration_no],[car_registration_year],[status],[payment_status],[additional_information],[discount_type],[discount_amount],[price],[job_start_date],[job_start_time],[job_end_time],[coupon_code],[fuel],[transmission]
      *  in the template",
      *         @OA\JsonContent(
      *            required={"id","template","is_active"},
@@ -177,7 +195,7 @@ class EmailTemplateController extends Controller
     public function updateEmailTemplate(EmailTemplateUpdateRequest $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "DUMMY activity","DUMMY description");
             return    DB::transaction(function () use (&$request) {
                 if (!$request->user()->hasPermissionTo('template_update')) {
                     return response()->json([
@@ -186,33 +204,46 @@ class EmailTemplateController extends Controller
                 }
                 $request_data = $request->validated();
                 $request_data["wrapper_id"]  = !empty($request_data["wrapper_id"])?$request_data["wrapper_id"]:1;
-                $template  =  tap(EmailTemplate::where(["id" => $request_data["id"]]))->update(
+                // $request_data["template"] = json_encode($request_data["template"]);
+
+$query = [
+    "id" => $request_data["id"],
+];
+
+         if(!empty(auth()->user()->business_id)) {
+           $query["business_id"] = auth()->user()->business_id;
+           $query["is_default"] = 0;
+         } else {
+            $query["business_id"] = NULL;
+            $query["is_default"] = 1;
+         }
+
+                $template  =  tap(EmailTemplate::where($query))->update(
                     collect($request_data)->only([
                         "name",
                         "template",
                         "wrapper_id"
                     ])->toArray()
                 )
-
-
                     ->first();
+
+
                     if(!$template) {
                         return response()->json([
                             "message" => "no template found"
                             ],404);
-
                 }
 
                 //    if the template is active then other templates of this type will deactive
-                if ($template->is_active) {
-                    EmailTemplate::where("id", "!=", $template->id)
-                        ->where([
-                            "type" => $template->type
-                        ])
-                        ->update([
-                            "is_active" => false
-                        ]);
-                }
+                // if ($template->is_active) {
+                //     EmailTemplate::where("id", "!=", $template->id)
+                //         ->where([
+                //             "type" => $template->type
+                //         ])
+                //         ->update([
+                //             "is_active" => false
+                //         ]);
+                // }
                 return response($template, 201);
             });
         } catch (Exception $e) {
@@ -299,7 +330,7 @@ class EmailTemplateController extends Controller
     public function getEmailTemplates($perPage, Request $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "DUMMY activity","DUMMY description");
             if (!$request->user()->hasPermissionTo('template_view')) {
                 return response()->json([
                     "message" => "You can not perform this action"
@@ -317,14 +348,39 @@ class EmailTemplateController extends Controller
                 });
             }
 
+            if (!empty(auth()->user()->business_id)) {
+                $templateQuery = $templateQuery
+                ->where([
+                    'business_id'=>auth()->user()->business_id,
+                    "is_default" => 0
+
+                ])
+
+
+                ;
+            } else {
+                $templateQuery = $templateQuery
+                ->where([
+                    'business_id'=> NULL,
+                    "is_default" => 1
+
+                ]);
+            }
+
             if (!empty($request->start_date)) {
                 $templateQuery = $templateQuery->where('created_at', ">=", $request->start_date);
             }
             if (!empty($request->end_date)) {
-                $templateQuery = $templateQuery->where('created_at', "<=", $request->end_date);
+                $templateQuery = $templateQuery->where('created_at', "<=", ($request->end_date . ' 23:59:59'));
             }
 
-            $templates = $templateQuery->orderByDesc("id")->paginate($perPage);
+            $templates = $templateQuery
+            ->orderByDesc("id")
+            ->paginate($perPage);
+
+
+
+
             return response()->json($templates, 200);
         } catch (Exception $e) {
 
@@ -391,7 +447,7 @@ class EmailTemplateController extends Controller
     public function getEmailTemplateById($id, Request $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "DUMMY activity","DUMMY description");
             if (!$request->user()->hasPermissionTo('template_view')) {
                 return response()->json([
                     "message" => "You can not perform this action"
@@ -404,6 +460,7 @@ class EmailTemplateController extends Controller
             ])
             ->first();
             if(!$template){
+
                 return response()->json([
                      "message" => "no email template found"
                 ], 404);
@@ -466,7 +523,7 @@ class EmailTemplateController extends Controller
     public function getEmailTemplateTypes( Request $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "DUMMY activity","DUMMY description");
             if (!$request->user()->hasPermissionTo('template_view')) {
                 return response()->json([
                     "message" => "You can not perform this action"
@@ -478,11 +535,11 @@ $types = [
     "forget_password_mail",
     "welcome_message",
 
-    "booking_updated_by_garage_owner",
-    "booking_status_changed_by_garage_owner",
-    "booking_confirmed_by_garage_owner",
-    "booking_deleted_by_garage_owner",
-     "booking_rejected_by_garage_owner",
+    "booking_updated_by_business_owner",
+    "booking_status_changed_by_business_owner",
+    "booking_confirmed_by_business_owner",
+    "booking_deleted_by_business_owner",
+     "booking_rejected_by_business_owner",
 
     "booking_created_by_client",
     "booking_updated_by_client",
@@ -491,10 +548,10 @@ $types = [
     "booking_rejected_by_client",
 
 
-    "job_created_by_garage_owner",
-    "job_updated_by_garage_owner",
-    "job_status_changed_by_garage_owner",
-    "job_deleted_by_garage_owner",
+    "job_created_by_business_owner",
+    "job_updated_by_business_owner",
+    "job_status_changed_by_business_owner",
+    "job_deleted_by_business_owner",
 
 
 ];
@@ -564,7 +621,7 @@ $types = [
     public function deleteEmailTemplateById($id,Request $request) {
 
         try{
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "DUMMY activity","DUMMY description");
             if(!$request->user()->hasPermissionTo('template_delete')){
                 return response()->json([
                    "message" => "You can not perform this action"

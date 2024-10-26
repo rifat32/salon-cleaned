@@ -13,6 +13,7 @@ use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\PriceUtil;
 use App\Http\Utils\UserActivityUtil;
+use App\Mail\BookingUpdateMail;
 use App\Mail\DynamicMail;
 use App\Models\Booking;
 use App\Models\BookingPackage;
@@ -952,6 +953,10 @@ class BookingController extends Controller
                             ]);
                     }
                 }
+                if (env("SEND_EMAIL") == true) {
+                    Mail::to($booking->client_email)->send(new BookingUpdateMail($booking));
+                }
+
 
                 return response($booking, 201);
             });
