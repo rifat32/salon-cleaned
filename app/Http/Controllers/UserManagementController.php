@@ -105,13 +105,13 @@ class UserManagementController extends Controller
             //      ],401);
             // }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
             $location =  config("setup-config.user_image_location");
 
-            $new_file_name = time() . '_' . str_replace(' ', '_', $insertableData["image"]->getClientOriginalName());
+            $new_file_name = time() . '_' . str_replace(' ', '_', $request_data["image"]->getClientOriginalName());
 
-            $insertableData["image"]->move(public_path($location), $new_file_name);
+            $request_data["image"]->move(public_path($location), $new_file_name);
 
 
             return response()->json(["image" => $new_file_name,"location" => $location,"full_location"=>("/".$location."/".$new_file_name)], 200);
@@ -251,19 +251,19 @@ class UserManagementController extends Controller
                  ],401);
             }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
-            $insertableData['password'] = Hash::make($request['password']);
-            $insertableData['is_active'] = true;
-            $insertableData['business_id'] = auth()->user()->business_id;
+            $request_data['password'] = Hash::make($request['password']);
+            $request_data['is_active'] = true;
+            $request_data['business_id'] = auth()->user()->business_id;
 
-            $insertableData['remember_token'] = Str::random(10);
+            $request_data['remember_token'] = Str::random(10);
 
-            $user =  User::create($insertableData);
+            $user =  User::create($request_data);
             $user->email_verified_at = now();
             $user->save();
 
-            $user->assignRole($insertableData['role']);
+            $user->assignRole($request_data['role']);
 
             // $user->token = $user->createToken('Laravel Password Grant Client')->accessToken;
 
@@ -490,24 +490,24 @@ class UserManagementController extends Controller
     {
         try {
             $this->storeActivity($request,"");
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
-            $insertableData['password'] = Hash::make(Str::random(8));
-            $insertableData['remember_token'] = Str::random(10);
+            $request_data['password'] = Hash::make(Str::random(8));
+            $request_data['remember_token'] = Str::random(10);
 
-            // if (empty($insertableData['email'])) {
-            //     $insertableData['email'] = "guest_" . '@example.com';
+            // if (empty($request_data['email'])) {
+            //     $request_data['email'] = "guest_" . '@example.com';
             //     $counter = 1;
 
-            //     while (User::where('email', $insertableData['email'])->exists()) {
-            //         $insertableData['email'] = "guest_" . $counter . '@example.com';
+            //     while (User::where('email', $request_data['email'])->exists()) {
+            //         $request_data['email'] = "guest_" . $counter . '@example.com';
             //         $counter++;
             //     }
             // }
 
 
 
-            if (empty($insertableData['email']) && empty($insertableData['id'])) {
+            if (empty($request_data['email']) && empty($request_data['id'])) {
                 $maxCounterUser = User::where('email', 'LIKE', 'guest_%')->orderByRaw('SUBSTRING_INDEX(email, "_", -1) + 0 DESC')->first();
 
                 if ($maxCounterUser) {
@@ -516,13 +516,13 @@ class UserManagementController extends Controller
                     $counter = 1;
                 }
 
-                $insertableData['email'] = "guest_" . $counter . '@example.com';
+                $request_data['email'] = "guest_" . $counter . '@example.com';
             }
 
 
-            if(!empty($insertableData["id"])) {
+            if(!empty($request_data["id"])) {
              $user =  User::where([
-                    "id" => $insertableData["id"]
+                    "id" => $request_data["id"]
                 ])
                 ->whereHas('roles', function ($query) {
                     return $query->where('name','=', 'customer');
@@ -535,7 +535,7 @@ class UserManagementController extends Controller
                 if(!$user->email_verified_at) {
                     return response()->json(["message" => "you can not update an active user",404]);
                 }
-                $user->update(collect($insertableData)->only([
+                $user->update(collect($request_data)->only([
                     'first_Name',
                     'last_Name',
                     'email',
@@ -556,7 +556,7 @@ class UserManagementController extends Controller
 
             }
             else {
-                $user =  User::create($insertableData);
+                $user =  User::create($request_data);
                 // verify email starts
                 $otp = random_int(100000, 999999);
                 $user->email_verify_token = $otp;
@@ -841,17 +841,17 @@ class UserManagementController extends Controller
 
 
 
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
-            if(!empty($updatableData['password'])) {
-                $updatableData['password'] = Hash::make($updatableData['password']);
+            if(!empty($request_data['password'])) {
+                $request_data['password'] = Hash::make($request_data['password']);
             } else {
-                unset($updatableData['password']);
+                unset($request_data['password']);
             }
-            $updatableData['is_active'] = true;
-            $updatableData['remember_token'] = Str::random(10);
-            $user  =  tap(User::where(["id" => $updatableData["id"]]))->update(collect($updatableData)->only([
+            $request_data['is_active'] = true;
+            $request_data['remember_token'] = Str::random(10);
+            $user  =  tap(User::where(["id" => $request_data["id"]]))->update(collect($request_data)->only([
                 'first_Name' ,
                 'last_Name',
                 'password',
@@ -877,7 +877,7 @@ class UserManagementController extends Controller
 
             }
 
-            $user->syncRoles([$updatableData['role']]);
+            $user->syncRoles([$request_data['role']]);
 
 
 
@@ -992,9 +992,9 @@ class UserManagementController extends Controller
                     "message" => "You can not perform this action"
                  ],401);
             }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
-            $userQuery  = User::where(["id" => $updatableData["id"]])
+            $userQuery  = User::where(["id" => $request_data["id"]])
             ->when(!empty(auth()->user()->business_id), function($query) {
                 $query->where("business_id", auth()->user()->business_id);
                 });
@@ -1106,17 +1106,17 @@ class UserManagementController extends Controller
 
              $this->storeActivity($request,"");
 
-             $updatableData = $request->validated();
+             $request_data = $request->validated();
 
 
-             if(!empty($updatableData['password'])) {
-                 $updatableData['password'] = Hash::make($updatableData['password']);
+             if(!empty($request_data['password'])) {
+                 $request_data['password'] = Hash::make($request_data['password']);
              } else {
-                 unset($updatableData['password']);
+                 unset($request_data['password']);
              }
-            //  $updatableData['is_active'] = true;
-            //  $updatableData['remember_token'] = Str::random(10);
-             $user  =  tap(User::where(["id" => $request->user()->id]))->update(collect($updatableData)->only([
+            //  $request_data['is_active'] = true;
+            //  $request_data['remember_token'] = Str::random(10);
+             $user  =  tap(User::where(["id" => $request->user()->id]))->update(collect($request_data)->only([
                  'first_Name' ,
                  'last_Name',
                  'password',

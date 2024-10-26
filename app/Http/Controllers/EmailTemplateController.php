@@ -88,9 +88,9 @@ class EmailTemplateController extends Controller
                     ], 401);
                 }
 
-                $insertableData = $request->validated();
-                $insertableData["wrapper_id"]  = !empty($insertableData["wrapper_id"])?$insertableData["wrapper_id"]:1;
-                $template =  EmailTemplate::create($insertableData);
+                $request_data = $request->validated();
+                $request_data["wrapper_id"]  = !empty($request_data["wrapper_id"])?$request_data["wrapper_id"]:1;
+                $template =  EmailTemplate::create($request_data);
 
 
 
@@ -184,10 +184,10 @@ class EmailTemplateController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
-                $updatableData["wrapper_id"]  = !empty($updatableData["wrapper_id"])?$updatableData["wrapper_id"]:1;
-                $template  =  tap(EmailTemplate::where(["id" => $updatableData["id"]]))->update(
-                    collect($updatableData)->only([
+                $request_data = $request->validated();
+                $request_data["wrapper_id"]  = !empty($request_data["wrapper_id"])?$request_data["wrapper_id"]:1;
+                $template  =  tap(EmailTemplate::where(["id" => $request_data["id"]]))->update(
+                    collect($request_data)->only([
                         "name",
                         "template",
                         "wrapper_id"

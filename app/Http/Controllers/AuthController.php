@@ -231,12 +231,12 @@ class AuthController extends Controller
     {
         try {
             $this->storeActivity($request, "");
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
-            $insertableData['password'] = Hash::make($request['password']);
-            $insertableData['remember_token'] = Str::random(10);
-            $insertableData['is_active'] = true;
-            $user =  User::create($insertableData);
+            $request_data['password'] = Hash::make($request['password']);
+            $request_data['remember_token'] = Str::random(10);
+            $request_data['is_active'] = true;
+            $user =  User::create($request_data);
 
 
             $otp = random_int(100000, 999999);
@@ -516,9 +516,9 @@ class AuthController extends Controller
 
         try {
             $this->storeActivity($request, "");
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
             $user = User::where([
-                "id" => $insertableData["user_id"],
+                "id" => $request_data["user_id"],
             ])
                 ->first();
 
@@ -526,7 +526,7 @@ class AuthController extends Controller
 
             $site_redirect_token_db = (json_decode($user->site_redirect_token, true));
 
-            if ($site_redirect_token_db["token"] !== $insertableData["site_redirect_token"]) {
+            if ($site_redirect_token_db["token"] !== $request_data["site_redirect_token"]) {
                 return response()
                     ->json([
                         "message" => "invalid token"
@@ -615,9 +615,9 @@ class AuthController extends Controller
         try {
             $this->storeActivity($request, "");
             return DB::transaction(function () use (&$request) {
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
 
-                $user = User::where(["email" => $insertableData["email"]])->first();
+                $user = User::where(["email" => $request_data["email"]])->first();
                 if (!$user) {
                     return response()->json(["message" => "no user found"], 404);
                 }
@@ -628,7 +628,7 @@ class AuthController extends Controller
                 $user->resetPasswordExpires = Carbon::now()->subDays(-1);
                 $user->save();
 
-                Mail::to($insertableData["email"])->send(new ForgetPasswordMail($user, $insertableData["client_site"]));
+                Mail::to($request_data["email"])->send(new ForgetPasswordMail($user, $request_data["client_site"]));
 
 
                 return response()->json([
@@ -696,9 +696,9 @@ class AuthController extends Controller
         try {
             $this->storeActivity($request, "");
             return DB::transaction(function () use (&$request) {
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
 
-                $user = User::where(["email" => $insertableData["email"]])->first();
+                $user = User::where(["email" => $request_data["email"]])->first();
                 if (!$user) {
                     return response()->json(["message" => "no user found"], 404);
                 }
@@ -791,7 +791,7 @@ class AuthController extends Controller
         try {
             $this->storeActivity($request, "");
             return DB::transaction(function () use (&$request, &$token) {
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
                 $user = User::where([
                     "resetPasswordToken" => $token,
                 ])
@@ -803,7 +803,7 @@ class AuthController extends Controller
                     ], 400);
                 }
 
-                $password = Hash::make($insertableData["password"]);
+                $password = Hash::make($request_data["password"]);
                 $user->password = $password;
 
                 $user->login_attempts = 0;
@@ -960,37 +960,37 @@ class AuthController extends Controller
         try {
             $this->storeActivity($request, "");
             return DB::transaction(function () use (&$request) {
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
                 // user info starts ##############
-                $insertableData['user']['password'] = Hash::make($insertableData['user']['password']);
-                $insertableData['user']['remember_token'] = Str::random(10);
-                $insertableData['user']['is_active'] = true;
-                $insertableData['user']['address_line_1'] = $insertableData['garage']['address_line_1'];
-                $insertableData['user']['address_line_2'] = $insertableData['garage']['address_line_2'];
-                $insertableData['user']['country'] = $insertableData['garage']['country'];
-                $insertableData['user']['city'] = $insertableData['garage']['city'];
-                $insertableData['user']['postcode'] = $insertableData['garage']['postcode'];
-                $insertableData['user']['lat'] = $insertableData['garage']['lat'];
-                $insertableData['user']['long'] = $insertableData['garage']['long'];
+                $request_data['user']['password'] = Hash::make($request_data['user']['password']);
+                $request_data['user']['remember_token'] = Str::random(10);
+                $request_data['user']['is_active'] = true;
+                $request_data['user']['address_line_1'] = $request_data['garage']['address_line_1'];
+                $request_data['user']['address_line_2'] = $request_data['garage']['address_line_2'];
+                $request_data['user']['country'] = $request_data['garage']['country'];
+                $request_data['user']['city'] = $request_data['garage']['city'];
+                $request_data['user']['postcode'] = $request_data['garage']['postcode'];
+                $request_data['user']['lat'] = $request_data['garage']['lat'];
+                $request_data['user']['long'] = $request_data['garage']['long'];
 
 
-                $user =  User::create($insertableData['user']);
+                $user =  User::create($request_data['user']);
                 $user->assignRole('garage_owner');
                 // end user info ##############
 
 
                 //  garage info ##############
-                $insertableData['garage']['status'] = "pending";
-                $insertableData['garage']['owner_id'] = $user->id;
+                $request_data['garage']['status'] = "pending";
+                $request_data['garage']['owner_id'] = $user->id;
 
-                $insertableData['garage']['is_active'] = true;
-                $garage =  Garage::create($insertableData['garage']);
+                $request_data['garage']['is_active'] = true;
+                $garage =  Garage::create($request_data['garage']);
 
                 GarageTime::where([
                     "garage_id" => $garage->id
                 ])
                     ->delete();
-                $timesArray = collect($insertableData["times"])->unique("day");
+                $timesArray = collect($request_data["times"])->unique("day");
                 foreach ($timesArray as $garage_time) {
                     GarageTime::create([
                         "garage_id" => $garage->id,
@@ -1003,8 +1003,8 @@ class AuthController extends Controller
                     ]);
                 }
 
-                if (!empty($insertableData["images"])) {
-                    foreach ($insertableData["images"] as $garage_images) {
+                if (!empty($request_data["images"])) {
+                    foreach ($request_data["images"] as $garage_images) {
                         GarageGallery::create([
                             "image" => $garage_images,
                             "garage_id" => $garage->id,
@@ -1016,7 +1016,7 @@ class AuthController extends Controller
                 // end garage info ##############
 
                 // create services
-                $serviceUpdate =  $this->createGarageServices($insertableData['service'], $garage->id, true);
+                $serviceUpdate =  $this->createGarageServices($request_data['service'], $garage->id, true);
 
                 if (!$serviceUpdate["success"]) {
                     $error =  [
@@ -1499,18 +1499,18 @@ class AuthController extends Controller
 
         try {
             $this->storeActivity($request, "");
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
-            if (!empty($updatableData['password'])) {
-                $updatableData['password'] = Hash::make($updatableData['password']);
+            if (!empty($request_data['password'])) {
+                $request_data['password'] = Hash::make($request_data['password']);
             } else {
-                unset($updatableData['password']);
+                unset($request_data['password']);
             }
-            $updatableData['is_active'] = true;
-            $updatableData['remember_token'] = Str::random(10);
+            $request_data['is_active'] = true;
+            $request_data['remember_token'] = Str::random(10);
             $user  =  tap(User::where(["id" => $request->user()->id]))->update(
-                collect($updatableData)->only([
+                collect($request_data)->only([
                     'first_Name',
                     'last_Name',
                     'password',

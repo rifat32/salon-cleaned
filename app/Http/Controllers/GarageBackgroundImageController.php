@@ -87,13 +87,13 @@ class GarageBackgroundImageController extends Controller
                 ], 401);
             }
 
-             $insertableData = $request->validated();
+             $request_data = $request->validated();
 
              $location =  config("setup-config.garage_background_image_location");
 
              $new_file_name = time() . "_" ."garage_background_image.jpeg";
 
-             $insertableData["image"]->move(public_path($location), $new_file_name);
+             $request_data["image"]->move(public_path($location), $new_file_name);
 
 
 // Update the desired key in the configuration
@@ -191,13 +191,13 @@ File::put(config_path('setup-config.php'), '<?php return ' . var_export(config('
 
 
 
-             $insertableData = $request->validated();
+             $request_data = $request->validated();
 
              $location =  config("setup-config.garage_background_image_location");
 
 
-             $new_file_name = time() . '_' . str_replace(' ', '_', $insertableData["image"]->getClientOriginalName());
-             $insertableData["image"]->move(public_path($location), $new_file_name);
+             $new_file_name = time() . '_' . str_replace(' ', '_', $request_data["image"]->getClientOriginalName());
+             $request_data["image"]->move(public_path($location), $new_file_name);
 
 
              User::where([

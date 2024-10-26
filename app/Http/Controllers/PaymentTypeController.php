@@ -82,9 +82,9 @@ class PaymentTypeController extends Controller
                     ], 401);
                 }
 
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
 
-                $payment_type =  PaymentType::create($insertableData);
+                $payment_type =  PaymentType::create($request_data);
 
 
                 return response($payment_type, 201);
@@ -162,12 +162,12 @@ class PaymentTypeController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
 
 
-                $payment_type  =  tap(PaymentType::where(["id" => $updatableData["id"]]))->update(
-                    collect($updatableData)->only([
+                $payment_type  =  tap(PaymentType::where(["id" => $request_data["id"]]))->update(
+                    collect($request_data)->only([
         "name",
         "description",
         "is_active",

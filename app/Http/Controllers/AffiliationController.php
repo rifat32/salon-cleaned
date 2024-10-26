@@ -90,14 +90,14 @@ class AffiliationController extends Controller
                  ],401);
             }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
             $location =  config("setup-config.affiliation_logo");
 
-            $new_file_name = time() . '_' . str_replace(' ', '_', $insertableData["image"]->getClientOriginalName());
+            $new_file_name = time() . '_' . str_replace(' ', '_', $request_data["image"]->getClientOriginalName());
 
 
-            $insertableData["image"]->move(public_path($location), $new_file_name);
+            $request_data["image"]->move(public_path($location), $new_file_name);
 
 
             return response()->json(["image" => $new_file_name,"location" => $location,"full_location"=>("/".$location."/".$new_file_name)], 200);
@@ -188,9 +188,9 @@ class AffiliationController extends Controller
                     ], 401);
                 }
 
-                $insertableData = $request->validated();
-                $insertableData["created_by"] = $request->user()->id;
-                $affiliation =  Affiliation::create($insertableData);
+                $request_data = $request->validated();
+                $request_data["created_by"] = $request->user()->id;
+                $affiliation =  Affiliation::create($request_data);
 
 
                 return response($affiliation, 201);
@@ -268,10 +268,10 @@ class AffiliationController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
                 $affiliationPrev = Affiliation::where([
-                    "id" => $updatableData["id"]
+                    "id" => $request_data["id"]
                    ]);
 
                    if(!$request->user()->hasRole('superadmin')) {
@@ -289,8 +289,8 @@ class AffiliationController extends Controller
 
 
 
-                $affiliation  =  tap(Affiliation::where(["id" => $updatableData["id"]]))->update(
-                    collect($updatableData)->only([
+                $affiliation  =  tap(Affiliation::where(["id" => $request_data["id"]]))->update(
+                    collect($request_data)->only([
                         "name",
                         "description",
                         "logo"

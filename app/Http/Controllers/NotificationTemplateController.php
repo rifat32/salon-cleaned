@@ -85,13 +85,13 @@ class NotificationTemplateController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
-                $updatableData["template"] =  json_encode($updatableData["template"]);
+                $request_data["template"] =  json_encode($request_data["template"]);
 
 
-                $template  =  tap(NotificationTemplate::where(["id" => $updatableData["id"]]))->update(
-                    collect($updatableData)->only([
+                $template  =  tap(NotificationTemplate::where(["id" => $request_data["id"]]))->update(
+                    collect($request_data)->only([
                         "name",
                         "template",
                         "link"

@@ -104,11 +104,11 @@ class GarageServicePriceController extends Controller
                 }
 
 
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
 
 
 
-                    if (!$this->garageOwnerCheck($insertableData["garage_id"])) {
+                    if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                         return response()->json([
                             "message" => "you are not the owner of the garage or the requested garage does not exist."
                         ], 401);
@@ -117,7 +117,7 @@ class GarageServicePriceController extends Controller
         $garage_sub_service = GarageSubService::leftJoin('sub_services', 'garage_sub_services.sub_service_id', '=', 'sub_services.id')
         ->leftJoin('services', 'sub_services.service_id', '=', 'services.id')
         ->where([
-            "garage_sub_services.id" => $insertableData["garage_sub_service_id"]
+            "garage_sub_services.id" => $request_data["garage_sub_service_id"]
         ])
         ->select(
 
@@ -128,7 +128,7 @@ class GarageServicePriceController extends Controller
         ->first();
 
 
-                    foreach($insertableData["garage_sub_service_prices"] as $index=>$price_details){
+                    foreach($request_data["garage_sub_service_prices"] as $index=>$price_details){
 
 
 
@@ -138,7 +138,7 @@ class GarageServicePriceController extends Controller
                             $garage_make =  GarageAutomobileMake::
                             leftJoin('automobile_makes', 'garage_automobile_makes.automobile_make_id', '=', 'automobile_makes.id')
                             ->where([
-                              "garage_automobile_makes.garage_id" => $insertableData["garage_id"],
+                              "garage_automobile_makes.garage_id" => $request_data["garage_id"],
                               "garage_automobile_makes.automobile_make_id" => $price_details["automobile_make_id"],
                               "automobile_makes.automobile_category_id" =>  $garage_sub_service->automobile_category_id,
                               ])
@@ -166,8 +166,8 @@ GarageSubServicePrice::create([
     "garage_sub_service_id" => $garage_sub_service->id,
     "automobile_make_id" => (!empty($garage_make)?$garage_make->automobile_make_id:NULL),
     "price" => $price_details["price"],
-    "business_id" => $insertableData["garage_id"],
-    "expert_id" => $insertableData["expert_id"]
+    "business_id" => $request_data["garage_id"],
+    "expert_id" => $request_data["expert_id"]
 ]);
 
 
@@ -265,10 +265,10 @@ GarageSubServicePrice::create([
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
 
-                if (!$this->garageOwnerCheck($updatableData["garage_id"])) {
+                if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                     return response()->json([
                         "message" => "you are not the owner of the garage or the requested garage does not exist."
                     ], 401);
@@ -278,7 +278,7 @@ GarageSubServicePrice::create([
                 leftJoin('sub_services', 'garage_sub_services.sub_service_id', '=', 'sub_services.id')
                 ->leftJoin('services', 'sub_services.service_id', '=', 'services.id')
                 ->where([
-                    "garage_sub_services.id" => $updatableData["garage_sub_service_id"]
+                    "garage_sub_services.id" => $request_data["garage_sub_service_id"]
                 ])
 
                 ->select(
@@ -296,7 +296,7 @@ GarageSubServicePrice::create([
                 }
 
 
-                            foreach($updatableData["garage_sub_service_prices"] as $index=>$price_details){
+                            foreach($request_data["garage_sub_service_prices"] as $index=>$price_details){
 
 
                                 $garage_make = NULL;
@@ -304,7 +304,7 @@ GarageSubServicePrice::create([
                                     $garage_make =  GarageAutomobileMake::
                                     leftJoin('automobile_makes', 'garage_automobile_makes.automobile_make_id', '=', 'automobile_makes.id')
                                     ->where([
-                                      "garage_automobile_makes.garage_id" => $updatableData["garage_id"],
+                                      "garage_automobile_makes.garage_id" => $request_data["garage_id"],
                                       "garage_automobile_makes.automobile_make_id" => $price_details["automobile_make_id"],
                                       "automobile_makes.automobile_category_id" =>  $garage_sub_service->automobile_category_id,
                                       ])
@@ -329,8 +329,8 @@ GarageSubServicePrice::create([
             "garage_sub_service_id" => $garage_sub_service->id,
             "automobile_make_id" => (!empty($garage_make)?$garage_make->automobile_make_id:NULL),
             "price" => $price_details["price"],
-            "business_id" => $updatableData["garage_id"],
-            "expert_id" => $updatableData["expert_id"]
+            "business_id" => $request_data["garage_id"],
+            "expert_id" => $request_data["expert_id"]
         ];
         if(!empty($price_details["id"])){
             $garage_sub_service_price  =  tap(GarageSubServicePrice::where(["id" => $price_details["id"]]))->update(

@@ -89,13 +89,13 @@ class ShopsController extends Controller
  {
      try{
         $this->storeActivity($request,"");
-         $insertableData = $request->validated();
+         $request_data = $request->validated();
 
          $location =  config("setup-config.shop_gallery_location");
 
-         $new_file_name = time() . '_' . str_replace(' ', '_', $insertableData["image"]->getClientOriginalName());
+         $new_file_name = time() . '_' . str_replace(' ', '_', $request_data["image"]->getClientOriginalName());
 
-         $insertableData["image"]->move(public_path($location), $new_file_name);
+         $request_data["image"]->move(public_path($location), $new_file_name);
 
 
          return response()->json(["image" => $new_file_name,"location" => $location,"full_location"=>("/".$location."/".$new_file_name)], 200);
@@ -179,13 +179,13 @@ class ShopsController extends Controller
         try{
 
             $this->storeActivity($request,"");
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
             $location =  config("setup-config.shop_gallery_location");
 
             $images = [];
-            if(!empty($insertableData["images"])) {
-                foreach($insertableData["images"] as $image){
+            if(!empty($request_data["images"])) {
+                foreach($request_data["images"] as $image){
                     $new_file_name = time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
                     $image->move(public_path($location), $new_file_name);
 
@@ -325,25 +325,25 @@ class ShopsController extends Controller
             "message" => "You can not perform this action"
          ],401);
     }
-     $insertableData = $request->validated();
+     $request_data = $request->validated();
 
 // user info starts ##############
- $insertableData['user']['password'] = Hash::make($insertableData['user']['password']);
- $insertableData['user']['remember_token'] = Str::random(10);
- $insertableData['user']['is_active'] = true;
- $insertableData['user']['created_by'] = $request->user()->id;
- $user =  User::create($insertableData['user']);
+ $request_data['user']['password'] = Hash::make($request_data['user']['password']);
+ $request_data['user']['remember_token'] = Str::random(10);
+ $request_data['user']['is_active'] = true;
+ $request_data['user']['created_by'] = $request->user()->id;
+ $user =  User::create($request_data['user']);
  $user->assignRole('shop_owner');
 // end user info ##############
 
 
 //  shop info ##############
-     $insertableData['shop']['status'] = "pending";
-     $insertableData['shop']['owner_id'] = $user->id;
-     $insertableData['shop']['created_by'] = $request->user()->id;
-     $shop =  Shop::create($insertableData['shop']);
-     if(!empty($insertableData["images"])) {
-        foreach($insertableData["images"] as $shop_images){
+     $request_data['shop']['status'] = "pending";
+     $request_data['shop']['owner_id'] = $user->id;
+     $request_data['shop']['created_by'] = $request->user()->id;
+     $shop =  Shop::create($request_data['shop']);
+     if(!empty($request_data["images"])) {
+        foreach($request_data["images"] as $shop_images){
             ShopGallery::create([
                 "image" => $shop_images,
                 "shop_id" =>$shop->id,
@@ -483,10 +483,10 @@ class ShopsController extends Controller
     }
 
 
-    $updatableData = $request->validated();
+    $request_data = $request->validated();
  //    user email check
     $userPrev = User::where([
-     "id" => $updatableData["user"]["id"]
+     "id" => $request_data["user"]["id"]
     ]);
     if(!$request->user()->hasRole('superadmin')) {
      $userPrev =    $userPrev->where([
@@ -501,8 +501,8 @@ class ShopsController extends Controller
   }
 
 
-if($userPrev->email !== $updatableData['user']['email']) {
-     if(User::where(["email" => $updatableData['user']['email']])->exists()) {
+if($userPrev->email !== $request_data['user']['email']) {
+     if(User::where(["email" => $request_data['user']['email']])->exists()) {
            return response()->json([
               "message" => "The given data was invalid.",
               "errors" => ["user.password"=>["email already taken"]]
@@ -512,7 +512,7 @@ if($userPrev->email !== $updatableData['user']['email']) {
  // user email check
   // shop email check + authorization check
   $shopPrev = Shop::where([
-     "id" => $updatableData["shop"]["id"]
+     "id" => $request_data["shop"]["id"]
   ]);
   if(!$request->user()->hasRole('superadmin')) {
      $shopPrev =    $shopPrev->where([
@@ -526,8 +526,8 @@ if($userPrev->email !== $updatableData['user']['email']) {
      ],404);
    }
 
-if($shopPrev->email !== $updatableData['shop']['email']) {
-     if(Shop::where(["email" => $updatableData['shop']['email']])->exists()) {
+if($shopPrev->email !== $request_data['shop']['email']) {
+     if(Shop::where(["email" => $request_data['shop']['email']])->exists()) {
            return response()->json([
               "message" => "The given data was invalid.",
               "errors" => ["shop.password"=>["email already taken"]]
@@ -538,16 +538,16 @@ if($shopPrev->email !== $updatableData['shop']['email']) {
 
 
 
-     if(!empty($updatableData['user']['password'])) {
-         $updatableData['user']['password'] = Hash::make($updatableData['user']['password']);
+     if(!empty($request_data['user']['password'])) {
+         $request_data['user']['password'] = Hash::make($request_data['user']['password']);
      } else {
-         unset($updatableData['user']['password']);
+         unset($request_data['user']['password']);
      }
-     $updatableData['user']['is_active'] = true;
-     $updatableData['user']['remember_token'] = Str::random(10);
+     $request_data['user']['is_active'] = true;
+     $request_data['user']['remember_token'] = Str::random(10);
      $user  =  tap(User::where([
-         "id" => $updatableData['user']["id"]
-         ]))->update(collect($updatableData['user'])->only([
+         "id" => $request_data['user']["id"]
+         ]))->update(collect($request_data['user'])->only([
          'first_Name',
          'last_Name',
          'phone',
@@ -579,11 +579,11 @@ if($shopPrev->email !== $updatableData['shop']['email']) {
 
 
 //  shop info ##############
-     // $updatableData['shop']['status'] = "pending";
+     // $request_data['shop']['status'] = "pending";
 
      $shop  =  tap(Shop::where([
-         "id" => $updatableData['shop']["id"]
-         ]))->update(collect($updatableData['shop'])->only([
+         "id" => $request_data['shop']["id"]
+         ]))->update(collect($request_data['shop'])->only([
              "name",
              "about",
              "web_page",
@@ -618,8 +618,8 @@ if($shopPrev->email !== $updatableData['shop']['email']) {
             ],404);
 
         }
-        if(!empty($updatableData["images"])) {
-            foreach($updatableData["images"] as $shop_images){
+        if(!empty($request_data["images"])) {
+            foreach($request_data["images"] as $shop_images){
                 ShopGallery::create([
                     "image" => $shop_images,
                     "shop_id" =>$shop->id,

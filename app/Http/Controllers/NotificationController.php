@@ -451,10 +451,10 @@ class NotificationController extends Controller
             $this->storeActivity($request,"");
             return    DB::transaction(function () use (&$request) {
 
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
 
-     Notification::whereIn('id', $updatableData["notification_ids"])
+     Notification::whereIn('id', $request_data["notification_ids"])
     ->where('receiver_id', $request->user()->id)
     ->update([
         "status" => "read"

@@ -88,9 +88,9 @@ class GarageRuleController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
-                $garage_id = $updatableData["garage_id"];
+                $garage_id = $request_data["garage_id"];
            if (!$this->garageOwnerCheck($garage_id)) {
             return response()->json([
                 "message" => "you are not the owner of the garage or the requested garage does not exist."
@@ -102,15 +102,15 @@ class GarageRuleController extends Controller
                 "garage_id" => $garage_id
                ])
                ->delete();
-               $block_out_days_array = collect($updatableData["block_out_days"])->unique();
+               $block_out_days_array = collect($request_data["block_out_days"])->unique();
 
                 GarageRule::create([
                     "garage_id"=> $garage_id,
-                    "standard_lead_time"=>$updatableData["standard_lead_time"],
+                    "standard_lead_time"=>$request_data["standard_lead_time"],
 
-                    "booking_accept_start_time"=>$updatableData["booking_accept_start_time"],
+                    "booking_accept_start_time"=>$request_data["booking_accept_start_time"],
 
-                    "booking_accept_end_time"=>$updatableData["booking_accept_end_time"],
+                    "booking_accept_end_time"=>$request_data["booking_accept_end_time"],
 
                     "block_out_days"=>json_encode($block_out_days_array)
 
@@ -120,11 +120,11 @@ class GarageRuleController extends Controller
                 GarageRule::upsert([
                     [
                         "garage_id"=> $garage_id,
-                        "standard_lead_time"=>$updatableData["standard_lead_time"],
+                        "standard_lead_time"=>$request_data["standard_lead_time"],
 
-                        "booking_accept_start_time"=>$updatableData["booking_accept_start_time"],
+                        "booking_accept_start_time"=>$request_data["booking_accept_start_time"],
 
-                        "booking_accept_end_time"=>$updatableData["booking_accept_end_time"],
+                        "booking_accept_end_time"=>$request_data["booking_accept_end_time"],
 
                         "block_out_days"=>json_encode($block_out_days_array)
 

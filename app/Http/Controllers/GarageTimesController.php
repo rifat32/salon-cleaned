@@ -91,9 +91,9 @@ class GarageTimesController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
-                $garage_id = $updatableData["garage_id"];
+                $garage_id = $request_data["garage_id"];
            if (!$this->garageOwnerCheck($garage_id)) {
             return response()->json([
                 "message" => "you are not the owner of the garage or the requested garage does not exist."
@@ -105,7 +105,7 @@ class GarageTimesController extends Controller
                 "garage_id" => $garage_id
                ])
                ->delete();
-               $timesArray = collect($updatableData["times"])->unique("day");
+               $timesArray = collect($request_data["times"])->unique("day");
                foreach($timesArray as $garage_time) {
                 GarageTime::create([
                     "garage_id" => $garage_id,

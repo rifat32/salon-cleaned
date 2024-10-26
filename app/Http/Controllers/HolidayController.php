@@ -8,6 +8,7 @@ use App\Http\Utils\BasicUtil;
 use App\Http\Utils\BusinessUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
+use App\Models\Booking;
 use App\Models\Holiday;
 use Carbon\Carbon;
 use DB;
@@ -99,6 +100,19 @@ class HolidayController extends Controller
                 $request_data["is_active"] = true;
                 $request_data["created_by"] = $request->user()->id;
                 $request_data["status"] = (auth()->user()->hasRole("business_owner") ? "approved" : "pending_approval");
+
+                $bookings = Booking::
+                whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+                ->whereDate("job_start_date", ">=", $request_data["start_date"])
+                ->whereDate("job_start_date", "<=", $request_data["end_date"])
+                ->get();
+
+                if(!empty($bookings)) {
+                    return response()->json([
+                      "message" => "some appointments are exists",
+                      "conflicted_bookings" => $bookings
+                    ], 409);
+                }
 
                 $holiday =  Holiday::create($request_data);
 
@@ -194,13 +208,19 @@ class HolidayController extends Controller
                     "id" => $request_data["id"],
                     "business_id" => $business_id
                 ];
-                $holiday_prev = Holiday::where($holiday_query_params)
-                    ->first();
-                if (!$holiday_prev) {
 
+
+                $bookings = Booking::
+                whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+                ->whereDate("job_start_date", ">=", $request_data["start_date"])
+                ->whereDate("job_start_date", "<=", $request_data["end_date"])
+                ->get();
+
+                if(!empty($bookings)) {
                     return response()->json([
-                        "message" => "no holiday found"
-                    ], 404);
+                      "message" => "some appointments are exists",
+                      "conflicted_bookings" => $bookings
+                    ], 409);
                 }
 
                 $holiday  =  tap(Holiday::where($holiday_query_params))->update(
@@ -218,7 +238,8 @@ class HolidayController extends Controller
                     // ->with("somthing")
 
                     ->first();
-                if (!$holiday) {
+                    
+                if (empty($holiday)) {
                     return response()->json([
                         "message" => "something went wrong."
                     ], 500);

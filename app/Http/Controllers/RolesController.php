@@ -80,10 +80,10 @@ class RolesController extends Controller
                   "message" => "You can not perform this action"
                ],401);
           }
-           $insertableData = $request->validated();
-           $role = Role::create(["name"=>$insertableData["name"]]);
+           $request_data = $request->validated();
+           $role = Role::create(["name"=>$request_data["name"]]);
 
-           $role->syncPermissions($insertableData["permissions"]);
+           $role->syncPermissions($request_data["permissions"]);
 
            return response()->json([
                "role" =>  $role,

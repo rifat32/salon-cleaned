@@ -108,13 +108,13 @@ class ClientPreBookingController extends Controller
              //      ],401);
              // }
 
-             $insertableData = $request->validated();
+             $request_data = $request->validated();
 
              $location =  config("setup-config.temporary_files_location");
 
-             $new_file_name = time() . '_' . str_replace(' ', '_', $insertableData["video"]->getClientOriginalName());
+             $new_file_name = time() . '_' . str_replace(' ', '_', $request_data["video"]->getClientOriginalName());
 
-             $insertableData["video"]->move(public_path($location), $new_file_name);
+             $request_data["video"]->move(public_path($location), $new_file_name);
 
 
              return response()->json(["video" => $new_file_name,"location" => $location,"full_location"=>("/".$location."/".$new_file_name)], 200);
@@ -198,13 +198,13 @@ class ClientPreBookingController extends Controller
          try{
 
              $this->storeActivity($request,"");
-             $insertableData = $request->validated();
+             $request_data = $request->validated();
 
              $location =  config("setup-config.temporary_files_location");
 
              $images = [];
-             if(!empty($insertableData["images"])) {
-                 foreach($insertableData["images"] as $image){
+             if(!empty($request_data["images"])) {
+                 foreach($request_data["images"] as $image){
                      $new_file_name = time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
                      $image->move(public_path($location), $new_file_name);
 
@@ -324,16 +324,16 @@ class ClientPreBookingController extends Controller
             return DB::transaction(function () use ($request) {
                 $this->storeActivity($request,"");
 
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
 
-                $insertableData["customer_id"] = auth()->user()->id;
-                $insertableData["status"] = "pending";
+                $request_data["customer_id"] = auth()->user()->id;
+                $request_data["status"] = "pending";
 
 
                 $temporary_files_location =  config("setup-config.temporary_files_location");
                 $location =  config("setup-config.pre_booking_file_location");
 
-                foreach(array_merge($insertableData["images"],$insertableData["videos"]) as $temp_file_path) {
+                foreach(array_merge($request_data["images"],$request_data["videos"]) as $temp_file_path) {
 
 
 
@@ -373,14 +373,14 @@ class ClientPreBookingController extends Controller
 
 
 
-$insertableData["images"] = json_encode($insertableData["images"]) ;
-$insertableData["videos"] = json_encode($insertableData["videos"]) ;
-$insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
+$request_data["images"] = json_encode($request_data["images"]) ;
+$request_data["videos"] = json_encode($request_data["videos"]) ;
+$request_data["file_links"] = json_encode($request_data["file_links"]) ;
 
 
 
                 $automobile_make = AutomobileMake::where([
-                    "id" =>  $insertableData["automobile_make_id"]
+                    "id" =>  $request_data["automobile_make_id"]
                 ])
                     ->first();
                 if (!$automobile_make) {
@@ -392,7 +392,7 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
                     throw new Exception(json_encode($error),422);
                 }
                 $automobile_model = AutomobileModel::where([
-                    "id" => $insertableData["automobile_model_id"],
+                    "id" => $request_data["automobile_model_id"],
                     "automobile_make_id" => $automobile_make->id
                 ])
                     ->first();
@@ -409,12 +409,12 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
 
 
 
-                $pre_booking =  PreBooking::create($insertableData);
+                $pre_booking =  PreBooking::create($request_data);
 
 
 
 
-                foreach ($insertableData["pre_booking_sub_service_ids"] as $index=>$sub_service_id) {
+                foreach ($request_data["pre_booking_sub_service_ids"] as $index=>$sub_service_id) {
                     $sub_service =  SubService::where([
                             "id" => $sub_service_id,
                         ])
@@ -530,12 +530,12 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
             return  DB::transaction(function () use ($request) {
                 $this->storeActivity($request,"");
 
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
 
                 $temporary_files_location =  config("setup-config.temporary_files_location");
                 $location =  config("setup-config.pre_booking_file_location");
-                foreach(array_merge($updatableData["images"],$updatableData["videos"]) as $temp_file_path) {
+                foreach(array_merge($request_data["images"],$request_data["videos"]) as $temp_file_path) {
 
 
 
@@ -552,14 +552,14 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
 
 
 
-                $updatableData["images"] = json_encode($updatableData["images"]) ;
-                $updatableData["videos"] = json_encode($updatableData["videos"]) ;
-                $updatableData["file_links"] = json_encode($updatableData["file_links"]) ;
+                $request_data["images"] = json_encode($request_data["images"]) ;
+                $request_data["videos"] = json_encode($request_data["videos"]) ;
+                $request_data["file_links"] = json_encode($request_data["file_links"]) ;
 
 
 
                 $automobile_make = AutomobileMake::where([
-                    "id" =>  $updatableData["automobile_make_id"]
+                    "id" =>  $request_data["automobile_make_id"]
                 ])
                     ->first();
                 if (!$automobile_make) {
@@ -570,7 +570,7 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
                     throw new Exception(json_encode($error),422);
                 }
                 $automobile_model = AutomobileModel::where([
-                    "id" => $updatableData["automobile_model_id"],
+                    "id" => $request_data["automobile_model_id"],
                     "automobile_make_id" => $automobile_make->id
                 ])
                     ->first();
@@ -587,8 +587,8 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
 
 
 
-                $pre_booking  =  tap(PreBooking::where(["id" => $updatableData["id"]]))->update(
-                    collect($updatableData)->only([
+                $pre_booking  =  tap(PreBooking::where(["id" => $request_data["id"]]))->update(
+                    collect($request_data)->only([
                         "automobile_make_id",
                         "automobile_model_id",
                         "car_registration_no",
@@ -625,7 +625,7 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
 
 
 
-                foreach ($updatableData["pre_booking_sub_service_ids"] as $index=>$sub_service_id) {
+                foreach ($request_data["pre_booking_sub_service_ids"] as $index=>$sub_service_id) {
                     $sub_service =  SubService::where([
                             "id" => $sub_service_id,
 
@@ -979,10 +979,10 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
             $this->storeActivity($request,"");
             return DB::transaction(function () use ($request) {
 
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
 
                 $pre_booking  = PreBooking::where([
-                    "id" => $insertableData["pre_booking_id"],
+                    "id" => $request_data["pre_booking_id"],
                     "customer_id" => auth()->user()->id,
 
                 ])
@@ -994,7 +994,7 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
                         "message" => "pre booking not found for user id " . auth()->user()->id
                     ], 404);
                 }
-                if ($pre_booking->status !== "pending" && $insertableData["is_confirmed"]) {
+                if ($pre_booking->status !== "pending" && $request_data["is_confirmed"]) {
                     return response()->json([
                         "message" => "you can only confirm pending pre bookings"
                     ], 409);
@@ -1002,7 +1002,7 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
 
 
                 $job_bid  = JobBid::where([
-                    "id" => $insertableData["job_bid_id"],
+                    "id" => $request_data["job_bid_id"],
                     "pre_booking_id" => $pre_booking->id,
                 ])
                     ->first();
@@ -1014,7 +1014,7 @@ $insertableData["file_links"] = json_encode($insertableData["file_links"]) ;
                     ], 404);
                 }
 
-                if (!$insertableData["is_confirmed"]) {
+                if (!$request_data["is_confirmed"]) {
 
 $job_bid->status = "rejected";
 $job_bid->save();
@@ -1037,9 +1037,9 @@ $job_bid->save();
                 } else {
 
 
-                    $insertableData["customer_id"] = auth()->user()->id;
-                    $insertableData["created_by"] = $request->user()->id;
-                    $insertableData["created_from"] = "customer_side";
+                    $request_data["customer_id"] = auth()->user()->id;
+                    $request_data["created_by"] = $request->user()->id;
+                    $request_data["created_from"] = "customer_side";
 
                     $pre_booking->status = "booked";
                     $pre_booking->selected_bid_id =  $job_bid->id;
@@ -1069,7 +1069,7 @@ $job_bid->save();
                         "final_price" => $job_bid->price,
                         "status" => "pending",
                         "payment_status" => "pending",
-                        "created_by" => $insertableData["created_by"]
+                        "created_by" => $request_data["created_by"]
 
 
 

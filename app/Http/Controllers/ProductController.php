@@ -112,12 +112,12 @@ class ProductController extends Controller
                    "message" => "You can not perform this action"
                 ],401);
            }
-           $insertableData = $request->validated();
+           $request_data = $request->validated();
            $sku_prefix = "";
   // shop id is required if user is not super admin od data collector. and shop id means it is spacific to shop. so it is not default
-           if(!empty($insertableData["shop_id"])) {
-              $insertableData["is_default"] = false;
-          $shop =   $this->shopOwnerCheck($insertableData["shop_id"]);
+           if(!empty($request_data["shop_id"])) {
+              $request_data["is_default"] = false;
+          $shop =   $this->shopOwnerCheck($request_data["shop_id"]);
               if (!$shop) {
                   return response()->json([
                       "message" => "you are not the owner of the shop or the requested shop does not exist."
@@ -125,11 +125,11 @@ class ProductController extends Controller
               }
               $sku_prefix = $shop->sku_prefix;
            } else {
-              $insertableData["is_default"] = true;
+              $request_data["is_default"] = true;
            }
 
 
-           $product =  Product::create($insertableData);
+           $product =  Product::create($request_data);
 
            if(empty($product->sku)){
               $product->sku = $sku_prefix .  str_pad($product->id, 4, '0', STR_PAD_LEFT);
@@ -141,14 +141,14 @@ class ProductController extends Controller
               $product->product_variations()->create([
 
                       "sub_sku" => $product->sku,
-                      "quantity" => $insertableData["quantity"],
-                      "price" => $insertableData["price"],
+                      "quantity" => $request_data["quantity"],
+                      "price" => $request_data["price"],
                       "automobile_make_id" => NULL,
 
 
               ]);
            } else {
-              foreach($insertableData["product_variations"] as $product_variation) {
+              foreach($request_data["product_variations"] as $product_variation) {
                   $c = ProductVariation::withTrashed()
                   ->where('product_id', $product->id)
                   ->count() + 1;
@@ -167,8 +167,8 @@ class ProductController extends Controller
 
            }
 
-           if(!empty($insertableData["images"])) {
-            foreach($insertableData["images"] as $product_image){
+           if(!empty($request_data["images"])) {
+            foreach($request_data["images"] as $product_image){
                 ProductGallery::create([
                     "image" => $product_image,
                     "product_id" =>$product->id,
@@ -286,13 +286,13 @@ class ProductController extends Controller
                    "message" => "You can not perform this action"
                 ],401);
            }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
 
         $product_prev = Product::where(
             [
-"id" => $updatableData["id"],
+"id" => $request_data["id"],
             ]
         )
         ->first();
@@ -316,7 +316,7 @@ class ProductController extends Controller
                         "id" => $product_prev->id,
                         "shop_id" => $product_prev->shop_id
                                     ]
-                ))->update(collect($updatableData)->only([
+                ))->update(collect($request_data)->only([
                   "name",
                   "sku",
                   "description",
@@ -348,12 +348,12 @@ class ProductController extends Controller
               ->update([
 
                       "sub_sku" => $product->sku,
-                      "quantity" => $updatableData["quantity"],
-                      "price" => $updatableData["price"],
+                      "quantity" => $request_data["quantity"],
+                      "price" => $request_data["price"],
                       "automobile_make_id" => NULL,
               ]);
            } else {
-              foreach($updatableData["product_variations"] as $product_variation) {
+              foreach($request_data["product_variations"] as $product_variation) {
 
                   if(empty($product_variation["id"])) {
                       $c = ProductVariation::withTrashed()
@@ -388,14 +388,14 @@ class ProductController extends Controller
               }
               }
 
-              if(!empty($updatableData["images"])) {
+              if(!empty($request_data["images"])) {
                 ProductGallery::where([
                     "product_id" =>$product->id,
                 ])
                 ->delete();
               }
-              if(!empty($updatableData["images"])) {
-                foreach($updatableData["images"] as $product_image){
+              if(!empty($request_data["images"])) {
+                foreach($request_data["images"] as $product_image){
                     ProductGallery::create([
                         "image" => $product_image,
                         "product_id" =>$product->id,
@@ -516,14 +516,14 @@ class ProductController extends Controller
                    "message" => "You can not perform this action"
                 ],401);
            }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
-            if (!$this->shopOwnerCheck($updatableData["shop_id"])) {
+            if (!$this->shopOwnerCheck($request_data["shop_id"])) {
                 return response()->json([
                     "message" => "you are not the owner of the shop or the requested shop does not exist."
                 ], 401);
             }
-            $shop =   $this->shopOwnerCheck($updatableData["shop_id"]);
+            $shop =   $this->shopOwnerCheck($request_data["shop_id"]);
             if (!$shop) {
                 return response()->json([
                     "message" => "you are not the owner of the shop or the requested shop does not exist."
@@ -531,10 +531,10 @@ class ProductController extends Controller
             }
 
             $sku_prefix = $shop->sku_prefix;
-            $updatableData["is_default"] = false;
+            $request_data["is_default"] = false;
 
 
-                     $product =  Product::create($updatableData);
+                     $product =  Product::create($request_data);
 
                      if(empty($product->sku)){
                         $product->sku = $sku_prefix .  str_pad($product->id, 4, '0', STR_PAD_LEFT);
@@ -546,14 +546,14 @@ class ProductController extends Controller
                         $product->product_variations()->create([
 
                                 "sub_sku" => $product->sku,
-                                "quantity" => $updatableData["quantity"],
-                                "price" => $updatableData["price"],
+                                "quantity" => $request_data["quantity"],
+                                "price" => $request_data["price"],
                                 "automobile_make_id" => NULL,
 
 
                         ]);
                      } else {
-                        foreach($updatableData["product_variations"] as $product_variation) {
+                        foreach($request_data["product_variations"] as $product_variation) {
                             $c = ProductVariation::withTrashed()
                             ->where('product_id', $product->id)
                             ->count() + 1;

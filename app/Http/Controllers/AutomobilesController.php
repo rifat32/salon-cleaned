@@ -92,10 +92,10 @@ class AutomobilesController extends Controller
                  ],401);
             }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
 
-            $automobile =  AutomobileCategory::create($insertableData);
+            $automobile =  AutomobileCategory::create($request_data);
 
 
             return response($automobile, 201);
@@ -171,11 +171,11 @@ class AutomobilesController extends Controller
                    "message" => "You can not perform this action"
                 ],401);
            }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
 
-                $automobile  =  tap(AutomobileCategory::where(["id" => $updatableData["id"]]))->update(collect($updatableData)->only([
+                $automobile  =  tap(AutomobileCategory::where(["id" => $request_data["id"]]))->update(collect($request_data)->only([
                     'name',
                     'logo'
                 ])->toArray()
@@ -635,10 +635,10 @@ class AutomobilesController extends Controller
                  ],401);
             }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
 
-            $automobile =  AutomobileMake::create($insertableData);
+            $automobile =  AutomobileMake::create($request_data);
 
 
             return response($automobile, 201);
@@ -713,11 +713,11 @@ class AutomobilesController extends Controller
                    "message" => "You can not perform this action"
                 ],401);
            }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
 
-                $automobile  =  tap(AutomobileMake::where(["id" => $updatableData["id"]]))->update(collect($updatableData)->only([
+                $automobile  =  tap(AutomobileMake::where(["id" => $request_data["id"]]))->update(collect($request_data)->only([
                     'name',
                     "description"
                 ])->toArray()
@@ -1310,10 +1310,10 @@ class AutomobilesController extends Controller
                  ],401);
             }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
 
-            $automobile =  AutomobileModel::create($insertableData);
+            $automobile =  AutomobileModel::create($request_data);
 
 
             return response($automobile, 201);
@@ -1388,11 +1388,11 @@ class AutomobilesController extends Controller
                    "message" => "You can not perform this action"
                 ],401);
            }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
 
-                $automobile  =  tap(AutomobileModel::where(["id" => $updatableData["id"]]))->update(collect($updatableData)->only([
+                $automobile  =  tap(AutomobileModel::where(["id" => $request_data["id"]]))->update(collect($request_data)->only([
                     'name',
                     "description"
                 ])->toArray()
@@ -1867,10 +1867,10 @@ class AutomobilesController extends Controller
                  ],401);
             }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
 
-            $automobile =  AutomobileModelVariant::create($insertableData);
+            $automobile =  AutomobileModelVariant::create($request_data);
 
 
             return response($automobile, 201);
@@ -1945,11 +1945,11 @@ class AutomobilesController extends Controller
                    "message" => "You can not perform this action"
                 ],401);
            }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
 
-                $automobile  =  tap(AutomobileModelVariant::where(["id" => $updatableData["id"]]))->update(collect($updatableData)->only([
+                $automobile  =  tap(AutomobileModelVariant::where(["id" => $request_data["id"]]))->update(collect($request_data)->only([
                     'name',
                     "description"
                 ])->toArray()
@@ -2340,9 +2340,9 @@ class AutomobilesController extends Controller
                  ],401);
             }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
-            $automobile =  AutomobileFuelType::create($insertableData);
+            $automobile =  AutomobileFuelType::create($request_data);
 
 
             return response($automobile, 201);
@@ -2417,11 +2417,11 @@ class AutomobilesController extends Controller
                    "message" => "You can not perform this action"
                 ],401);
            }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
 
-                $automobile  =  tap(AutomobileFuelType::where(["id" => $updatableData["id"]]))->update(collect($updatableData)->only([
+                $automobile  =  tap(AutomobileFuelType::where(["id" => $request_data["id"]]))->update(collect($request_data)->only([
                     'name',
                     "description"
                 ])->toArray()

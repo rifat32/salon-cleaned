@@ -27,13 +27,13 @@ class FuelStationController extends Controller
         try{
             $this->storeActivity($request,"");
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
             $location =  config("setup-config.fuel_station_gallery_location");
 
             $images = [];
-            if(!empty($insertableData["images"])) {
-                foreach($insertableData["images"] as $image){
+            if(!empty($request_data["images"])) {
+                foreach($request_data["images"] as $image){
                     $new_file_name = time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
                     $image->move(public_path($location), $new_file_name);
 
@@ -368,17 +368,17 @@ class FuelStationController extends Controller
                     ], 401);
                 }
 
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
 
-                $insertableData["created_by"] = $request->user()->id;
+                $request_data["created_by"] = $request->user()->id;
 
-                $fuel_station =  FuelStation::create($insertableData);
+                $fuel_station =  FuelStation::create($request_data);
 
-                if (empty($insertableData["options"])) {
-                    $insertableData["options"]  = [];
+                if (empty($request_data["options"])) {
+                    $request_data["options"]  = [];
                 }
 
-                foreach ($insertableData["options"] as $option) {
+                foreach ($request_data["options"] as $option) {
 
                     FuelStationOption::create([
                         "fuel_station_id" => $fuel_station->id,
@@ -391,7 +391,7 @@ class FuelStationController extends Controller
                     "fuel_station_id" => $fuel_station->id
                 ])
                     ->delete();
-                $timesArray = collect($insertableData["times"])->unique("day");
+                $timesArray = collect($request_data["times"])->unique("day");
                 foreach ($timesArray as $garage_time) {
                     FuelStationTime::create([
                         "fuel_station_id" => $fuel_station->id,

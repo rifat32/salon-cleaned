@@ -23,6 +23,7 @@ use App\Models\GarageAutomobileModel;
 use App\Models\GaragePackage;
 use App\Models\GarageSubService;
 use App\Models\GarageTime;
+use App\Models\Holiday;
 use App\Models\Job;
 use App\Models\JobBid;
 use App\Models\JobPayment;
@@ -120,23 +121,23 @@ class ClientBookingController extends Controller
         try {
             $this->storeActivity($request, "");
             return DB::transaction(function () use ($request) {
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
 
-                $insertableData["customer_id"] = auth()->user()->id;
-                $insertableData["status"] = "pending";
-                $insertableData["created_by"] = $request->user()->id;
-                $insertableData["created_from"] = "customer_side";
-
-
+                $request_data["customer_id"] = auth()->user()->id;
+                $request_data["status"] = "pending";
+                $request_data["created_by"] = $request->user()->id;
+                $request_data["created_from"] = "customer_side";
 
 
-                $insertableData["payment_status"] = "pending";
+
+
+                $request_data["payment_status"] = "pending";
 
 
 
 
                 $garage = Garage::where([
-                    "id" => $insertableData["garage_id"]
+                    "id" => $request_data["garage_id"]
                 ])
                     ->first();
 
@@ -149,13 +150,25 @@ class ClientBookingController extends Controller
                             404
                         );
                 }
+                $holidays = Holiday::
+
+                whereDate("start_date", "<=", $request_data["job_start_date"])
+                ->whereDate("end_date", ">=", $request_data["job_start_date"])
+                ->get();
+
+                if(!empty($holidays)) {
+                    return response()->json([
+                      "message" => "some off days are exists",
+                      "conflicted_holidays" => $holidays
+                    ], 409);
+                }
 
 
-                $booking =  Booking::create($insertableData);
+                $booking =  Booking::create($request_data);
 
                 $total_price = 0;
                 $total_time = 0;
-                foreach ($insertableData["booking_sub_service_ids"] as $index => $sub_service_id) {
+                foreach ($request_data["booking_sub_service_ids"] as $index => $sub_service_id) {
                     $sub_service =  SubService::where([
                         "business_id" => $booking->garage_id,
                         "id" => $sub_service_id
@@ -170,7 +183,7 @@ class ClientBookingController extends Controller
                         throw new Exception(json_encode($error), 422);
                     }
 
-                    $price = $this->getPrice($sub_service, $insertableData["expert_id"]);
+                    $price = $this->getPrice($sub_service, $request_data["expert_id"]);
 
                     $total_time += $sub_service->service_time_in_minute;
 
@@ -190,9 +203,9 @@ class ClientBookingController extends Controller
                 }
 
 
-                foreach ($insertableData["booking_garage_package_ids"] as $index => $garage_package_id) {
+                foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([
-                        "garage_id" => $insertableData["garage_id"],
+                        "garage_id" => $request_data["garage_id"],
                         "id" => $garage_package_id
                     ])
 
@@ -221,10 +234,10 @@ class ClientBookingController extends Controller
                 $booking->price = $total_price;
                 $booking->save();
 
-                if (!empty($insertableData["coupon_code"])) {
+                if (!empty($request_data["coupon_code"])) {
                     $coupon_discount = $this->getCouponDiscount(
-                        $insertableData["garage_id"],
-                        $insertableData["coupon_code"],
+                        $request_data["garage_id"],
+                        $request_data["coupon_code"],
                         $total_price
                     );
 
@@ -232,7 +245,7 @@ class ClientBookingController extends Controller
 
                         $booking->coupon_discount_type = $coupon_discount["discount_type"];
                         $booking->coupon_discount_amount = $coupon_discount["discount_amount"];
-                        $booking->coupon_code = $insertableData["coupon_code"];
+                        $booking->coupon_code = $request_data["coupon_code"];
 
                         $booking->save();
 
@@ -429,10 +442,10 @@ $booking->clientSecret = $paymentIntent->client_secret;
             $this->storeActivity($request, "");
             return  DB::transaction(function () use ($request) {
 
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
                 $booking = Booking::where([
-                    "id" => $updatableData["id"],
+                    "id" => $request_data["id"],
                     "customer_id" =>  auth()->user()->id
                 ])
                     ->first();
@@ -461,8 +474,8 @@ $booking->clientSecret = $paymentIntent->client_secret;
 
 
 
-                $booking->status = $updatableData["status"];
-                $booking->status = $updatableData["reason"] ?? NULL;
+                $booking->status = $request_data["status"];
+                $booking->status = $request_data["reason"] ?? NULL;
 
                 $booking->save();
 
@@ -576,10 +589,10 @@ $booking->clientSecret = $paymentIntent->client_secret;
             $this->storeActivity($request, "");
             return  DB::transaction(function () use ($request) {
 
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
                 $garage = Garage::where([
-                    "id" => $updatableData["garage_id"]
+                    "id" => $request_data["garage_id"]
                 ])
                     ->first();
 
@@ -594,12 +607,24 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 }
 
 
+                $holidays = Holiday::
+
+                whereDate("start_date", "<=", $request_data["job_start_date"])
+                ->whereDate("end_date", ">=", $request_data["job_start_date"])
+                ->get();
+
+                if(!empty($holidays)) {
+                    return response()->json([
+                      "message" => "some off days are exists",
+                      "conflicted_holidays" => $holidays
+                    ], 409);
+                }
 
 
 
 
-                $booking  =  tap(Booking::where(["id" => $updatableData["id"]]))->update(
-                    collect($updatableData)->only([
+                $booking  =  tap(Booking::where(["id" => $request_data["id"]]))->update(
+                    collect($request_data)->only([
                         "garage_id",
                         "additional_information",
                         "coupon_code",
@@ -651,14 +676,14 @@ $booking->clientSecret = $paymentIntent->client_secret;
                     ]);
                 }
 
-                $slotValidation =  $this->validateBookingSlots($booking->id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
+                // $slotValidation =  $this->validateBookingSlots($booking->id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
-                if ($slotValidation['status'] === 'error') {
-                    // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
-                    return response()->json($slotValidation, 422);
-                }
+                // if ($slotValidation['status'] === 'error') {
+                //     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
+                //     return response()->json($slotValidation, 422);
+                // }
 
-                foreach ($updatableData["booking_garage_package_ids"] as $index => $garage_package_id) {
+                foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([
                         "garage_id" => $booking->garage_id,
                         "id" => $garage_package_id
@@ -683,7 +708,7 @@ $booking->clientSecret = $paymentIntent->client_secret;
                     ]);
                 }
 
-                // $booking->price = (!empty($updatableData["price"]?$updatableData["price"]:$total_price));
+                // $booking->price = (!empty($request_data["price"]?$request_data["price"]:$total_price));
                 $booking->price = $total_price;
 
 
@@ -691,10 +716,10 @@ $booking->clientSecret = $paymentIntent->client_secret;
 
 
 
-                // if(!empty($updatableData["coupon_code"])){
+                // if(!empty($request_data["coupon_code"])){
                 //     $coupon_discount = $this->getCouponDiscount(
-                //         $updatableData["garage_id"],
-                //         $updatableData["coupon_code"],
+                //         $request_data["garage_id"],
+                //         $request_data["coupon_code"],
                 //         $booking->price
                 //     );
 
@@ -734,11 +759,11 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 // ));}
 
 
-                if(!empty($updatableData["payments"])) {
+                if(!empty($request_data["payments"])) {
                     $total_payable = $booking->final_price;
 
 
-                    $payments = collect($updatableData["payments"]);
+                    $payments = collect($request_data["payments"]);
 
                     $payment_amount =  $payments->sum("amount");
 
@@ -750,7 +775,7 @@ $booking->clientSecret = $paymentIntent->client_secret;
 
                     if ($total_payable < $total_payment) {
                         return response([
-                            "payment is greater than payable"
+                          "message" =>  "payment is greater than payable"
                         ], 409);
                     }
 
@@ -766,7 +791,7 @@ $booking->clientSecret = $paymentIntent->client_secret;
 
                     if ($total_payable == $total_payment) {
                         Booking::where([
-                            "id" => $updatableData["booking_id"]
+                            "id" => $booking->id
                         ])
                             ->update([
                                 "payment_status" => "complete",

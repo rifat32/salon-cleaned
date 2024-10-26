@@ -97,11 +97,11 @@ class ServiceController extends Controller
                  ],401);
             }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
-            $insertableData["business_id"] = auth()->user()->business_id;
+            $request_data["business_id"] = auth()->user()->business_id;
 
-            $service =  Service::create($insertableData);
+            $service =  Service::create($request_data);
 
          // Translate the service name using MyMemory
 $service_name_query = Http::get('https://api.mymemory.translated.net/get', [
@@ -217,11 +217,11 @@ if(!empty($service->description)) {
                    "message" => "You can not perform this action"
                 ],401);
            }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
 
-                $service  =  tap(Service::where(["id" => $updatableData["id"]])->where("business_id",auth()->user()->business_id))->update(collect($updatableData)->only([
+                $service  =  tap(Service::where(["id" => $request_data["id"]])->where("business_id",auth()->user()->business_id))->update(collect($request_data)->only([
                     'name',
                     'image',
                     'icon',
@@ -1150,10 +1150,10 @@ if(!empty($service->description)) {
                  ],401);
             }
 
-            $insertableData = $request->validated();
-            $insertableData["is_fixed_price"] = 1;
-            $insertableData["business_id"] = auth()->user()->business_id;
-            $sub_service =  SubService::create($insertableData);
+            $request_data = $request->validated();
+            $request_data["is_fixed_price"] = 1;
+            $request_data["business_id"] = auth()->user()->business_id;
+            $sub_service =  SubService::create($request_data);
 
 
             $service_name_query = Http::get('https://api.mymemory.translated.net/get', [
@@ -1271,16 +1271,16 @@ if(!empty($sub_service->description)) {
                    "message" => "You can not perform this action"
                 ],401);
            }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
 
 
                 $sub_service  =  tap(SubService::where([
-                    "id" => $updatableData["id"]
+                    "id" => $request_data["id"]
                 ])
                 ->where("business_id",auth()->user()->business_id)
 
-                )->update(collect($updatableData)->only([
+                )->update(collect($request_data)->only([
                     'name',
                     "description",
                     "service_id",

@@ -85,10 +85,10 @@ class EmailTemplateWrapperController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
-                $template  =  tap(EmailTemplateWrapper::where(["id" => $updatableData["id"]]))->update(
-                    collect($updatableData)->only([
+                $template  =  tap(EmailTemplateWrapper::where(["id" => $request_data["id"]]))->update(
+                    collect($request_data)->only([
                         "name",
                         "template"
                     ])->toArray()

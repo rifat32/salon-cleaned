@@ -94,20 +94,20 @@ class CouponController extends Controller
                     ], 401);
                 }
 
-                $insertableData = $request->validated();
-                if (!$this->garageOwnerCheck($insertableData["garage_id"])) {
+                $request_data = $request->validated();
+                if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                     return response()->json([
                         "message" => "you are not the owner of the garage or the requested garage does not exist."
                     ], 401);
                 }
 
-                // if(empty($insertableData["code"])) {
-                //     $insertableData["code"] =
+                // if(empty($request_data["code"])) {
+                //     $request_data["code"] =
                 // }
 
                 $code_exists = Coupon::where([
-                    "garage_id" =>$insertableData["garage_id"],
-                    "code" => $insertableData["code"]
+                    "garage_id" =>$request_data["garage_id"],
+                    "code" => $request_data["code"]
                 ])->first();
 
               if ($code_exists) {
@@ -120,7 +120,7 @@ class CouponController extends Controller
                     }
 
 
-                $coupon =  Coupon::create($insertableData);
+                $coupon =  Coupon::create($request_data);
 
 
                 return response($coupon, 201);
@@ -207,19 +207,19 @@ class CouponController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
 
-                if (!$this->garageOwnerCheck($updatableData["garage_id"])) {
+                if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                     return response()->json([
                         "message" => "you are not the owner of the garage or the requested garage does not exist."
                     ], 401);
                 }
                 $code_exists = Coupon::where([
-                    "garage_id" =>$updatableData["garage_id"],
-                    "code" => $updatableData["code"]
+                    "garage_id" =>$request_data["garage_id"],
+                    "code" => $request_data["code"]
                 ])
-                ->where('id', '<>',$updatableData["id"])
+                ->where('id', '<>',$request_data["id"])
                 ->first();
 
               if ($code_exists) {
@@ -231,8 +231,8 @@ class CouponController extends Controller
 
                     }
 
-                $coupon  =  tap(Coupon::where(["id" => $updatableData["id"]]))->update(
-                    collect($updatableData)->only([
+                $coupon  =  tap(Coupon::where(["id" => $request_data["id"]]))->update(
+                    collect($request_data)->only([
                         "garage_id",
                         "name",
                         "code",
@@ -331,9 +331,9 @@ class CouponController extends Controller
                     "message" => "You can not perform this action"
                  ],401);
             }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
-            if (!$this->garageOwnerCheck($updatableData["garage_id"])) {
+            if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                 return response()->json([
                     "message" => "you are not the owner of the garage or the requested garage does not exist."
                 ], 401);
@@ -342,8 +342,8 @@ class CouponController extends Controller
 
 
             $coupon =  Coupon::where([
-                "garage_id"=> $updatableData["garage_id"],
-                "id"=> $updatableData["id"]
+                "garage_id"=> $request_data["garage_id"],
+                "id"=> $request_data["id"]
             ])
             ->first();
 

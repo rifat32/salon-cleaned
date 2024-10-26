@@ -118,8 +118,8 @@ class JobController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
-                if (!$this->garageOwnerCheck($updatableData["garage_id"])) {
+                $request_data = $request->validated();
+                if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                     return response()->json([
                         "message" => "you are not the owner of the garage or the requested garage does not exist."
                     ], 401);
@@ -127,17 +127,17 @@ class JobController extends Controller
 
 
                 $booking  = Booking::where([
-                    "id" => $updatableData["booking_id"],
-                    "garage_id" =>  $updatableData["garage_id"]
+                    "id" => $request_data["booking_id"],
+                    "garage_id" =>  $request_data["garage_id"]
                 ])
                     ->first();
 
                 // $coupon_discount = false;
-                // if(!empty($insertableData["coupon_code"])){
+                // if(!empty($request_data["coupon_code"])){
                 //     $coupon_discount = $this->getCouponDiscount(
-                //         $insertableData["garage_id"],
-                //         $insertableData["coupon_code"],
-                //         $insertableData["price"]
+                //         $request_data["garage_id"],
+                //         $request_data["coupon_code"],
+                //         $request_data["price"]
                 //     );
                 // }
 
@@ -165,15 +165,15 @@ class JobController extends Controller
 
                     "job_start_date" => $booking->job_start_date,
 
-                    "discount_type" => $updatableData["discount_type"],
-                    "discount_amount" => $updatableData["discount_amount"],
+                    "discount_type" => $request_data["discount_type"],
+                    "discount_amount" => $request_data["discount_amount"],
 
                     "coupon_code" => $booking->coupon_code,
                     "coupon_discount_type" => $booking->coupon_discount_type,
                     "coupon_discount_amount" => $booking->coupon_discount_amount,
                     "price" => ($booking->price),
                     "final_price" => $booking->final_price,
-                    "status" => $updatableData["status"],
+                    "status" => $request_data["status"],
                     "payment_status" => "due",
                 ]);
 
@@ -213,10 +213,10 @@ class JobController extends Controller
                     $total_price += $booking_package->price;
                 }
 
-                // if(!empty($updatableData["coupon_code"])){
+                // if(!empty($request_data["coupon_code"])){
                 //     $coupon_discount = $this->getCouponDiscount(
-                //         $updatableData["garage_id"],
-                //         $updatableData["coupon_code"],
+                //         $request_data["garage_id"],
+                //         $request_data["coupon_code"],
                 //         $job->price
 
                 //     );
@@ -395,35 +395,35 @@ class JobController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
-                if (!$this->garageOwnerCheck($updatableData["garage_id"])) {
+                $request_data = $request->validated();
+                if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                     return response()->json([
                         "message" => "you are not the owner of the garage or the requested garage does not exist."
                     ], 401);
                 }
 
                 // $coupon_discount = false;
-                // if(!empty($updatableData["coupon_code"])){
+                // if(!empty($request_data["coupon_code"])){
                 //     $coupon_discount = $this->getCouponDiscount(
-                //         $updatableData["garage_id"],
-                //         $updatableData["coupon_code"],
-                //         $updatableData["price"]
+                //         $request_data["garage_id"],
+                //         $request_data["coupon_code"],
+                //         $request_data["price"]
                 //     );
 
                 // }
 
                 // if($coupon_discount) {
-                //     $updatableData["coupon_discount_type"] = $coupon_discount["discount_type"];
-                //     $updatableData["coupon_discount_amount"] = $coupon_discount["discount_amount"];
+                //     $request_data["coupon_discount_type"] = $coupon_discount["discount_type"];
+                //     $request_data["coupon_discount_amount"] = $coupon_discount["discount_amount"];
 
                 // }
 
 
                 $job  =  tap(Job::where([
-                    "id" => $updatableData["id"],
-                    "garage_id" =>  $updatableData["garage_id"]
+                    "id" => $request_data["id"],
+                    "garage_id" =>  $request_data["garage_id"]
                 ]))->update(
-                    collect($updatableData)->only([
+                    collect($request_data)->only([
                         "coupon_code",
                         "status",
                         "job_start_date",
@@ -447,7 +447,7 @@ class JobController extends Controller
                     "job_id" => $job->id
                 ])->delete();
                 $total_price = 0;
-                foreach ($updatableData["job_sub_service_ids"] as $index => $sub_service_id) {
+                foreach ($request_data["job_sub_service_ids"] as $index => $sub_service_id) {
                     $garage_sub_service =  GarageSubService::leftJoin('garage_services', 'garage_sub_services.garage_service_id', '=', 'garage_services.id')
                         ->where([
                             "garage_services.garage_id" => $job->garage_id,
@@ -470,7 +470,7 @@ class JobController extends Controller
                     $price = $this->getPrice(
                         $sub_service_id,
                         $garage_sub_service->id,
-                        $updatableData["automobile_make_id"]
+                        $request_data["automobile_make_id"]
                     );
                     // $total_price += $price;
                     JobSubService::create([
@@ -479,7 +479,7 @@ class JobController extends Controller
                         "price" => $price
                     ]);
                 }
-                foreach ($updatableData["job_garage_package_ids"] as $index => $garage_package_id) {
+                foreach ($request_data["job_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([
                         "garage_id" => $job->garage_id,
                         "id" => $garage_package_id
@@ -514,10 +514,10 @@ class JobController extends Controller
                 $job->final_price = $job->price - $discount_amount;
 
 
-                // if(!empty($updatableData["coupon_code"])){
+                // if(!empty($request_data["coupon_code"])){
                 //     $coupon_discount = $this->getCouponDiscount(
-                //         $updatableData["garage_id"],
-                //         $updatableData["coupon_code"],
+                //         $request_data["garage_id"],
+                //         $request_data["coupon_code"],
                 //         $job->price
 
                 //     );
@@ -628,16 +628,16 @@ class JobController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
-                if (!$this->garageOwnerCheck($updatableData["garage_id"])) {
+                $request_data = $request->validated();
+                if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                     return response()->json([
                         "message" => "you are not the owner of the garage or the requested garage does not exist."
                     ], 401);
                 }
 
                 $job = Job::where([
-                    "id" => $updatableData["id"],
-                    "garage_id" =>  $updatableData["garage_id"]
+                    "id" => $request_data["id"],
+                    "garage_id" =>  $request_data["garage_id"]
                 ])
                     ->first();
                 if (!$job) {
@@ -651,8 +651,8 @@ class JobController extends Controller
                 }
 
                 if ($job) {
-                    $job->status = $updatableData["status"];
-                    $job->update(collect($updatableData)->only(["status"])->toArray());
+                    $job->status = $request_data["status"];
+                    $job->update(collect($request_data)->only(["status"])->toArray());
                 }
 
 
@@ -1435,8 +1435,8 @@ class JobController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
-                if (!$this->garageOwnerCheck($updatableData["garage_id"])) {
+                $request_data = $request->validated();
+                if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                     return response()->json([
                         "message" => "you are not the owner of the garage or the requested garage does not exist."
                     ], 401);
@@ -1444,8 +1444,8 @@ class JobController extends Controller
 
 
                 $booking  = Booking::where([
-                    "id" => $updatableData["booking_id"],
-                    "garage_id" =>  $updatableData["garage_id"]
+                    "id" => $request_data["booking_id"],
+                    "garage_id" =>  $request_data["garage_id"]
                 ])->first();
 
                 if (!$booking) {
@@ -1464,7 +1464,7 @@ class JobController extends Controller
                 $total_payable = $booking->final_price;
 
 
-                $payments = collect($updatableData["payments"]);
+                $payments = collect($request_data["payments"]);
 
                 $payment_amount =  $payments->sum("amount");
 
@@ -1476,7 +1476,7 @@ class JobController extends Controller
 
                 if ($total_payable < $total_payment) {
                     return response([
-                        "payment is greater than payable"
+                        "message" =>  "payment is greater than payable"
                     ], 409);
                 }
 
@@ -1492,7 +1492,7 @@ class JobController extends Controller
 
                 if ($total_payable == $total_payment) {
                     Booking::where([
-                        "id" => $updatableData["booking_id"]
+                        "id" => $request_data["booking_id"]
                     ])
                         ->update([
                             "payment_status" => "complete",

@@ -83,9 +83,9 @@ class FuelStationServiceController extends Controller
                     ], 401);
                 }
 
-                $insertableData = $request->validated();
+                $request_data = $request->validated();
 
-                $fuel_station =  FuelStationService::create($insertableData);
+                $fuel_station =  FuelStationService::create($request_data);
 
 
 
@@ -167,12 +167,12 @@ class FuelStationServiceController extends Controller
                         "message" => "You can not perform this action"
                     ], 401);
                 }
-                $updatableData = $request->validated();
+                $request_data = $request->validated();
 
 
 
-                $fuel_station_service  =  tap(FuelStationService::where(["id" => $updatableData["id"]]))->update(
-                    collect($updatableData)->only([
+                $fuel_station_service  =  tap(FuelStationService::where(["id" => $request_data["id"]]))->update(
+                    collect($request_data)->only([
                         "name",
                         "icon",
 

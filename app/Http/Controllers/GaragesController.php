@@ -111,13 +111,13 @@ class GaragesController extends Controller
             //      ],401);
             // }
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
             $location =  config("setup-config.garage_gallery_location");
 
-            $new_file_name = time() . '_' . str_replace(' ', '_', $insertableData["image"]->getClientOriginalName());
+            $new_file_name = time() . '_' . str_replace(' ', '_', $request_data["image"]->getClientOriginalName());
 
-            $insertableData["image"]->move(public_path($location), $new_file_name);
+            $request_data["image"]->move(public_path($location), $new_file_name);
 
 
             return response()->json(["image" => $new_file_name,"location" => $location,"full_location"=>("/".$location."/".$new_file_name)], 200);
@@ -247,13 +247,13 @@ public function createGarageImageV2(ImageUploadRequestInBase64 $request)
         try{
             $this->storeActivity($request,"");
 
-            $insertableData = $request->validated();
+            $request_data = $request->validated();
 
             $location =  config("setup-config.garage_gallery_location");
 
             $images = [];
-            if(!empty($insertableData["images"])) {
-                foreach($insertableData["images"] as $image){
+            if(!empty($request_data["images"])) {
+                foreach($request_data["images"] as $image){
                     $new_file_name = time() . '_' . str_replace(' ', '_', $image->getClientOriginalName());
                     $image->move(public_path($location), $new_file_name);
 
@@ -412,12 +412,12 @@ public function createGarageImageV2(ImageUploadRequestInBase64 $request)
                "message" => "You can not perform this action"
             ],401);
        }
-        $insertableData = $request->validated();
+        $request_data = $request->validated();
 
 
 
 $user = User::where([
-    "id" =>  $insertableData['garage']['owner_id']
+    "id" =>  $request_data['garage']['owner_id']
 ])
 ->first();
 
@@ -439,18 +439,18 @@ if(!$user->hasRole('garage_owner')) {
 
 
 
-        $insertableData['garage']['status'] = "pending";
+        $request_data['garage']['status'] = "pending";
 
-        $insertableData['garage']['created_by'] = $request->user()->id;
-        $insertableData['garage']['is_active'] = true;
-        $garage =  Garage::create($insertableData['garage']);
+        $request_data['garage']['created_by'] = $request->user()->id;
+        $request_data['garage']['is_active'] = true;
+        $garage =  Garage::create($request_data['garage']);
 
 
         GarageTime::where([
             "garage_id" => $garage->id
            ])
            ->delete();
-           $timesArray = collect($insertableData["times"])->unique("day");
+           $timesArray = collect($request_data["times"])->unique("day");
            foreach($timesArray as $garage_time) {
             GarageTime::create([
                 "garage_id" => $garage->id,
@@ -467,8 +467,8 @@ if(!$user->hasRole('garage_owner')) {
 
 
 
-        if(!empty($insertableData["images"])) {
-            foreach($insertableData["images"] as $garage_images){
+        if(!empty($request_data["images"])) {
+            foreach($request_data["images"] as $garage_images){
                 GarageGallery::create([
                     "image" => $garage_images,
                     "garage_id" =>$garage->id,
@@ -480,7 +480,7 @@ if(!$user->hasRole('garage_owner')) {
   // end garage info ##############
 
   // create services
-     $serviceUpdate = $this->createGarageServices($insertableData['service'],$garage->id);
+     $serviceUpdate = $this->createGarageServices($request_data['service'],$garage->id);
 
      if(!$serviceUpdate["success"]){
         $error =  [
@@ -678,33 +678,33 @@ if(!$user->hasRole('garage_owner')) {
                "message" => "You can not perform this action"
             ],401);
        }
-        $insertableData = $request->validated();
+        $request_data = $request->validated();
 
    // user info starts ##############
 
-   $password = $insertableData['user']['password'];
-   $insertableData['user']['password'] = Hash::make($password);
-   if(!$request->user()->hasRole('superadmin') || empty($insertableData['user']['password'])) {
+   $password = $request_data['user']['password'];
+   $request_data['user']['password'] = Hash::make($password);
+   if(!$request->user()->hasRole('superadmin') || empty($request_data['user']['password'])) {
     $password = Str::random(10);
-    $insertableData['user']['password'] = Hash::make($password);
+    $request_data['user']['password'] = Hash::make($password);
     }
 
 
 
 
-    $insertableData['user']['remember_token'] = Str::random(10);
-    $insertableData['user']['is_active'] = true;
-    $insertableData['user']['created_by'] = $request->user()->id;
+    $request_data['user']['remember_token'] = Str::random(10);
+    $request_data['user']['is_active'] = true;
+    $request_data['user']['created_by'] = $request->user()->id;
 
-    $insertableData['user']['address_line_1'] = $insertableData['garage']['address_line_1'];
-    $insertableData['user']['address_line_2'] = (!empty($insertableData['garage']['address_line_2'])?$insertableData['garage']['address_line_2']:"") ;
-    $insertableData['user']['country'] = $insertableData['garage']['country'];
-    $insertableData['user']['city'] = $insertableData['garage']['city'];
-    $insertableData['user']['postcode'] = $insertableData['garage']['postcode'];
-    $insertableData['user']['lat'] = $insertableData['garage']['lat'];
-    $insertableData['user']['long'] = $insertableData['garage']['long'];
+    $request_data['user']['address_line_1'] = $request_data['garage']['address_line_1'];
+    $request_data['user']['address_line_2'] = (!empty($request_data['garage']['address_line_2'])?$request_data['garage']['address_line_2']:"") ;
+    $request_data['user']['country'] = $request_data['garage']['country'];
+    $request_data['user']['city'] = $request_data['garage']['city'];
+    $request_data['user']['postcode'] = $request_data['garage']['postcode'];
+    $request_data['user']['lat'] = $request_data['garage']['lat'];
+    $request_data['user']['long'] = $request_data['garage']['long'];
 
-    $user =  User::create($insertableData['user']);
+    $user =  User::create($request_data['user']);
 
    // end user info ##############
 
@@ -712,14 +712,14 @@ if(!$user->hasRole('garage_owner')) {
   //  garage info ##############
 
 
-        $insertableData['garage']['status'] = "pending";
-        $insertableData['garage']['owner_id'] = $user->id;
-        $insertableData['garage']['created_by'] = $request->user()->id;
-        $insertableData['garage']['is_active'] = true;
-        $garage =  Garage::create($insertableData['garage']);
+        $request_data['garage']['status'] = "pending";
+        $request_data['garage']['owner_id'] = $user->id;
+        $request_data['garage']['created_by'] = $request->user()->id;
+        $request_data['garage']['is_active'] = true;
+        $garage =  Garage::create($request_data['garage']);
 
-        if(!empty($insertableData["images"])) {
-            foreach($insertableData["images"] as $garage_images){
+        if(!empty($request_data["images"])) {
+            foreach($request_data["images"] as $garage_images){
                 GarageGallery::create([
                     "image" => $garage_images,
                     "garage_id" =>$garage->id,
@@ -731,7 +731,7 @@ if(!$user->hasRole('garage_owner')) {
             "garage_id" => $garage->id
            ])
            ->delete();
-           $timesArray = collect($insertableData["times"])->unique("day");
+           $timesArray = collect($request_data["times"])->unique("day");
            foreach($timesArray as $garage_time) {
             GarageTime::create([
                 "garage_id" => $garage->id,
@@ -749,7 +749,7 @@ if(!$user->hasRole('garage_owner')) {
   // end garage info ##############
 
   // create services
-     $serviceUpdate = $this->createGarageServices($insertableData['service'],$garage->id);
+     $serviceUpdate = $this->createGarageServices($request_data['service'],$garage->id);
 
      if(!$serviceUpdate["success"]){
         $error =  [
@@ -769,9 +769,9 @@ if(!$user->hasRole('garage_owner')) {
 
      $this->storeQuestion($garage->id);
 
-     if($insertableData['user']['send_password']) {
+     if($request_data['user']['send_password']) {
         if(env("SEND_EMAIL") == true) {
-            Mail::to($insertableData['user']['email'])->send(new SendPassword($user,$password));
+            Mail::to($request_data['user']['email'])->send(new SendPassword($user,$password));
         }
     }
 
@@ -965,10 +965,10 @@ if(!$user->hasRole('garage_owner')) {
         ], 401);
     }
 
-       $updatableData = $request->validated();
+       $request_data = $request->validated();
     //    user email check
        $userPrev = User::where([
-        "id" => $updatableData["user"]["id"]
+        "id" => $request_data["user"]["id"]
        ]);
        if(!$request->user()->hasRole('superadmin')) {
         $userPrev  = $userPrev->where(function ($query) {
@@ -987,7 +987,7 @@ if(!$user->hasRole('garage_owner')) {
 
 
     //  $garagePrev = Garage::where([
-    //     "id" => $updatableData["garage"]["id"]
+    //     "id" => $request_data["garage"]["id"]
     //  ]);
 
     // $garagePrev = $garagePrev->first();
@@ -997,23 +997,23 @@ if(!$user->hasRole('garage_owner')) {
     //     ],404);
     //   }
 
-        if(!empty($updatableData['user']['password'])) {
-            $updatableData['user']['password'] = Hash::make($updatableData['user']['password']);
+        if(!empty($request_data['user']['password'])) {
+            $request_data['user']['password'] = Hash::make($request_data['user']['password']);
         } else {
-            unset($updatableData['user']['password']);
+            unset($request_data['user']['password']);
         }
-        $updatableData['user']['is_active'] = true;
-        $updatableData['user']['remember_token'] = Str::random(10);
-        $updatableData['user']['address_line_1'] = $updatableData['garage']['address_line_1'];
-    $updatableData['user']['address_line_2'] = $updatableData['garage']['address_line_2'];
-    $updatableData['user']['country'] = $updatableData['garage']['country'];
-    $updatableData['user']['city'] = $updatableData['garage']['city'];
-    $updatableData['user']['postcode'] = $updatableData['garage']['postcode'];
-    $updatableData['user']['lat'] = $updatableData['garage']['lat'];
-    $updatableData['user']['long'] = $updatableData['garage']['long'];
+        $request_data['user']['is_active'] = true;
+        $request_data['user']['remember_token'] = Str::random(10);
+        $request_data['user']['address_line_1'] = $request_data['garage']['address_line_1'];
+    $request_data['user']['address_line_2'] = $request_data['garage']['address_line_2'];
+    $request_data['user']['country'] = $request_data['garage']['country'];
+    $request_data['user']['city'] = $request_data['garage']['city'];
+    $request_data['user']['postcode'] = $request_data['garage']['postcode'];
+    $request_data['user']['lat'] = $request_data['garage']['lat'];
+    $request_data['user']['long'] = $request_data['garage']['long'];
         $user  =  tap(User::where([
-            "id" => $updatableData['user']["id"]
-            ]))->update(collect($updatableData['user'])->only([
+            "id" => $request_data['user']["id"]
+            ]))->update(collect($request_data['user'])->only([
             'first_Name',
             'last_Name',
             'phone',
@@ -1044,11 +1044,11 @@ if(!$user->hasRole('garage_owner')) {
 
 
   //  garage info ##############
-        // $updatableData['garage']['status'] = "pending";
+        // $request_data['garage']['status'] = "pending";
 
         $garage  =  tap(Garage::where([
-            "id" => $updatableData['garage']["id"]
-            ]))->update(collect($updatableData['garage'])->only([
+            "id" => $request_data['garage']["id"]
+            ]))->update(collect($request_data['garage'])->only([
                 "name",
                 "about",
                 "web_page",
@@ -1083,8 +1083,8 @@ if(!$user->hasRole('garage_owner')) {
                 ],404);
 
             }
-            if(!empty($updatableData["images"])) {
-                foreach($updatableData["images"] as $garage_images){
+            if(!empty($request_data["images"])) {
+                foreach($request_data["images"] as $garage_images){
                     GarageGallery::create([
                         "image" => $garage_images,
                         "garage_id" =>$garage->id,
@@ -1105,7 +1105,7 @@ if(!$user->hasRole('garage_owner')) {
     ->delete();
 
   // create services
-  $this->createGarageServices($updatableData['service'],$garage->id);
+  $this->createGarageServices($request_data['service'],$garage->id);
 
   UserTranslation::where([
     "user_id" => $user->id
@@ -1224,9 +1224,9 @@ UserTranslation::create([
                     "message" => "You can not perform this action"
                  ],401);
             }
-            $updatableData = $request->validated();
+            $request_data = $request->validated();
 
-            $garageQuery  = Garage::where(["id" => $updatableData["id"]]);
+            $garageQuery  = Garage::where(["id" => $request_data["id"]]);
             if(!auth()->user()->hasRole('superadmin')) {
                 $garageQuery = $garageQuery->where(function ($query) {
                     $query->where('created_by', auth()->user()->id);
@@ -1385,15 +1385,15 @@ UserTranslation::create([
         ], 401);
     }
 
-       $updatableData = $request->validated();
+       $request_data = $request->validated();
 
 
   //  garage info ##############
-        // $updatableData['garage']['status'] = "pending";
+        // $request_data['garage']['status'] = "pending";
 
         $garage  =  tap(Garage::where([
-            "id" => $updatableData['garage']["id"]
-            ]))->update(collect($updatableData['garage'])->only([
+            "id" => $request_data['garage']["id"]
+            ]))->update(collect($request_data['garage'])->only([
                 "name",
                 "about",
                 "web_page",
@@ -1428,8 +1428,8 @@ UserTranslation::create([
                 ],404);
 
             }
-            if(!empty($updatableData["images"])) {
-                foreach($updatableData["images"] as $garage_images){
+            if(!empty($request_data["images"])) {
+                foreach($request_data["images"] as $garage_images){
                     GarageGallery::create([
                         "image" => $garage_images,
                         "garage_id" =>$garage->id,
@@ -1450,7 +1450,7 @@ UserTranslation::create([
     ->delete();
 
   // create services
-  $this->createGarageServices($updatableData['service'],$garage->id);
+  $this->createGarageServices($request_data['service'],$garage->id);
 
 
         return response([
@@ -1536,15 +1536,15 @@ UserTranslation::create([
         ], 401);
     }
 
-       $updatableData = $request->validated();
+       $request_data = $request->validated();
 
 
   //  garage info ##############
-        // $updatableData['garage']['status'] = "pending";
+        // $request_data['garage']['status'] = "pending";
 
         $garage  =  tap(Garage::where([
-            "id" => $updatableData['garage_id']
-            ]))->update(collect($updatableData['garage'])->only([
+            "id" => $request_data['garage_id']
+            ]))->update(collect($request_data['garage'])->only([
                 "time_format",
         ])->toArray()
         )
