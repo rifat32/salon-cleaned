@@ -437,12 +437,11 @@ class BookingController extends Controller
             $request_data = $request->validated();
 
             $holidays = Holiday::
-
             whereDate("start_date", "<=", $request_data["job_start_date"])
             ->whereDate("end_date", ">=", $request_data["job_start_date"])
             ->get();
 
-            if(!empty($holidays)) {
+            if($holidays->count()) {
                 return response()->json([
                   "message" => "some off days are exists",
                   "conflicted_holidays" => $holidays
@@ -765,12 +764,11 @@ class BookingController extends Controller
                 }
 
                 $holidays = Holiday::
-
                 whereDate("start_date", "<=", $request_data["job_start_date"])
                 ->whereDate("end_date", ">=", $request_data["job_start_date"])
                 ->get();
 
-                if(!empty($holidays)) {
+                if($holidays->count()) {
                     return response()->json([
                       "message" => "some off days are exists",
                       "conflicted_holidays" => $holidays
@@ -1773,12 +1771,33 @@ public function changeMultipleBookingStatuses(Request $request)
                 });
             })
 
-             ->when(!empty($request->start_date), function ($query) use ($request) {
-                 return $query->where('users.created_at', ">=", $request->start_date);
-             })
-             ->when(!empty($request->end_date), function ($query) use ($request) {
-                 return $query->where('users.created_at', "<=", ($request->end_date . ' 23:59:59'));
-             })
+            ->when(!empty($request->email), function ($query) use ($request) {
+                return $query->where('users.email', 'like', '%' . $request->email . '%');
+            })
+            ->when(!empty($request->phone), function ($query) use ($request) {
+                return $query->where('users.phone', 'like', '%' . $request->phone . '%');
+            })
+            ->when(!empty($request->last_visited_date), function ($query) use ($request) {
+                return $query->whereHas('lastBooking', function($query){
+                 return $query->where('bookings.job_start_date', request()->input("last_visited_date"));
+                });
+            })
+            ->when(!empty($request->expert_id), function ($query) use ($request) {
+                return $query->whereHas('bookings', function($query){
+                 return $query->where('bookings.expert_id', request()->input("expert_id"));
+                });
+            })
+            ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
+
+                $sub_service_ids = explode(',', request()->sub_service_ids);
+
+                return $query->whereHas('bookings.booking_sub_services', function($query) use($sub_service_ids){
+                 return $query->whereIn('booking_sub_services.id', $sub_service_ids);
+                });
+            })
+
+
+
 
              ->when(!empty($request->search_key), function ($query) use ($request) {
                  return $query->where(function ($query) use ($request) {

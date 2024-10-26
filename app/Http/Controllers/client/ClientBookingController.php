@@ -156,7 +156,7 @@ class ClientBookingController extends Controller
                 ->whereDate("end_date", ">=", $request_data["job_start_date"])
                 ->get();
 
-                if(!empty($holidays)) {
+                if($holidays->count()) {
                     return response()->json([
                       "message" => "some off days are exists",
                       "conflicted_holidays" => $holidays
@@ -625,7 +625,7 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 ->whereDate("end_date", ">=", $request_data["job_start_date"])
                 ->get();
 
-                if(!empty($holidays)) {
+                if($holidays->count()) {
                     return response()->json([
                       "message" => "some off days are exists",
                       "conflicted_holidays" => $holidays
