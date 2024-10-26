@@ -734,7 +734,7 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 // ));}
 
 
-                if(!empty($$updatableData["payments"])) {
+                if(!empty($updatableData["payments"])) {
                     $total_payable = $booking->final_price;
 
 

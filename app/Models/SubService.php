@@ -26,16 +26,26 @@ class SubService extends Model
      public function getPriceAttribute($value)
      {
         $price = $this->default_price;
-        if(!empty(request()->input("expert_id"))) {
+        if(request()->filled("expert_id")) {
             $user = User::where("id", request()->input("expert_id"))->first();
+
+          if(empty($user)){
+            return number_format($price, 2); // Format as
+          }
 
             $businessSetting = BusinessSetting::where([
                 "business_id" => $user->business_id
             ])->first();
 
-            if(!empty($businessSetting) && empty($businessSetting->is_expert_price)) {
-                $price = $this->default_price;
-            } else {
+            if(empty($businessSetting)) {
+                return number_format($price, 2); // Format as
+            }
+
+            if(empty($businessSetting->is_expert_price)) {
+                return number_format($price, 2); // Format as
+            }
+
+
                 $subServicePrice = SubServicePrice::where([
                     "sub_service_id" => $this->id,
                     "expert_id" => request()->input("expert_id")
@@ -43,7 +53,7 @@ class SubService extends Model
                   if(!empty($subServicePrice)) {
                      $price = $subServicePrice->price;
                   }
-            }
+
 
 
 

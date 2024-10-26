@@ -866,7 +866,7 @@ class BookingController extends Controller
                 //     ));
                 // }
 
-                if(!empty($$updatableData["payments"])) {
+                if(!empty($updatableData["payments"])) {
                     $total_payable = $booking->final_price;
 
 
