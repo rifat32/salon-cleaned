@@ -795,11 +795,11 @@ $booking->clientSecret = $paymentIntent->client_secret;
 
                     $total_payment = $job_payment_amount + $payment_amount;
 
-                    if ($total_payable < $total_payment) {
-                        return response([
-                          "message" =>  "payment is greater than payable"
-                        ], 409);
-                    }
+                    // if ($total_payable < $total_payment) {
+                    //     return response([
+                    //       "message" =>  "payment is greater than payable"
+                    //     ], 409);
+                    // }
 
                     foreach ($payments->all() as $payment) {
 

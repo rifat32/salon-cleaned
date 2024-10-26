@@ -927,11 +927,11 @@ class BookingController extends Controller
 
                     $total_payment = $job_payment_amount + $payment_amount;
 
-                    if ($total_payable < $total_payment) {
-                        return response([
-                            "message" => "payment is greater than payable. You need to pay ".$total_payable." You are paying ". $total_payment
-                        ], 409);
-                    }
+                    // if ($total_payable < $total_payment) {
+                    //     return response([
+                    //         "message" => "payment is greater than payable. You need to pay ".$total_payable." You are paying ". $total_payment
+                    //     ], 409);
+                    // }
 
                     foreach ($payments->all() as $payment) {
                         JobPayment::create([
