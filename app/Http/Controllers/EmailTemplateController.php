@@ -23,7 +23,7 @@ class EmailTemplateController extends Controller
      * @OA\Post(
      *      path="/v1.0/email-templates",
      *      operationId="createEmailTemplate",
-     *      tags={"z.unused"},
+     *      tags={"template_management.email"},
      *       security={
      *           {"bearerAuth": {}}
      *       },
