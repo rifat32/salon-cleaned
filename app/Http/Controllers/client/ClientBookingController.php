@@ -11,6 +11,7 @@ use App\Http\Utils\DiscountUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\PriceUtil;
 use App\Http\Utils\UserActivityUtil;
+use App\Mail\BookingStatusUpdateMail;
 use App\Mail\BookingUpdateMail;
 use App\Mail\DynamicMail;
 use App\Models\Booking;
@@ -513,7 +514,9 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 // ));
                 // }
 
-
+                if (env("SEND_EMAIL") == true) {
+                    Mail::to($booking->client_email)->send(new BookingStatusUpdateMail($booking));
+                }
 
 
                 return response([
