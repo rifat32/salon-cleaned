@@ -13,6 +13,7 @@ use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\PriceUtil;
 use App\Http\Utils\UserActivityUtil;
+use App\Mail\BookingCreateMail;
 use App\Mail\BookingStatusUpdateMail;
 use App\Mail\BookingUpdateMail;
 use App\Mail\DynamicMail;
@@ -656,7 +657,20 @@ foreach ($recipientIds as $recipientId) {
             //         "booking_created_by_garage_owner"
             //     ));
             // }
+            if (env("SEND_EMAIL") == true) {
+                // Get the customer's email
+$recipientEmails = [$booking->customer->email];
 
+//  // Retrieve emails of users with the role 'business_receptionist'
+//  $receptionists = User::role('business_receptionist')
+//  ->where("business_id",$booking->garage_id)
+//  ->pluck('email')->toArray();
+
+//  // Merge the two arrays
+//  $recipientEmails = array_merge($recipientEmails, $receptionists);
+
+Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
+}
             DB::commit();
             return response($booking, 201);
         } catch (Exception $e) {
@@ -2583,7 +2597,7 @@ public function changeMultipleBookingStatuses(Request $request)
                 "type" => "booking_deleted_by_garage_owner"
             ])
                 ->first();
-                
+
                 $recipientIds = [$booking->customer->id];
 
                 // Retrieve emails of users with the role 'business_receptionist'

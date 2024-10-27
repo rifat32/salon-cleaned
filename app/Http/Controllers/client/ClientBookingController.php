@@ -11,6 +11,7 @@ use App\Http\Utils\DiscountUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\PriceUtil;
 use App\Http\Utils\UserActivityUtil;
+use App\Mail\BookingCreateMail;
 use App\Mail\BookingStatusUpdateMail;
 use App\Mail\BookingUpdateMail;
 use App\Mail\DynamicMail;
@@ -407,6 +408,24 @@ $booking->save();
 $booking->clientSecret = $paymentIntent->client_secret;
 
                 }
+
+                if (env("SEND_EMAIL") == true) {
+                    // Get the customer's email
+                    $recipientEmails = [$booking->customer->email];
+
+                    // Retrieve emails of users with the role 'business_receptionist'
+                    $receptionists = User::role('business_receptionist')
+                    ->where("business_id",$booking->garage_id)
+                    ->pluck('email')->toArray();
+
+                    // Merge the two arrays
+                    $recipientEmails = array_merge($recipientEmails, $receptionists);
+
+                                       Mail::to(
+                                           $recipientEmails
+
+                                           )->send(new BookingCreateMail($booking));
+                                   }
 
                 return response($booking, 201);
             });
