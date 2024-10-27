@@ -24,6 +24,9 @@ class CreateNotificationsTable extends Migration
             $table->unsignedBigInteger("customer_id");
             $table->foreign('customer_id')->references('id')->on('users')->onDelete('cascade');
 
+            $table->unsignedBigInteger("business_id")->nullable();
+            $table->foreign('business_id')->references('id')->on('garages')->onDelete('cascade');
+
             $table->unsignedBigInteger("garage_id")->nullable();
             $table->foreign('garage_id')->references('id')->on('garages')->onDelete('cascade');
 
@@ -39,12 +42,23 @@ class CreateNotificationsTable extends Migration
             $table->unsignedBigInteger("job_id")->nullable();
             $table->foreign('job_id')->references('id')->on('jobs')->onDelete('cascade');
 
+            $table->string("entity_name")->nullable();
+            $table->unsignedBigInteger("entity_id")->nullable();
+            $table->json("entity_ids")->nullable();
+
+            $table->string('notification_title')->nullable();
+            $table->text('notification_description')->nullable();
+            $table->string('notification_link')->nullable();
+
+            $table->boolean("is_system_generated")->default(false);
+
             $table->unsignedBigInteger("notification_template_id");
             $table->foreign('notification_template_id')->references('id')->on('notification_templates')->onDelete('cascade');
 
+            $table->enum("status", ['read', 'unread'])->default("unread");
 
-            $table->enum("status",['read', 'unread'])->default("unread")->nullable();
-
+            $table->date("start_date")->nullable();
+            $table->date("end_date")->nullable();
 
             $table->timestamps();
         });

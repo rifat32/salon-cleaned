@@ -164,6 +164,11 @@ return [
         [
             "role" => "garage_owner",
             "permissions" => [
+                
+                "template_create",
+                "template_update",
+                "template_view",
+                "template_delete",
 
                 "holiday_create",
                 "holiday_update",
@@ -286,6 +291,11 @@ return [
         [
             "role" => "business_receptionist",
             "permissions" => [
+
+                "template_create",
+                "template_update",
+                "template_view",
+                "template_delete",
 
                 "review_manage",
                 "user_create",

@@ -12,17 +12,25 @@ class Notification extends Model
     protected $fillable = [
         "sender_id",
         "receiver_id",
+        "business_id",
         "customer_id",
         "garage_id",
         "bid_id",
         "pre_booking_id",
         "booking_id",
         "job_id",
+        "entity_name",
+        "entity_id",
+        "entity_ids",
+        "notification_title",
+        "notification_description",
+        "notification_link",
+        "is_system_generated",
         "notification_template_id",
         "status",
-
+        "start_date",
+        "end_date",
     ];
-
 
 
 

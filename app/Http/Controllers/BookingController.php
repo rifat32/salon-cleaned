@@ -617,15 +617,39 @@ class BookingController extends Controller
                 throw new Exception("notification template error");
             }
 
-            Notification::create([
-                "sender_id" =>  $booking->garage->owner_id,
-                "receiver_id" => $booking->customer_id,
-                "customer_id" => $booking->customer_id,
-                "garage_id" => $booking->garage_id,
-                "booking_id" => $booking->id,
-                "notification_template_id" => $notification_template->id,
-                "status" => "unread",
-            ]);
+            $recipientIds = [$booking->customer->id];
+
+//  // Retrieve emails of users with the role 'business_receptionist'
+//  $receptionists = User::role('business_receptionist')
+//  ->where("business_id",$booking->garage_id)
+//  ->pluck('id')->toArray();
+
+//  // Merge the two arrays
+//  $recipientIds = array_merge($recipientIds, $receptionists);
+
+foreach ($recipientIds as $recipientId) {
+    Notification::create([
+        "sender_id" => $request->user()->id,
+        "receiver_id" => $recipientId,
+        "customer_id" => $booking->customer->id,
+        "business_id" => $booking->garage_id ,
+        "garage_id" => $booking->garage_id,
+        "booking_id" => $booking->id,
+        "entity_name" => "booking",
+        "entity_id" => $booking->id,
+        "entity_ids" => json_encode([]),
+        "notification_title" => 'Booking Created',
+        "notification_description" => "A new booking has been created for booking ID: {$booking->id}.",
+        "notification_link" => null,
+        "is_system_generated" => false,
+        "notification_template_id" => $notification_template->id,
+        "status" => "unread",
+        "start_date" => now(),
+        "end_date" => null,
+    ]);
+ }
+
+
             // if (env("SEND_EMAIL") == true) {
             //     Mail::to($booking->customer->email)->send(new DynamicMail(
             //         $booking,
@@ -899,15 +923,39 @@ class BookingController extends Controller
                     "type" => "booking_updated_by_garage_owner"
                 ])
                     ->first();
-                Notification::create([
-                    "sender_id" =>  $booking->garage->owner_id,
-                    "receiver_id" => $booking->customer_id,
-                    "customer_id" => $booking->customer_id,
-                    "garage_id" => $booking->garage_id,
-                    "booking_id" => $booking->id,
-                    "notification_template_id" => $notification_template->id,
-                    "status" => "unread",
-                ]);
+                                                 // Get the customer's email
+ $recipientIds = [$booking->customer->id];
+
+//  // Retrieve emails of users with the role 'business_receptionist'
+//  $receptionists = User::role('business_receptionist')
+//  ->where("business_id",$booking->garage_id)
+//  ->pluck('id')->toArray();
+
+//  // Merge the two arrays
+//  $recipientIds = array_merge($recipientIds, $receptionists);
+
+ foreach ($recipientIds as $recipientId) {
+    Notification::create([
+        "sender_id" => $request->user()->id,
+        "receiver_id" => $recipientId,
+        "customer_id" => $booking->customer->id,
+        "business_id" => $booking->garage_id ,
+        "garage_id" => $booking->garage_id,
+        "booking_id" => $booking->id,
+        "entity_name" => "booking",
+        "entity_id" => $booking->id,
+        "entity_ids" => json_encode([]),
+       "notification_title" => 'Booking Updated',
+    "notification_description" => "The details of booking ID: {$booking->id} have been updated.",
+   "notification_link" => null,
+        "is_system_generated" => false,
+        "notification_template_id" => $notification_template->id,
+        "status" => "unread",
+        "start_date" => now(),
+        "end_date" => null,
+    ]);
+ }
+
                 // if (env("SEND_EMAIL") == true) {
                 //     Mail::to($booking->customer->email)->send(new DynamicMail(
                 //         $booking,
@@ -1104,29 +1152,76 @@ class BookingController extends Controller
                         "type" => "booking_rejected_by_garage_owner"
                     ])
                         ->first();
-                    Notification::create([
-                        "sender_id" =>  $booking->garage->owner_id,
-                        "receiver_id" => $booking->customer_id,
-                        "customer_id" => $booking->customer_id,
-                        "garage_id" => $booking->garage_id,
-                        "booking_id" => $booking->id,
-                        "notification_template_id" => $notification_template->id,
-                        "status" => "unread",
-                    ]);
+                                        // Get the customer's email
+ $recipientIds = [$booking->customer->id];
+
+//  // Retrieve emails of users with the role 'business_receptionist'
+//  $receptionists = User::role('business_receptionist')
+//  ->where("business_id",$booking->garage_id)
+//  ->pluck('id')->toArray();
+
+//  // Merge the two arrays
+//  $recipientIds = array_merge($recipientIds, $receptionists);
+
+ foreach ($recipientIds as $recipientId) {
+    Notification::create([
+        "sender_id" => $request->user()->id,
+        "receiver_id" => $recipientId,
+        "customer_id" => $booking->customer->id,
+        "business_id" => $booking->garage_id ,
+        "garage_id" => $booking->garage_id,
+        "booking_id" => $booking->id,
+        "entity_name" => "booking",
+        "entity_id" => $booking->id,
+        "entity_ids" => json_encode([]),
+        "notification_title" => 'Booking Status Changed',
+       "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
+      "notification_link" => null,
+        "is_system_generated" => false,
+        "notification_template_id" => $notification_template->id,
+        "status" => "unread",
+        "start_date" => now(),
+        "end_date" => null,
+    ]);
+ }
+
                 } else {
                     $notification_template = NotificationTemplate::where([
                         "type" => "booking_status_changed_by_garage_owner"
                     ])
                         ->first();
-                    Notification::create([
-                        "sender_id" =>  $booking->garage->owner_id,
-                        "receiver_id" => $booking->customer_id,
-                        "customer_id" => $booking->customer_id,
-                        "garage_id" => $booking->garage_id,
-                        "booking_id" => $booking->id,
-                        "notification_template_id" => $notification_template->id,
-                        "status" => "unread",
-                    ]);
+                                                     // Get the customer's email
+ $recipientIds = [$booking->customer->id];
+
+ //  // Retrieve emails of users with the role 'business_receptionist'
+ //  $receptionists = User::role('business_receptionist')
+ //  ->where("business_id",$booking->garage_id)
+ //  ->pluck('id')->toArray();
+
+ //  // Merge the two arrays
+ //  $recipientIds = array_merge($recipientIds, $receptionists);
+
+  foreach ($recipientIds as $recipientId) {
+     Notification::create([
+         "sender_id" => $request->user()->id,
+         "receiver_id" => $recipientId,
+         "customer_id" => $booking->customer->id,
+         "business_id" => $booking->garage_id ,
+         "garage_id" => $booking->garage_id,
+         "booking_id" => $booking->id,
+         "entity_name" => "booking",
+         "entity_id" => $booking->id,
+         "entity_ids" => json_encode([]),
+         "notification_title" => 'Booking Status Changed',
+        "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
+       "notification_link" => null,
+         "is_system_generated" => false,
+         "notification_template_id" => $notification_template->id,
+         "status" => "unread",
+         "start_date" => now(),
+         "end_date" => null,
+     ]);
+  }
                 }
 
                 if (env("SEND_EMAIL") == true) {
@@ -1243,17 +1338,40 @@ public function changeMultipleBookingStatuses(Request $request)
                     ? "booking_rejected_by_garage_owner"
                     : "booking_status_changed_by_garage_owner";
 
-                $notificationTemplate = NotificationTemplate::where('type', $notificationTemplateType)->first();
+                $notification_template = NotificationTemplate::where('type', $notificationTemplateType)->first();
 
-                Notification::create([
-                    'sender_id' => $booking->garage->owner_id,
-                    'receiver_id' => $booking->customer_id,
-                    'customer_id' => $booking->customer_id,
-                    'garage_id' => $booking->garage_id,
-                    'booking_id' => $booking->id,
-                    'notification_template_id' => $notificationTemplate->id,
-                    'status' => 'unread',
-                ]);
+                                                  // Get the customer's email
+ $recipientIds = [$booking->customer->id];
+
+ //  // Retrieve emails of users with the role 'business_receptionist'
+ //  $receptionists = User::role('business_receptionist')
+ //  ->where("business_id",$booking->garage_id)
+ //  ->pluck('id')->toArray();
+
+ //  // Merge the two arrays
+ //  $recipientIds = array_merge($recipientIds, $receptionists);
+
+  foreach ($recipientIds as $recipientId) {
+     Notification::create([
+         "sender_id" => $request->user()->id,
+         "receiver_id" => $recipientId,
+         "customer_id" => $booking->customer->id,
+         "business_id" => $booking->garage_id ,
+         "garage_id" => $booking->garage_id,
+         "booking_id" => $booking->id,
+         "entity_name" => "booking",
+         "entity_id" => $booking->id,
+         "entity_ids" => json_encode([]),
+         "notification_title" => 'Booking Status Changed',
+        "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
+       "notification_link" => null,
+         "is_system_generated" => false,
+         "notification_template_id" => $notification_template->id,
+         "status" => "unread",
+         "start_date" => now(),
+         "end_date" => null,
+     ]);
+  }
             }
 
             return response()->json($updatedBookings, 200);
@@ -1398,15 +1516,38 @@ public function changeMultipleBookingStatuses(Request $request)
                     "type" => "booking_confirmed_by_garage_owner"
                 ])
                     ->first();
-                Notification::create([
-                    "sender_id" =>  $booking->garage->owner_id,
-                    "receiver_id" => $booking->customer_id,
-                    "customer_id" => $booking->customer_id,
-                    "garage_id" => $booking->garage_id,
-                    "booking_id" => $booking->id,
-                    "notification_template_id" => $notification_template->id,
-                    "status" => "unread",
-                ]);
+                                                        // Get the customer's email
+ $recipientIds = [$booking->customer->id];
+
+ //  // Retrieve emails of users with the role 'business_receptionist'
+ //  $receptionists = User::role('business_receptionist')
+ //  ->where("business_id",$booking->garage_id)
+ //  ->pluck('id')->toArray();
+
+ //  // Merge the two arrays
+ //  $recipientIds = array_merge($recipientIds, $receptionists);
+
+  foreach ($recipientIds as $recipientId) {
+     Notification::create([
+         "sender_id" => $request->user()->id,
+         "receiver_id" => $recipientId,
+         "customer_id" => $booking->customer->id,
+         "business_id" => $booking->garage_id ,
+         "garage_id" => $booking->garage_id,
+         "booking_id" => $booking->id,
+         "entity_name" => "booking",
+         "entity_id" => $booking->id,
+         "entity_ids" => json_encode([]),
+         "notification_title" => 'Booking Status Changed',
+        "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
+       "notification_link" => null,
+         "is_system_generated" => false,
+         "notification_template_id" => $notification_template->id,
+         "status" => "unread",
+         "start_date" => now(),
+         "end_date" => null,
+     ]);
+  }
                 // if (env("SEND_EMAIL") == true) {
                 //     Mail::to($booking->customer->email)->send(new DynamicMail(
                 //         $booking,
@@ -2442,15 +2583,38 @@ public function changeMultipleBookingStatuses(Request $request)
                 "type" => "booking_deleted_by_garage_owner"
             ])
                 ->first();
-            Notification::create([
-                "sender_id" =>  $booking->garage->owner_id,
-                "receiver_id" => $booking->customer_id,
-                "customer_id" => $booking->customer_id,
-                "garage_id" => $booking->garage_id,
-                "booking_id" => $booking->id,
-                "notification_template_id" => $notification_template->id,
-                "status" => "unread",
-            ]);
+                
+                $recipientIds = [$booking->customer->id];
+
+                // Retrieve emails of users with the role 'business_receptionist'
+                $receptionists = User::role('business_receptionist')
+                ->where("business_id",$booking->garage_id)
+                ->pluck('id')->toArray();
+
+                // Merge the two arrays
+                $recipientIds = array_merge($recipientIds, $receptionists);
+
+                foreach ($recipientIds as $recipientId) {
+                   Notification::create([
+                       "sender_id" => $request->user()->id,
+                       "receiver_id" => $recipientId,
+                       "customer_id" => $booking->customer->id,
+                       "business_id" => $booking->garage_id ,
+                       "garage_id" => $booking->garage_id,
+                       "booking_id" => $booking->id,
+                       "entity_name" => "booking",
+                       "entity_id" => $booking->id,
+                       "entity_ids" => json_encode([]),
+                       "notification_title" => 'Booking Deleted',
+                       "notification_description" => "Booking ID: {$booking->id} has been deleted.",
+                      "notification_link" => null,
+                       "is_system_generated" => false,
+                       "notification_template_id" => $notification_template->id,
+                       "status" => "unread",
+                       "start_date" => now(),
+                       "end_date" => null,
+                   ]);
+                }
             // if (env("SEND_EMAIL") == true) {
             //     Mail::to($booking->customer->email)->send(new DynamicMail(
             //         $booking,
