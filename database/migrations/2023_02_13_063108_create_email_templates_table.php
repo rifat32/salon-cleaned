@@ -20,6 +20,9 @@ class CreateEmailTemplatesTable extends Migration
             $table->string("type");
             $table->text("template");
             $table->boolean("is_active");
+            $table->boolean("is_default");
+
+            $table->unsignedBigInteger("business_id");
 
 
             $table->unsignedBigInteger("wrapper_id");

@@ -22,7 +22,7 @@ class BookingStatusUpdateMail extends Mailable
      */
     public function __construct($booking)
     {
-        $this->booking = $booking->load(['services', 'salon']);
+        $this->booking = $booking;
     }
 
     /**
