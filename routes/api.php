@@ -234,6 +234,8 @@ Route::delete('/v1.0/sub-service-prices/{ids}', [SubServicePriceController::clas
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // notification management section
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+Route::get('/v2.0/notifications', [NotificationController::class, "getNotificationsV2"]);
+
     Route::get('/v1.0/notifications/{perPage}', [NotificationController::class, "getNotifications"]);
 
     Route::get('/v1.0/notifications/{garage_id}/{perPage}', [NotificationController::class, "getNotificationsByGarageId"]);
