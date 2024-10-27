@@ -955,7 +955,18 @@ class BookingController extends Controller
                     }
                 }
                 if (env("SEND_EMAIL") == true) {
-                    Mail::to($booking->client_email)->send(new BookingUpdateMail($booking));
+                                         // Get the customer's email
+ $recipientEmails = [$booking->customer->email];
+
+//  // Retrieve emails of users with the role 'business_receptionist'
+//  $receptionists = User::role('business_receptionist')
+//  ->where("business_id",$booking->garage_id)
+//  ->pluck('email')->toArray();
+
+//  // Merge the two arrays
+//  $recipientEmails = array_merge($recipientEmails, $receptionists);
+
+                    Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
                 }
 
 
@@ -1119,7 +1130,17 @@ class BookingController extends Controller
                 }
 
                 if (env("SEND_EMAIL") == true) {
-                    Mail::to($booking->client_email)->send(new BookingStatusUpdateMail($booking));
+                                                        // Get the customer's email
+ $recipientEmails = [$booking->customer->email];
+
+ //  // Retrieve emails of users with the role 'business_receptionist'
+ //  $receptionists = User::role('business_receptionist')
+ //  ->where("business_id",$booking->garage_id)
+ //  ->pluck('email')->toArray();
+
+ //  // Merge the two arrays
+ //  $recipientEmails = array_merge($recipientEmails, $receptionists);
+                    Mail::to($recipientEmails)->send(new BookingStatusUpdateMail($booking));
                 }
                 // if (env("SEND_EMAIL") == true) {
                 //     Mail::to($booking->customer->email)->send(new DynamicMail(
