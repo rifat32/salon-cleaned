@@ -790,12 +790,6 @@ Route::get('/v1.0/job-bids/single/{garage_id}/{id}', [JobBidController::class, "
 Route::delete('/v1.0/job-bids/{garage_id}/{id}', [JobBidController::class, "deleteJobBidById"]);
 
 
-
-
-
-
-
-
 Route::delete('/v1.0/bookings/{garage_id}/{id}', [BookingController::class, "deleteBookingById"]);
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // job bid management section
