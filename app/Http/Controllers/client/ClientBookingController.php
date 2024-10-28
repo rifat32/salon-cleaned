@@ -340,7 +340,7 @@ class ClientBookingController extends Controller
 }
 
 if (empty($stripeSetting->stripe_enabled)) {
-    throw new Exception("Stripe is not enabled",403);
+    throw new Exception("Stripe not enabled",403);
 
 }
 

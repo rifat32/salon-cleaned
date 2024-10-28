@@ -1763,6 +1763,19 @@ public function changeMultipleBookingStatuses(Request $request)
                     $query->where([
                         "expert_id" => request()->input("expert_id")
                     ]);
+                })
+                ->when(request()->input("customer_id"), function ($query) {
+                    $query->where([
+                        "customer_id" => request()->input("customer_id")
+                    ]);
+                })
+                ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
+
+                    $sub_service_ids = explode(',', request()->sub_service_ids);
+
+                    return $query->whereHas('booking_sub_services', function($query) use($sub_service_ids){
+                     return $query->whereIn('booking_sub_services.id', $sub_service_ids);
+                    });
                 });
 
             // Apply the existing status filter if provided in the request
