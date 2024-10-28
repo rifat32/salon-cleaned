@@ -330,7 +330,7 @@ class ClientBookingController extends Controller
                 // ));
                 // }
 
-                if($booking->payment_method="stripe") {
+                if($booking->payment_method=="stripe") {
  // Stripe settings retrieval based on business or garage ID
  $stripeSetting = BusinessSetting::where('business_id', $booking->garage_id)->first();
 
