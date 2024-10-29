@@ -2169,6 +2169,14 @@ class DashboardManagementController extends Controller
 
 
              $data["top_services"] = SubService::withCount([
+                'bookingSubServices as all_sales_count' => function ($query) {
+                     $query->whereHas('booking', function ($query) {
+                         $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+                         ->when(auth()->user()->hasRole("business_experts"), function($query)  {
+                             $query->where('bookings.expert_id', auth()->user()->id);
+                        }); // Sales this month
+                     });
+                 },
                  'bookingSubServices as this_month_sales' => function ($query) {
                      $query->whereHas('booking', function ($query) {
                          $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
