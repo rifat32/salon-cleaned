@@ -1892,9 +1892,10 @@ class DashboardManagementController extends Controller
             ->where("garage_id", auth()->user()->business_id)
             ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                 $query->where('bookings.expert_id', auth()->user()->id);
-            })
-    ;
-        })->distinct()->get();
+            });
+        })
+        ->distinct()
+        ->get();
     }
 
     public function getRepeatedCustomers()
