@@ -33,6 +33,9 @@ class Notification extends Model
     ];
 
 
+    public function sender(){
+        return $this->belongsTo(User::class,'sender_id', 'id')->withTrashed();
+    }
 
     public function template(){
         return $this->belongsTo(NotificationTemplate::class,'notification_template_id', 'id');
