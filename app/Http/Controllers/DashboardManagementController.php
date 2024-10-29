@@ -1887,15 +1887,35 @@ class DashboardManagementController extends Controller
         }
 
 
-        return User::whereHas('bookings', function($query) use ($start, $end) {
+        $app_customers = User::where("users.is_walk_in_customer", 0)
+        ->whereHas('bookings', function($query) use ($start, $end) {
             $query->whereBetween('bookings.job_start_date', [$start, $end])
-            ->where("garage_id", auth()->user()->business_id)
-            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                $query->where('bookings.expert_id', auth()->user()->id);
-            });
+                ->where("garage_id", auth()->user()->business_id)
+                ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                    $query->where('bookings.expert_id', auth()->user()->id);
+                });
         })
         ->distinct()
         ->get();
+
+    $walk_in_customers = User::where("users.is_walk_in_customer", 1) // Assuming is_walk_in_customer should be 1 for walk-in customers
+        ->whereHas('bookings', function($query) use ($start, $end) {
+            $query->whereBetween('bookings.job_start_date', [$start, $end])
+                ->where("garage_id", auth()->user()->business_id)
+                ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                    $query->where('bookings.expert_id', auth()->user()->id);
+                });
+        })
+        ->distinct()
+        ->get();
+
+    // Return the results
+    return [
+        'app_customers' => $app_customers,
+        'walk_in_customers' => $walk_in_customers,
+    ];
+
+
     }
 
     public function getRepeatedCustomers()
