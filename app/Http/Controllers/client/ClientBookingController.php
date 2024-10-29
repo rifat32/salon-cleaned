@@ -135,6 +135,8 @@ class ClientBookingController extends Controller
 
 
                 $request_data["payment_status"] = "pending";
+                $request_data["booking_type"] = "self_booking";
+           
 
 
 

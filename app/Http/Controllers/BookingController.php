@@ -489,9 +489,9 @@ class BookingController extends Controller
             $request_data["created_by"] = $request->user()->id;
             $request_data["created_from"] = "garage_owner_side";
             $request_data["payment_status"] = "pending";
+            $request_data["booking_type"] = "admin_panel_booking";
 
-
-
+     
 
 
 

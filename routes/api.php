@@ -34,6 +34,7 @@ use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\JobBidController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\NotificationSettingController;
 use App\Http\Controllers\NotificationTemplateController;
 use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\ProductCategoryController;
@@ -265,7 +266,7 @@ Route::post('/v1.0/users', [UserManagementController::class, "createUser"]);
 
 
   // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    // system  management section
+    // business  management section
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     Route::put('/v1.0/business-settingss', [SettingController::class, "updateBusinessSettings"]);
@@ -273,7 +274,19 @@ Route::post('/v1.0/users', [UserManagementController::class, "createUser"]);
 
 
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    // end system management section
+    // end business management section
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // notification setting  management section
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    Route::put('/v1.0/notification-settings', [NotificationSettingController::class, "updateNotificationSetting"]);
+    Route::get('/v1.0/notification-settings', [NotificationSettingController::class, "getNotificationSetting"]);
+
+
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // end notification setting  section
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 

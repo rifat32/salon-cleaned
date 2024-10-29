@@ -23,6 +23,9 @@ class CreateBookingsTable extends Migration
                    // Add the booked_slots JSON column
                    $table->json('booked_slots');
 
+                   $table->enum("booking_type", ["self_booking", "admin_panel_booking"]);
+
+
             $table->unsignedBigInteger("pre_booking_id")->nullable();
             $table->foreign('pre_booking_id')->references('id')->on('pre_bookings')->onDelete('restrict');
 
