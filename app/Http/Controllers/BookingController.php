@@ -1932,6 +1932,19 @@ public function changeMultipleBookingStatuses(Request $request)
                     ->select('bookings.customer_id', 'sub_services.id', 'sub_services.name')
                     ->distinct();  // Ensure unique sub-services per booking
             }])
+            ->withCount([
+                'bookings as completed_booking_count' => function ($query) {
+                    $query
+                    ->where('bookings.garage_id', auth()->user()->business_id)
+                    ->where('bookings.status', 'converted_to_job');  // Adjust 'status' according to your actual status field
+                },
+                'bookings as cancelled_booking_count' => function ($query) {
+                    $query
+                    ->where('bookings.garage_id', auth()->user()->business_id)
+                    ->whereIn('bookings.status', ['rejected_by_client','rejected_by_garage_owner']);
+                    // Adjust 'status' according to your actual status field
+                }
+            ])
             ->whereHas("bookings", function($query) use($request) {
                 $query->where("bookings.garage_id", auth()->user()->business_id)
                 ->when(request()->input("expert_id"), function ($query) {
