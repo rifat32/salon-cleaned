@@ -6,58 +6,82 @@ use App\Models\Booking;
 use App\Models\Coupon;
 use App\Models\ExpertRota;
 use App\Models\GarageTime;
+use App\Models\ReviewNew;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Http;
 
 trait BasicUtil
 {
-    public function blockedSlots($date,$expert_id) {
-  // Get all bookings for the provided date except the rejected ones
-  $bookings = Booking::with([
-    "customer" => function ($query) {
-        $query->select("users.id", "users.first_Name", "users.last_Name");
+    public function calculateAverageRating($expert_id)
+    {
+        // Get the total count of reviews and sum of rates for approved reviews with the specified expert
+        $reviewsQuery = ReviewNew::whereHas("booking", function ($query) use ($expert_id) {
+            $query->where("bookings.expert_id", $expert_id);
+        })
+            ->where("status", "approved");
+
+        // Count of total reviews
+        $totalReviews = $reviewsQuery->count();
+
+        // Sum of all rates
+        $totalRate = $reviewsQuery->sum('rate');
+
+        // Calculate the average rating out of 5
+        $averageRating = $totalReviews > 0 ? ($totalRate / $totalReviews) : 0;
+
+        // Round the average rating to a specific number of decimal places (optional)
+        $averageRating = round($averageRating, 2); // rounds to 2 decimal places
+        return $averageRating;
     }
-])
-    ->whereDate("job_start_date", $date)
-    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-    ->where([
-        "expert_id" => $expert_id
-    ])
-    ->select("id", "booked_slots", "customer_id", "status")
-    ->get();
 
-// Get all the booked slots as a flat array
+    public function blockedSlots($date, $expert_id)
+    {
+        // Get all bookings for the provided date except the rejected ones
+        $bookings = Booking::with([
+            "customer" => function ($query) {
+                $query->select("users.id", "users.first_Name", "users.last_Name");
+            }
+        ])
+            ->whereDate("job_start_date", $date)
+            ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+            ->where([
+                "expert_id" => $expert_id
+            ])
+            ->select("id", "booked_slots", "customer_id", "status")
+            ->get();
 
-$data["bookings"] = $bookings;
-$data["booking_slots"] = $bookings->pluck('booked_slots')->flatten()->toArray();
+        // Get all the booked slots as a flat array
 
-// Get all bookings for the provided date except the rejected ones
-$check_in_bookings = Booking::whereDate("job_start_date", $date)
-    ->whereIn("status", ["check_in"])
-    ->where([
-        "expert_id" => $expert_id
-    ])
-    ->get();
+        $data["bookings"] = $bookings;
+        $data["booking_slots"] = $bookings->pluck('booked_slots')->flatten()->toArray();
 
-$data["check_in_slots"]  = $check_in_bookings->pluck('booked_slots')->flatten()->toArray();
+        // Get all bookings for the provided date except the rejected ones
+        $check_in_bookings = Booking::whereDate("job_start_date", $date)
+            ->whereIn("status", ["check_in"])
+            ->where([
+                "expert_id" => $expert_id
+            ])
+            ->get();
+
+        $data["check_in_slots"]  = $check_in_bookings->pluck('booked_slots')->flatten()->toArray();
 
 
 
-$expertRota = ExpertRota::where([
-    "expert_id" =>  $expert_id
-])
-    ->whereDate("date", $date)
-    ->first();
-if (!empty($expertRota)) {
-    $expertRota->busy_slots;
-}
-$data["busy_slots"] = [];
-// If expertRota exists, merge its busy_slots with the booked slots
-if (!empty($expertRota)) {
-    $data["busy_slots"] = $expertRota->busy_slots;
-}
-return $data;
+        $expertRota = ExpertRota::where([
+            "expert_id" =>  $expert_id
+        ])
+            ->whereDate("date", $date)
+            ->first();
+        if (!empty($expertRota)) {
+            $expertRota->busy_slots;
+        }
+        $data["busy_slots"] = [];
+        // If expertRota exists, merge its busy_slots with the booked slots
+        if (!empty($expertRota)) {
+            $data["busy_slots"] = $expertRota->busy_slots;
+        }
+        return $data;
     }
 
     public function convertToHoursOnly(array $times)
@@ -99,14 +123,13 @@ return $data;
         return $timeFormat;
     }
 
-    public function validateBookingSlots($id,$slots, $date, $expert_id,$total_time)
+    public function validateBookingSlots($id, $slots, $date, $expert_id, $total_time)
     {
         // Get all bookings for the provided date except the rejected ones
-        $bookings = Booking::
-        when(!empty($id), function($query) use($id){
-             $query->whereNotIn("id",[$id]);
-        })
-        ->whereDate("job_start_date", $date)
+        $bookings = Booking::when(!empty($id), function ($query) use ($id) {
+                $query->whereNotIn("id", [$id]);
+            })
+            ->whereDate("job_start_date", $date)
             ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
             ->where([
                 "expert_id" => $expert_id
@@ -123,19 +146,19 @@ return $data;
         $expertRota = ExpertRota::where([
             "expert_id" =>  $expert_id
         ])
-        ->whereDate("date",$date)
-        ->first();
-        if(!empty($expertRota)) {
-          $expertRota->busy_slots;
+            ->whereDate("date", $date)
+            ->first();
+        if (!empty($expertRota)) {
+            $expertRota->busy_slots;
         }
 
 
-    // If expertRota exists, merge its busy_slots with the booked slots
-    if (!empty($expertRota) && !empty($expertRota->busy_slots)) {
-        $allBusySlots = array_merge($allBusySlots, $expertRota->busy_slots);
-    }
-    // Find overlapping slots between the input slots and the combined allBusySlots
-    $overlappingSlots = array_intersect($slots, $allBusySlots);
+        // If expertRota exists, merge its busy_slots with the booked slots
+        if (!empty($expertRota) && !empty($expertRota->busy_slots)) {
+            $allBusySlots = array_merge($allBusySlots, $expertRota->busy_slots);
+        }
+        // Find overlapping slots between the input slots and the combined allBusySlots
+        $overlappingSlots = array_intersect($slots, $allBusySlots);
 
         // If there are overlaps, return them or throw an error
         if (!empty($overlappingSlots)) {
@@ -147,10 +170,10 @@ return $data;
         }
 
         $slot_numbers = ceil($total_time / 15);
-        if(count($slots) != $slot_numbers) {
+        if (count($slots) != $slot_numbers) {
             return [
                 'status' => 'error',
-                'message' => ("You need exactly " .$slot_numbers. "slots."),
+                'message' => ("You need exactly " . $slot_numbers . "slots."),
             ];
         }
 
@@ -165,7 +188,8 @@ return $data;
 
 
 
-    public function canculate_discounted_price($total_price, $discount_type, $discount_amount) {
+    public function canculate_discounted_price($total_price, $discount_type, $discount_amount)
+    {
         if (!empty($discount_type) && !empty($discount_amount)) {
             if ($discount_type == "fixed") {
                 return round($discount_amount, 2);
@@ -204,7 +228,7 @@ return $data;
 
     public function getCountryAndCity($latitude, $longitude)
     {
-        if(empty($latitude) && empty($longitude)){
+        if (empty($latitude) && empty($longitude)) {
             return null;
         }
         $apiKey = env('GOOGLE_MAPS_API_KEY');

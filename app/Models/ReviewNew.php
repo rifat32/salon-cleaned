@@ -16,12 +16,13 @@ class ReviewNew extends Model
         'user_id',
         'comment',
         'status'
-
         // "question_id",
         // 'tag_id' ,
         // 'star_id',
 
     ];
+
+
     // public function question() {
     //     return $this->hasOne(Question::class,'id','question_id');
     // }
@@ -36,6 +37,10 @@ class ReviewNew extends Model
     }
     public function user() {
         return $this->hasOne(User::class,'id','user_id');
+    }
+
+    public function booking() {
+        return $this->hasOne(Booking::class,'id','booking_id');
     }
     protected $hidden = [
         'created_at',

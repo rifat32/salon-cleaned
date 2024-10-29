@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\UserActivityUtil;
@@ -13,6 +14,7 @@ use App\Models\GarageAffiliation;
 use App\Models\Job;
 use App\Models\JobPayment;
 use App\Models\PreBooking;
+use App\Models\ReviewNew;
 use App\Models\Service;
 use App\Models\SubService;
 use App\Models\User;
@@ -23,7 +25,7 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardManagementController extends Controller
 {
-    use ErrorUtil, GarageUtil, UserActivityUtil;
+    use ErrorUtil, GarageUtil, UserActivityUtil, BasicUtil;
 
     /**
      *
@@ -2068,6 +2070,16 @@ class DashboardManagementController extends Controller
                      ->whereIn("status", ["pending"])
                      ->where("expert_id", $expert->id)
                      ->get();
+
+                     $expert["all_services"] = SubService::whereHas('bookingSubServices.booking', function ($query) use($expert) {
+                      $query->where("bookings.expert_id",$expert->id);
+
+                     })
+                        ->orderBy('sub_services.name', 'asc') // Sort by this month's sales
+                        ->get();
+
+
+                 $expert["average_rating"] = $this->calculateAverageRating($expert->id);
 
 
                  $expert["today_bookings"] = $this->bookingsByStatusCount('today', $expert->id);
