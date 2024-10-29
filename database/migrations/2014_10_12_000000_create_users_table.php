@@ -19,6 +19,7 @@ class CreateUsersTable extends Migration
             $table->string('last_Name');
             $table->string('phone')->nullable();
             $table->string('image')->nullable();
+            $table->boolean('is_walk_in_customer')->default(0);
 
             $table->string("address_line_1")->nullable();
             $table->string("address_line_2")->nullable();

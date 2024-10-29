@@ -1300,10 +1300,13 @@ class JobController extends Controller
 
 
             // Check if job_id is provided
-            $query = JobPayment::with(
+            $app_customer_payments = JobPayment::with(
                 ["bookings" => function($query) {
                     $query->select("bookings.id","bookings.payment_method","bookings.job_start_date");
                 }])
+            ->whereHas("bookings.customer", function ($query)  {
+                   $query->where("users.is_walk_in_customer",0);
+            })
             ->whereHas("bookings", function ($query) use ($garage_id, $request) {
                     $query
                     ->when(request()->filled("status"), function($query) {
@@ -1337,18 +1340,63 @@ class JobController extends Controller
                 })
                 ->when($request->has('booking_id'), function ($query) {
                     $query->where('booking_id', request()->input("booking_id"));
-                });
+                })
+                ->get();
+
+ // Check if job_id is provided
+            $walk_customer_payments = JobPayment::with(
+                ["bookings" => function($query) {
+                    $query->select("bookings.id","bookings.payment_method","bookings.job_start_date");
+                }])
+            ->whereHas("bookings.customer", function ($query)  {
+                   $query->where("users.is_walk_in_customer",1);
+            })
+            ->whereHas("bookings", function ($query) use ($garage_id, $request) {
+                    $query
+                    ->when(request()->filled("status"), function($query) {
+                        $statusArray = explode(',', request()->input("status"));
+                        // If status is provided, include the condition in the query
+                        $query->whereIn("status", $statusArray);
+                    })
+                    ->where("bookings.garage_id", $garage_id)
+                        ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                            $query->where('bookings.expert_id', auth()->user()->id);
+                        });
+                    // Additional date filters using date_filter
+                    if ($request->date_filter === 'today') {
+                        $query = $query->whereDate('bookings.job_start_date', Carbon::today());
+                    } elseif ($request->date_filter === 'this_week') {
+                        $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'previous_week') {
+                        $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'next_week') {
+                        $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'this_month') {
+                        $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->year);
+                    } elseif ($request->date_filter === 'previous_month') {
+                        $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+                    } elseif ($request->date_filter === 'next_month') {
+                        $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                    }
+                })
+                ->when($request->has('booking_id'), function ($query) {
+                    $query->where('booking_id', request()->input("booking_id"));
+                })
+                ->get();
+
+                $responseData = [
+                    "app_customer_payments" => $app_customer_payments,
+                    "walk_customer_payments" => $walk_customer_payments
+                ];
 
 
 
 
+            return response()->json($responseData, 200);
 
-            // Fetch payments
-            $job_payments = $query->get();
-
-
-
-            return response()->json($job_payments, 200);
         } catch (Exception $e) {
             return $this->sendError($e, 500, $request);
         }

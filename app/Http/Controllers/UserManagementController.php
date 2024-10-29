@@ -399,6 +399,7 @@ class UserManagementController extends Controller
          $walkInCustomer->last_Name = $validatedData['last_Name'];
          $walkInCustomer->phone = $validatedData['phone'];
          $walkInCustomer->email = $validatedData['email'];
+         $walkInCustomer->is_walk_in_customer = 1;
          $walkInCustomer->address_line_1 = $validatedData['address_line_1'];
          $walkInCustomer->address_line_2 = $validatedData['address_line_2'];
          $walkInCustomer->country = $validatedData['country'];
@@ -1413,6 +1414,12 @@ class UserManagementController extends Controller
                 }
             }
 
+        )
+        ->when(request()->filled("role"), function($query) {
+            $query->whereHas('roles', function ($query) {
+                   return $query->where('roles.name', request()->input("role"));
+             });
+            }
         );
 
             // ->whereHas('roles', function ($query) {

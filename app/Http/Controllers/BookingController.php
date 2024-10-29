@@ -457,6 +457,7 @@ class BookingController extends Controller
                 $walkInCustomer->last_Name = $request_data['last_Name'];
                 $walkInCustomer->phone = $request_data['phone'];
                 $walkInCustomer->email = $request_data['email'];
+                $walkInCustomer->is_walk_in_customer = 1;
                 $walkInCustomer->address_line_1 = $request_data['address_line_1'];
                 $walkInCustomer->address_line_2 = $request_data['address_line_2'];
                 $walkInCustomer->country = $request_data['country'];
