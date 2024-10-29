@@ -11,6 +11,7 @@ class Booking extends Model
     use HasFactory,SoftDeletes;
 
     protected $fillable = [
+        "booking_type",
         "next_visit_date",
         "send_notification",
         "payment_status",

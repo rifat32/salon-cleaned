@@ -19,7 +19,7 @@ class NotificationSettingController extends Controller
    * @OA\Put(
    *      path="/v1.0/notification-settings",
    *      operationId="updateNotificationSetting",
-   *      tags={"setting"},
+   *      tags={"notification_setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },
@@ -32,19 +32,10 @@ class NotificationSettingController extends Controller
    *
    * *         @OA\Property(property="STRIPE_KEY", type="string", format="string",example="STRIPE_KEY"),
    *           @OA\Property(property="STRIPE_SECRET", type="string", format="string",example="STRIPE_SECRET"),
-   *  *   @OA\Property(property="stripe_enabled", type="boolean", example=true),
-   *      @OA\Property(property="is_expert_price", type="boolean", example=true),
- *   @OA\Property(property="allow_pay_after_service", type="boolean", example=false),
- *   @OA\Property(property="allow_expert_booking", type="boolean", example=true),
- *   @OA\Property(property="allow_expert_self_busy", type="boolean", example=true),
- *   @OA\Property(property="allow_expert_booking_cancel", type="boolean", example=false),
- *   @OA\Property(property="allow_expert_view_revenue", type="boolean", example=true),
- *   @OA\Property(property="allow_expert_view_customer_details", type="boolean", example=false),
- *   @OA\Property(property="allow_receptionist_add_question", type="boolean", example=true),
- *   @OA\Property(property="default_currency", type="string", format="string", example="USD"),
- *   @OA\Property(property="default_language", type="string", format="string", example="en"),
- *   @OA\Property(property="vat_enabled", type="boolean", example=true),
- *   @OA\Property(property="vat_percentage", type="number", format="float", example=15.00)
+    *     @OA\Property(property="notify_expert", type="boolean", example=true),
+ *     @OA\Property(property="notify_customer", type="boolean", example=true),
+ *     @OA\Property(property="notify_receptionist", type="boolean", example=false),
+ *     @OA\Property(property="notify_business_owner", type="boolean", example=true)
    *
    *
    *         ),
@@ -129,7 +120,7 @@ class NotificationSettingController extends Controller
    * @OA\Get(
    *      path="/v1.0/notification-settings",
    *      operationId="getNotificationSetting",
-   *      tags={"setting"},
+   *      tags={"notification_setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },
