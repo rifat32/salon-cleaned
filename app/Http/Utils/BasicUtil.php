@@ -12,6 +12,53 @@ use Illuminate\Support\Facades\Http;
 
 trait BasicUtil
 {
+    public function blockedSlots($date,$expert_id) {
+  // Get all bookings for the provided date except the rejected ones
+  $bookings = Booking::with([
+    "customer" => function ($query) {
+        $query->select("users.id", "users.first_Name", "users.last_Name");
+    }
+])
+    ->whereDate("job_start_date", $date)
+    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+    ->where([
+        "expert_id" => $expert_id
+    ])
+    ->select("id", "booked_slots", "customer_id", "status")
+    ->get();
+
+// Get all the booked slots as a flat array
+
+$data["bookings"] = $bookings;
+$data["booking_slots"] = $bookings->pluck('booked_slots')->flatten()->toArray();
+
+// Get all bookings for the provided date except the rejected ones
+$check_in_bookings = Booking::whereDate("job_start_date", $date)
+    ->whereIn("status", ["check_in"])
+    ->where([
+        "expert_id" => $expert_id
+    ])
+    ->get();
+
+$data["check_in_slots"]  = $check_in_bookings->pluck('booked_slots')->flatten()->toArray();
+
+
+
+$expertRota = ExpertRota::where([
+    "expert_id" =>  $expert_id
+])
+    ->whereDate("date", $date)
+    ->first();
+if (!empty($expertRota)) {
+    $expertRota->busy_slots;
+}
+$data["busy_slots"] = [];
+// If expertRota exists, merge its busy_slots with the booked slots
+if (!empty($expertRota)) {
+    $data["busy_slots"] = $expertRota->busy_slots;
+}
+return $data;
+    }
 
     public function convertToHoursOnly(array $times)
     {

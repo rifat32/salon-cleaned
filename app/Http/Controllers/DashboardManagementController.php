@@ -2077,6 +2077,7 @@ class DashboardManagementController extends Controller
                  $expert["next_month_bookings"] = $this->bookingsByStatusCount('next_month', $expert->id);
                  $expert["previous_week_bookings"] = $this->bookingsByStatusCount('previous_week', $expert->id);
                  $expert["previous_month_bookings"] = $this->bookingsByStatusCount('previous_month', $expert->id);
+                 $expert["busy_slots"] = $this->blockedSlots(today(),$expert->id);
 
              }
 

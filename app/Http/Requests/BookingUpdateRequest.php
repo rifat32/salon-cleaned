@@ -29,6 +29,8 @@ class BookingUpdateRequest extends FormRequest
 
             "id" => "required|numeric",
 
+            "next_visit_date" => "nullable|date",
+            "send_notification" => "nullable|boolean",
 
               'expert_id' => [
                 'required',

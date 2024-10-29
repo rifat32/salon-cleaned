@@ -11,6 +11,9 @@ class AddPaymentFieldsToBookingsTable extends Migration
         Schema::table('bookings', function (Blueprint $table) {
             $table->string('payment_status')->nullable();
             $table->string('payment_method')->nullable();
+            $table->date('next_visit_date')->nullable();
+            $table->boolean('send_notification')->nullable();
+
         });
     }
 

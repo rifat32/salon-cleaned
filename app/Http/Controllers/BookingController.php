@@ -450,6 +450,7 @@ class BookingController extends Controller
                   "conflicted_holidays" => $holidays
                 ], 409);
             }
+
             if(empty($request_data["customer_id"])) {
                 $walkInCustomer = new User(); // Assuming you are using the User model for walk-in customers
                 $walkInCustomer->business_id = auth()->user()->business_id;
@@ -826,6 +827,8 @@ Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
                     "expert_id",
                     "booked_slots",
                     "reason",
+                    "next_visit_date",
+                    "send_notification"
                 ])->toArray());
 
 
