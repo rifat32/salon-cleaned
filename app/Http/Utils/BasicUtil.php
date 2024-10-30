@@ -146,12 +146,22 @@ trait BasicUtil
             ])
             ->get();
 
+// Get all bookings for the provided date except the rejected ones
+$my_bookings = Booking::when(!empty($id), function ($query) use ($id) {
+    $query->whereNotIn("id", [$id]);
+})
+->whereDate("job_start_date", $date)
+->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+->where([
+    "customer_id" => $expert_id
+])
+->get();
 
+        $allBusySlots = $my_bookings->pluck('booked_slots')->flatten()->toArray();
 
-        // Get all the booked slots as a flat array
-        $allBusySlots = $bookings->pluck('booked_slots')->flatten()->toArray();
+        $booked_slots = $bookings->pluck('booked_slots')->flatten()->toArray();
 
-
+        $allBusySlots = array_merge($allBusySlots, $booked_slots);
 
         $expertRota = ExpertRota::where([
             "expert_id" =>  $expert_id

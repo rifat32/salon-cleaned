@@ -525,7 +525,7 @@ class BookingController extends Controller
                 ]);
             }
 
-            $slotValidation =  $this->validateBookingSlots($booking->id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
+            $slotValidation =  $this->validateBookingSlots($booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
             if ($slotValidation['status'] === 'error') {
                 // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
@@ -865,7 +865,7 @@ Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
                     ]);
                 }
 
-                // $slotValidation =  $this->validateBookingSlots($booking->id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
+                // $slotValidation =  $this->validateBookingSlots($booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
                 // if ($slotValidation['status'] === 'error') {
                 //     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
