@@ -157,7 +157,8 @@ $my_bookings = Booking::when(!empty($id), function ($query) use ($id) {
 ])
 ->get();
 
-        $allBusySlots = $my_bookings->pluck('booked_slots')->flatten()->toArray();
+        // $allBusySlots = $my_bookings->pluck('booked_slots')->flatten()->toArray();
+        $allBusySlots = [];
 
         $booked_slots = $bookings->pluck('booked_slots')->flatten()->toArray();
 
