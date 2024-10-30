@@ -7,6 +7,7 @@ use App\Models\Coupon;
 use App\Models\ExpertRota;
 use App\Models\GarageTime;
 use App\Models\ReviewNew;
+use App\Models\SlotHold;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Http;
@@ -81,6 +82,13 @@ trait BasicUtil
         if (!empty($expertRota)) {
             $data["busy_slots"] = $expertRota->busy_slots;
         }
+
+        $currentHeldSlots = SlotHold::where('expert_id', $expert_id)
+        ->where('held_until', '>', Carbon::now())
+        ->get();
+
+        $data["busy_slots"] = array_merge($data["busy_slots"], $currentHeldSlots->held_slots);
+
         return $data;
     }
 
@@ -157,6 +165,13 @@ trait BasicUtil
         if (!empty($expertRota) && !empty($expertRota->busy_slots)) {
             $allBusySlots = array_merge($allBusySlots, $expertRota->busy_slots);
         }
+
+        $currentHeldSlots = SlotHold::where('expert_id', $expert_id)
+        ->where('held_until', '>', Carbon::now())
+        ->get();
+
+        $allBusySlots = array_merge($allBusySlots, $currentHeldSlots->held_slots);
+
         // Find overlapping slots between the input slots and the combined allBusySlots
         $overlappingSlots = array_intersect($slots, $allBusySlots);
 

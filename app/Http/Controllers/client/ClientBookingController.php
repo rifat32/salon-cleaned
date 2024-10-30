@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BookingCreateRequestClient;
 use App\Http\Requests\BookingStatusChangeRequestClient;
 use App\Http\Requests\BookingUpdateRequestClient;
+use App\Http\Requests\HoldSlotRequest;
 use App\Http\Utils\BasicUtil;
 use App\Http\Utils\DiscountUtil;
 use App\Http\Utils\ErrorUtil;
@@ -34,6 +35,7 @@ use App\Models\Notification;
 use App\Models\NotificationTemplate;
 use App\Models\PreBooking;
 use App\Models\BusinessSetting;
+use App\Models\SlotHold;
 use App\Models\SubService;
 use App\Models\User;
 use Carbon\Carbon;
@@ -136,7 +138,7 @@ class ClientBookingController extends Controller
 
                 $request_data["payment_status"] = "pending";
                 $request_data["booking_type"] = "self_booking";
-           
+
 
 
 
@@ -155,16 +157,14 @@ class ClientBookingController extends Controller
                             404
                         );
                 }
-                $holidays = Holiday::
+                $holidays = Holiday::whereDate("start_date", "<=", $request_data["job_start_date"])
+                    ->whereDate("end_date", ">=", $request_data["job_start_date"])
+                    ->get();
 
-                whereDate("start_date", "<=", $request_data["job_start_date"])
-                ->whereDate("end_date", ">=", $request_data["job_start_date"])
-                ->get();
-
-                if($holidays->count()) {
+                if ($holidays->count()) {
                     return response()->json([
-                      "message" => "some off days are exists",
-                      "conflicted_holidays" => $holidays
+                        "message" => "some off days are exists",
+                        "conflicted_holidays" => $holidays
                     ], 409);
                 }
 
@@ -291,38 +291,38 @@ class ClientBookingController extends Controller
                     "type" => "booking_created_by_client"
                 ])
                     ->first();
-                     // Get the customer's email
- $recipientIds = [$booking->customer->id];
+                // Get the customer's email
+                $recipientIds = [$booking->customer->id];
 
- // Retrieve emails of users with the role 'business_receptionist'
- $receptionists = User::role('business_receptionist')
- ->where("business_id",$booking->garage_id)
- ->pluck('id')->toArray();
+                // Retrieve emails of users with the role 'business_receptionist'
+                $receptionists = User::role('business_receptionist')
+                    ->where("business_id", $booking->garage_id)
+                    ->pluck('id')->toArray();
 
- // Merge the two arrays
- $recipientIds = array_merge($recipientIds, $receptionists);
+                // Merge the two arrays
+                $recipientIds = array_merge($recipientIds, $receptionists);
 
- foreach ($recipientIds as $recipientId) {
-    Notification::create([
-        "sender_id" => $request->user()->id,
-        "receiver_id" => $recipientId,
-        "customer_id" => $booking->customer->id,
-        "business_id" => $booking->garage_id ,
-        "garage_id" => $booking->garage_id,
-        "booking_id" => $booking->id,
-        "entity_name" => "booking",
-        "entity_id" => $booking->id,
-        "entity_ids" => json_encode([]),
-        "notification_title" => 'Booking Created',
-        "notification_description" => "A new booking has been created for booking ID: {$booking->id}.",
-        "notification_link" => null,
-        "is_system_generated" => false,
-        "notification_template_id" => $notification_template->id,
-        "status" => "unread",
-        "start_date" => now(),
-        "end_date" => null,
-    ]);
- }
+                foreach ($recipientIds as $recipientId) {
+                    Notification::create([
+                        "sender_id" => $request->user()->id,
+                        "receiver_id" => $recipientId,
+                        "customer_id" => $booking->customer->id,
+                        "business_id" => $booking->garage_id,
+                        "garage_id" => $booking->garage_id,
+                        "booking_id" => $booking->id,
+                        "entity_name" => "booking",
+                        "entity_id" => $booking->id,
+                        "entity_ids" => json_encode([]),
+                        "notification_title" => 'Booking Created',
+                        "notification_description" => "A new booking has been created for booking ID: {$booking->id}.",
+                        "notification_link" => null,
+                        "is_system_generated" => false,
+                        "notification_template_id" => $notification_template->id,
+                        "status" => "unread",
+                        "start_date" => now(),
+                        "end_date" => null,
+                    ]);
+                }
 
 
                 // if(env("SEND_EMAIL") == true) {
@@ -332,83 +332,80 @@ class ClientBookingController extends Controller
                 // ));
                 // }
 
-                if($booking->payment_method=="stripe") {
- // Stripe settings retrieval based on business or garage ID
- $stripeSetting = BusinessSetting::where('business_id', $booking->garage_id)->first();
+                if ($booking->payment_method == "stripe") {
+                    // Stripe settings retrieval based on business or garage ID
+                    $stripeSetting = BusinessSetting::where('business_id', $booking->garage_id)->first();
 
- if (empty($stripeSetting)) {
-    throw new Exception("No stripe seting found",403);
+                    if (empty($stripeSetting)) {
+                        throw new Exception("No stripe seting found", 403);
+                    }
 
-}
+                    if (empty($stripeSetting->stripe_enabled)) {
+                        throw new Exception("Stripe not enabled", 403);
+                    }
 
-if (empty($stripeSetting->stripe_enabled)) {
-    throw new Exception("Stripe not enabled",403);
+                    // Set Stripe client
+                    $stripe = new \Stripe\StripeClient($stripeSetting->STRIPE_SECRET);
 
-}
+                    $discount = $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
+                    $coupon_discount = $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
 
- // Set Stripe client
- $stripe = new \Stripe\StripeClient($stripeSetting->STRIPE_SECRET);
+                    $total_discount = $discount + $coupon_discount;
 
- $discount = $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
- $coupon_discount = $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+                    $tipAmount = $this->canculate_discounted_price(
+                        $booking->price,
+                        $booking->tip_type,
+                        $booking->tip_amount
+                    );
 
- $total_discount = $discount + $coupon_discount;
+                    // Prepare payment intent data
+                    $paymentIntentData = [
+                        'amount' => ($booking->price + $tipAmount) * 100, // Adjusted amount in cents
+                        'currency' => 'usd',
+                        'payment_method_types' => ['card'],
+                        'metadata' => [
+                            'booking_id' => $booking->id,
+                            'our_url' => route('stripe.webhook'), // Webhook URL for tracking
+                        ],
+                    ];
 
- $tipAmount = $this->canculate_discounted_price(
-    $booking->price,
-    $booking->tip_type,
-    $booking->tip_amount
-);
+                    // Handle discounts (if applicable)
+                    if ($total_discount > 0) {
+                        $coupon = $stripe->coupons->create([
+                            'amount_off' => $total_discount * 100, // Amount in cents
+                            'currency' => 'usd',
+                            'duration' => 'once',
+                            'name' => 'Discount',
+                        ]);
 
- // Prepare payment intent data
- $paymentIntentData = [
-     'amount' => ($booking->price + $tipAmount) * 100, // Adjusted amount in cents
-     'currency' => 'usd',
-     'payment_method_types' => ['card'],
-     'metadata' => [
-         'booking_id' => $booking->id,
-         'our_url' => route('stripe.webhook'), // Webhook URL for tracking
-     ],
- ];
+                        $paymentIntentData['discounts'] = [
+                            [
+                                'coupon' => $coupon->id,
+                            ],
+                        ];
+                    }
 
- // Handle discounts (if applicable)
- if ($total_discount > 0) {
-     $coupon = $stripe->coupons->create([
-         'amount_off' => $total_discount * 100, // Amount in cents
-         'currency' => 'usd',
-         'duration' => 'once',
-         'name' => 'Discount',
-     ]);
+                    // Create payment intent
+                    $paymentIntent = $stripe->paymentIntents->create($paymentIntentData);
 
-     $paymentIntentData['discounts'] = [
-         [
-             'coupon' => $coupon->id,
-         ],
-     ];
- }
+                    JobPayment::create([
+                        "booking_id" => $booking->id,
+                        "amount" => $booking->final_price,
+                    ]);
 
- // Create payment intent
- $paymentIntent = $stripe->paymentIntents->create($paymentIntentData);
+                    Booking::where([
+                        "id" => $booking->id
+                    ])
+                        ->update([
+                            "payment_status" => "complete",
+                            "payment_method" => "stripe"
+                        ]);
 
- JobPayment::create([
-     "booking_id" => $booking->id,
-     "amount" => $booking->final_price,
- ]);
+                    // Save the payment intent ID to the booking record
+                    $booking->payment_intent_id = $paymentIntent->id; // Assuming there's a `payment_intent_id` column in the `bookings` table
+                    $booking->save();
 
-     Booking::where([
-         "id" => $booking->id
-     ])
-         ->update([
-             "payment_status" => "complete",
-             "payment_method" => "stripe"
-         ]);
-
-  // Save the payment intent ID to the booking record
-$booking->payment_intent_id = $paymentIntent->id; // Assuming there's a `payment_intent_id` column in the `bookings` table
-$booking->save();
-
-$booking->clientSecret = $paymentIntent->client_secret;
-
+                    $booking->clientSecret = $paymentIntent->client_secret;
                 }
 
                 if (env("SEND_EMAIL") == true) {
@@ -417,17 +414,17 @@ $booking->clientSecret = $paymentIntent->client_secret;
 
                     // Retrieve emails of users with the role 'business_receptionist'
                     $receptionists = User::role('business_receptionist')
-                    ->where("business_id",$booking->garage_id)
-                    ->pluck('email')->toArray();
+                        ->where("business_id", $booking->garage_id)
+                        ->pluck('email')->toArray();
 
                     // Merge the two arrays
                     $recipientEmails = array_merge($recipientEmails, $receptionists);
 
-                                       Mail::to(
-                                           $recipientEmails
+                    Mail::to(
+                        $recipientEmails
 
-                                           )->send(new BookingCreateMail($booking));
-                                   }
+                    )->send(new BookingCreateMail($booking));
+                }
 
                 return response($booking, 201);
             });
@@ -543,38 +540,38 @@ $booking->clientSecret = $paymentIntent->client_secret;
                     "type" => "booking_status_changed_by_garage_owner"
                 ])
                     ->first();
-                               // Get the customer's email
- $recipientIds = [$booking->customer->id];
+                // Get the customer's email
+                $recipientIds = [$booking->customer->id];
 
- // Retrieve emails of users with the role 'business_receptionist'
- $receptionists = User::role('business_receptionist')
- ->where("business_id",$booking->garage_id)
- ->pluck('id')->toArray();
+                // Retrieve emails of users with the role 'business_receptionist'
+                $receptionists = User::role('business_receptionist')
+                    ->where("business_id", $booking->garage_id)
+                    ->pluck('id')->toArray();
 
- // Merge the two arrays
- $recipientIds = array_merge($recipientIds, $receptionists);
+                // Merge the two arrays
+                $recipientIds = array_merge($recipientIds, $receptionists);
 
- foreach ($recipientIds as $recipientId) {
-    Notification::create([
-        "sender_id" => $request->user()->id,
-        "receiver_id" => $recipientId,
-        "customer_id" => $booking->customer->id,
-        "business_id" => $booking->garage_id ,
-        "garage_id" => $booking->garage_id,
-        "booking_id" => $booking->id,
-        "entity_name" => "booking",
-        "entity_id" => $booking->id,
-        "entity_ids" => json_encode([]),
-        "notification_title" => 'Booking Status Changed',
-       "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
-      "notification_link" => null,
-        "is_system_generated" => false,
-        "notification_template_id" => $notification_template->id,
-        "status" => "unread",
-        "start_date" => now(),
-        "end_date" => null,
-    ]);
- }
+                foreach ($recipientIds as $recipientId) {
+                    Notification::create([
+                        "sender_id" => $request->user()->id,
+                        "receiver_id" => $recipientId,
+                        "customer_id" => $booking->customer->id,
+                        "business_id" => $booking->garage_id,
+                        "garage_id" => $booking->garage_id,
+                        "booking_id" => $booking->id,
+                        "entity_name" => "booking",
+                        "entity_id" => $booking->id,
+                        "entity_ids" => json_encode([]),
+                        "notification_title" => 'Booking Status Changed',
+                        "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
+                        "notification_link" => null,
+                        "is_system_generated" => false,
+                        "notification_template_id" => $notification_template->id,
+                        "status" => "unread",
+                        "start_date" => now(),
+                        "end_date" => null,
+                    ]);
+                }
 
                 // if(env("SEND_EMAIL") == true) {
                 //     Mail::to($booking->customer->email)->send(new DynamicMail(
@@ -584,21 +581,21 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 // }
 
                 if (env("SEND_EMAIL") == true) {
- // Get the customer's email
- $recipientEmails = [$booking->customer->email];
+                    // Get the customer's email
+                    $recipientEmails = [$booking->customer->email];
 
- // Retrieve emails of users with the role 'business_receptionist'
- $receptionists = User::role('business_receptionist')
- ->where("business_id",$booking->garage_id)
- ->pluck('email')->toArray();
+                    // Retrieve emails of users with the role 'business_receptionist'
+                    $receptionists = User::role('business_receptionist')
+                        ->where("business_id", $booking->garage_id)
+                        ->pluck('email')->toArray();
 
- // Merge the two arrays
- $recipientEmails = array_merge($recipientEmails, $receptionists);
+                    // Merge the two arrays
+                    $recipientEmails = array_merge($recipientEmails, $receptionists);
 
                     Mail::to(
                         $recipientEmails
 
-                        )->send(new BookingStatusUpdateMail($booking));
+                    )->send(new BookingStatusUpdateMail($booking));
                 }
 
 
@@ -706,16 +703,14 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 }
 
 
-                $holidays = Holiday::
+                $holidays = Holiday::whereDate("start_date", "<=", $request_data["job_start_date"])
+                    ->whereDate("end_date", ">=", $request_data["job_start_date"])
+                    ->get();
 
-                whereDate("start_date", "<=", $request_data["job_start_date"])
-                ->whereDate("end_date", ">=", $request_data["job_start_date"])
-                ->get();
-
-                if($holidays->count()) {
+                if ($holidays->count()) {
                     return response()->json([
-                      "message" => "some off days are exists",
-                      "conflicted_holidays" => $holidays
+                        "message" => "some off days are exists",
+                        "conflicted_holidays" => $holidays
                     ], 409);
                 }
 
@@ -852,38 +847,38 @@ $booking->clientSecret = $paymentIntent->client_secret;
                     "type" => "booking_updated_by_client"
                 ])
                     ->first();
-                                    // Get the customer's email
- $recipientIds = [$booking->customer->id];
+                // Get the customer's email
+                $recipientIds = [$booking->customer->id];
 
- // Retrieve emails of users with the role 'business_receptionist'
- $receptionists = User::role('business_receptionist')
- ->where("business_id",$booking->garage_id)
- ->pluck('id')->toArray();
+                // Retrieve emails of users with the role 'business_receptionist'
+                $receptionists = User::role('business_receptionist')
+                    ->where("business_id", $booking->garage_id)
+                    ->pluck('id')->toArray();
 
- // Merge the two arrays
- $recipientIds = array_merge($recipientIds, $receptionists);
+                // Merge the two arrays
+                $recipientIds = array_merge($recipientIds, $receptionists);
 
- foreach ($recipientIds as $recipientId) {
-    Notification::create([
-        "sender_id" => $request->user()->id,
-        "receiver_id" => $recipientId,
-        "customer_id" => $booking->customer->id,
-        "business_id" => $booking->garage_id ,
-        "garage_id" => $booking->garage_id,
-        "booking_id" => $booking->id,
-        "entity_name" => "booking",
-        "entity_id" => $booking->id,
-        "entity_ids" => json_encode([]),
-       "notification_title" => 'Booking Updated',
-    "notification_description" => "The details of booking ID: {$booking->id} have been updated.",
-   "notification_link" => null,
-        "is_system_generated" => false,
-        "notification_template_id" => $notification_template->id,
-        "status" => "unread",
-        "start_date" => now(),
-        "end_date" => null,
-    ]);
- }
+                foreach ($recipientIds as $recipientId) {
+                    Notification::create([
+                        "sender_id" => $request->user()->id,
+                        "receiver_id" => $recipientId,
+                        "customer_id" => $booking->customer->id,
+                        "business_id" => $booking->garage_id,
+                        "garage_id" => $booking->garage_id,
+                        "booking_id" => $booking->id,
+                        "entity_name" => "booking",
+                        "entity_id" => $booking->id,
+                        "entity_ids" => json_encode([]),
+                        "notification_title" => 'Booking Updated',
+                        "notification_description" => "The details of booking ID: {$booking->id} have been updated.",
+                        "notification_link" => null,
+                        "is_system_generated" => false,
+                        "notification_template_id" => $notification_template->id,
+                        "status" => "unread",
+                        "start_date" => now(),
+                        "end_date" => null,
+                    ]);
+                }
 
                 // if(env("SEND_EMAIL") == true) {
                 //     Mail::to($booking->customer->email)->send(new DynamicMail(
@@ -892,7 +887,7 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 // ));}
 
 
-                if(!empty($request_data["payments"])) {
+                if (!empty($request_data["payments"])) {
                     $total_payable = $booking->final_price;
 
 
@@ -931,20 +926,19 @@ $booking->clientSecret = $paymentIntent->client_secret;
                                 "payment_method" => "cash"
                             ]);
                     }
-
                 }
 
                 if (env("SEND_EMAIL") == true) {
-                     // Get the customer's email
- $recipientEmails = [$booking->customer->email];
+                    // Get the customer's email
+                    $recipientEmails = [$booking->customer->email];
 
- // Retrieve emails of users with the role 'business_receptionist'
- $receptionists = User::role('business_receptionist')
- ->where("business_id",$booking->garage_id)
- ->pluck('email')->toArray();
+                    // Retrieve emails of users with the role 'business_receptionist'
+                    $receptionists = User::role('business_receptionist')
+                        ->where("business_id", $booking->garage_id)
+                        ->pluck('email')->toArray();
 
- // Merge the two arrays
- $recipientEmails = array_merge($recipientEmails, $receptionists);
+                    // Merge the two arrays
+                    $recipientEmails = array_merge($recipientEmails, $receptionists);
                     Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
                 }
                 return response($booking, 201);
@@ -1369,9 +1363,9 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 $dates[] = Carbon::today()->addDays($i)->toDateString();
             }
             $experts = User::with("translation")
-            ->when(request()->filled("expert_id"), function($query) {
+                ->when(request()->filled("expert_id"), function ($query) {
                     $query->where("users.id", request()->input("expert_id"));
-            })
+                })
                 ->whereHas('roles', function ($query) {
                     $query->where('roles.name', 'business_experts');
                 })
@@ -1410,31 +1404,31 @@ $booking->clientSecret = $paymentIntent->client_secret;
                 // $total_busy_slots = $totalBookedSlots + $totalBusySlots;
 
                 $total_expert_busy_slots = ExpertRota::selectRaw('COALESCE(SUM(json_length(busy_slots)), 0) as total_busy_slots')
-                ->when(request()->filled("expert_id"), function($query) {
-                    $query->where("expert_id", request()->input("expert_id"));
-                })
+                    ->when(request()->filled("expert_id"), function ($query) {
+                        $query->where("expert_id", request()->input("expert_id"));
+                    })
 
-                ->where('is_active', 1)
-                ->whereDate('date', $date)
-                ->value("total_busy_slots");
+                    ->where('is_active', 1)
+                    ->whereDate('date', $date)
+                    ->value("total_busy_slots");
 
-              $total_booked_slots =  Booking::selectRaw('COALESCE(SUM(json_length(booked_slots)), 0) as total_booked_slots')
-                ->when(request()->filled("expert_id"), function($query) {
-                    $query->where("expert_id", request()->input("expert_id"));
-                })
-                ->when(request()->filled("business_id"), function ($query) {
-                    $query->where("garage_id", request()->input("business_id"));
-                })
-                ->whereDate('job_start_date', $date)
-                ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
-                ->value("total_booked_slots");
+                $total_booked_slots =  Booking::selectRaw('COALESCE(SUM(json_length(booked_slots)), 0) as total_booked_slots')
+                    ->when(request()->filled("expert_id"), function ($query) {
+                        $query->where("expert_id", request()->input("expert_id"));
+                    })
+                    ->when(request()->filled("business_id"), function ($query) {
+                        $query->where("garage_id", request()->input("business_id"));
+                    })
+                    ->whereDate('job_start_date', $date)
+                    ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+                    ->value("total_booked_slots");
 
 
-$total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
-                    // $total_busy_slots_in_day->push([
-                    //     "date" => $date,
-                    //     "total_busy_slots" => $total_busy_slots
-                    // ]);
+                $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
+                // $total_busy_slots_in_day->push([
+                //     "date" => $date,
+                //     "total_busy_slots" => $total_busy_slots
+                // ]);
                 if ($total_busy_slots < $total_slots_in_one_day) {
                     $available_dates->push($date);
                 } else {
@@ -1448,11 +1442,11 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
 
 
             return response()->json([
-              "available_dates" => $available_dates->toArray(),
-              "blocked_dates" => $blocked_dates->toArray(),
-            //   "total_experts" => $total_experts,
-            //   "total_slots_in_one_day" => $total_slots_in_one_day,
-            //  "total_busy_slots_in_day" => $total_busy_slots_in_day->toArray()
+                "available_dates" => $available_dates->toArray(),
+                "blocked_dates" => $blocked_dates->toArray(),
+                //   "total_experts" => $total_experts,
+                //   "total_slots_in_one_day" => $total_slots_in_one_day,
+                //  "total_busy_slots_in_day" => $total_busy_slots_in_day->toArray()
 
             ], 200);
         } catch (Exception $e) {
@@ -1460,6 +1454,93 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
             return $this->sendError($e, 500, $request);
         }
     }
+
+
+    /**
+     *
+     * @OA\Post(
+     *     path="/v1.0/hold-slot",
+     *     operationId="holdSlot",
+     *     tags={"slot.management"},
+     *     security={
+     *         {"bearerAuth": {}}
+     *     },
+     *     summary="Hold slots for a customer",
+     *     description="This method allows a customer to hold slots for 90 seconds.",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"held_slots", "customer_id", "expert_id"},
+     *             @OA\Property(property="held_slots", type="array", @OA\Items(type="integer"), description="Array of slot IDs"),
+     *             @OA\Property(property="customer_id", type="integer", description="ID of the customer"),
+     *             @OA\Property(property="expert_id", type="integer", description="ID of the expert")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Slots held successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Slots held successfully"),
+     *             @OA\Property(property="held_until", type="string", format="date-time", example="2024-10-30T12:00:00Z")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict, user already has slots held",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="You already have slots held")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad request, validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Unprocessable Entity",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not Found",
+     *         @OA\JsonContent()
+     *     )
+     * )
+     */
+    public function holdSlot(HoldSlotRequest $request)
+    {
+        $request_data = $request->validated();
+
+        $request_data["customer_id"] = auth()->user()->id;
+        $request_data["held_until"] = Carbon::now()->addSeconds(90);
+
+     // Delete all slots for the customer, including expired ones
+     SlotHold::where('customer_id', $request_data["customer_id"])
+     ->orWhere('held_until', '<=', Carbon::now())
+     ->delete();
+
+
+
+
+        // Hold the slots for 90 seconds
+        SlotHold::create($request_data);
+
+        return response()->json(['message' => 'Slots held successfully', 'held_until' => $heldUntil]);
+    }
+
 
     /**
      *
@@ -1555,7 +1636,7 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
                 ], 401);
             }
 
-            $data = $this->blockedSlots(request()->input("date"),$expert_id);
+            $data = $this->blockedSlots(request()->input("date"), $expert_id);
 
 
 
@@ -1637,14 +1718,14 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
             $this->storeActivity($request, "");
 
             $booking = Booking::with(
-     "sub_services.translation",
+                "sub_services.translation",
                 "sub_services.service",
                 "sub_services.service.translation",
                 "booking_packages.garage_package",
                 "customer",
                 "garage",
                 "expert"
-                )
+            )
                 ->where([
                     "id" => $id,
                     "customer_id" => $request->user()->id
@@ -1667,7 +1748,7 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
 
 
 
-   /**
+    /**
      *
      *     @OA\Delete(
      *      path="/v1.0/client/bookings/{id}",
@@ -1721,89 +1802,89 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
      *     )
      */
 
-     public function deleteBookingByIdClient($id, Request $request)
-     {
+    public function deleteBookingByIdClient($id, Request $request)
+    {
 
-         try {
-             $this->storeActivity($request, "");
-             $booking =  Booking::where([
-                 "id" => $id,
-                 "customer_id" => $request->user()->id
-             ])->first();
-             if (!$booking) {
-                 return response()->json(
-                     [
-                         "message" => "no booking found"
-                     ],
-                     404
-                 );
-             }
-
-
-             if ($booking->status != "pending") {
-                 // Return an error response indicating that the status cannot be updated
-                 return response()->json(["message" => "only pending booking can be deleted"], 422);
-             }
-
-             $jobStartDate = Carbon::parse($booking->job_start_date);
-
-             if (Carbon::now()->gte($jobStartDate) || Carbon::now()->diffInHours($jobStartDate, false) < 24) {
-                 return response()->json(['error' => 'Booking cannot be deleted within 24 hours of the job start time or if the time has already passed'], 409);
-             }
+        try {
+            $this->storeActivity($request, "");
+            $booking =  Booking::where([
+                "id" => $id,
+                "customer_id" => $request->user()->id
+            ])->first();
+            if (!$booking) {
+                return response()->json(
+                    [
+                        "message" => "no booking found"
+                    ],
+                    404
+                );
+            }
 
 
-             $booking->delete();
+            if ($booking->status != "pending") {
+                // Return an error response indicating that the status cannot be updated
+                return response()->json(["message" => "only pending booking can be deleted"], 422);
+            }
 
-             $notification_template = NotificationTemplate::where([
-                 "type" => "booking_deleted_by_client"
-             ])
-                 ->first();
-                                                    // Get the customer's email
- $recipientIds = [$booking->customer->id];
+            $jobStartDate = Carbon::parse($booking->job_start_date);
 
- // Retrieve emails of users with the role 'business_receptionist'
- $receptionists = User::role('business_receptionist')
- ->where("business_id",$booking->garage_id)
- ->pluck('id')->toArray();
-
- // Merge the two arrays
- $recipientIds = array_merge($recipientIds, $receptionists);
-
- foreach ($recipientIds as $recipientId) {
-    Notification::create([
-        "sender_id" => $request->user()->id,
-        "receiver_id" => $recipientId,
-        "customer_id" => $booking->customer->id,
-        "business_id" => $booking->garage_id ,
-        "garage_id" => $booking->garage_id,
-        "booking_id" => $booking->id,
-        "entity_name" => "booking",
-        "entity_id" => $booking->id,
-        "entity_ids" => json_encode([]),
-        "notification_title" => 'Booking Deleted',
-        "notification_description" => "Booking ID: {$booking->id} has been deleted.",
-       "notification_link" => null,
-        "is_system_generated" => false,
-        "notification_template_id" => $notification_template->id,
-        "status" => "unread",
-        "start_date" => now(),
-        "end_date" => null,
-    ]);
- }
+            if (Carbon::now()->gte($jobStartDate) || Carbon::now()->diffInHours($jobStartDate, false) < 24) {
+                return response()->json(['error' => 'Booking cannot be deleted within 24 hours of the job start time or if the time has already passed'], 409);
+            }
 
 
-             //     if(env("SEND_EMAIL") == true) {
-             //         Mail::to($booking->customer->email)->send(new DynamicMail(
-             //         $booking,
-             //         "booking_deleted_by_client"
-             //     ));
-             // }
+            $booking->delete();
 
-             return response()->json(["ok" => true], 200);
-         } catch (Exception $e) {
-             return $this->sendError($e, 500, $request);
-         }
-     }
+            $notification_template = NotificationTemplate::where([
+                "type" => "booking_deleted_by_client"
+            ])
+                ->first();
+            // Get the customer's email
+            $recipientIds = [$booking->customer->id];
+
+            // Retrieve emails of users with the role 'business_receptionist'
+            $receptionists = User::role('business_receptionist')
+                ->where("business_id", $booking->garage_id)
+                ->pluck('id')->toArray();
+
+            // Merge the two arrays
+            $recipientIds = array_merge($recipientIds, $receptionists);
+
+            foreach ($recipientIds as $recipientId) {
+                Notification::create([
+                    "sender_id" => $request->user()->id,
+                    "receiver_id" => $recipientId,
+                    "customer_id" => $booking->customer->id,
+                    "business_id" => $booking->garage_id,
+                    "garage_id" => $booking->garage_id,
+                    "booking_id" => $booking->id,
+                    "entity_name" => "booking",
+                    "entity_id" => $booking->id,
+                    "entity_ids" => json_encode([]),
+                    "notification_title" => 'Booking Deleted',
+                    "notification_description" => "Booking ID: {$booking->id} has been deleted.",
+                    "notification_link" => null,
+                    "is_system_generated" => false,
+                    "notification_template_id" => $notification_template->id,
+                    "status" => "unread",
+                    "start_date" => now(),
+                    "end_date" => null,
+                ]);
+            }
+
+
+            //     if(env("SEND_EMAIL") == true) {
+            //         Mail::to($booking->customer->email)->send(new DynamicMail(
+            //         $booking,
+            //         "booking_deleted_by_client"
+            //     ));
+            // }
+
+            return response()->json(["ok" => true], 200);
+        } catch (Exception $e) {
+            return $this->sendError($e, 500, $request);
+        }
+    }
 
 
     /**
@@ -1895,6 +1976,4 @@ $total_busy_slots = $total_expert_busy_slots + $total_booked_slots;
             return $this->sendError($e, 500, $request);
         }
     }
-
-
 }

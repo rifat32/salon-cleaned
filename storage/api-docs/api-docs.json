@@ -14,7 +14,7 @@
     },
     "servers": [
         {
-            "url": "http://my-default-host.com",
+            "url": "https://quickreview.app/saloon/api",
             "description": "Demo API Server"
         }
     ],
@@ -7182,7 +7182,7 @@
             },
             "post": {
                 "tags": [
-                    "z.unused"
+                    "template_management.email"
                 ],
                 "summary": "This method is to store email template",
                 "description": "This method is to store email template",
@@ -18594,6 +18594,172 @@
                         "example": "1"
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/notification-settings": {
+            "get": {
+                "tags": [
+                    "notification_setting"
+                ],
+                "summary": "This method is to get busuness _setting",
+                "description": "This method is to get busuness setting",
+                "operationId": "getNotificationSetting",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "notification_setting"
+                ],
+                "summary": "This method is to update busuness setting",
+                "description": "This method is to update busuness setting",
+                "operationId": "updateNotificationSetting",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "STRIPE_KEY": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "STRIPE_KEY"
+                                    },
+                                    "STRIPE_SECRET": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "STRIPE_SECRET"
+                                    },
+                                    "notify_expert": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "notify_customer": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "notify_receptionist": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "notify_business_owner": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -30458,6 +30624,140 @@
                 ]
             }
         },
+        "/v1.0/hold-slot": {
+            "post": {
+                "tags": [
+                    "slot.management"
+                ],
+                "summary": "Hold slots for a customer",
+                "description": "This method allows a customer to hold slots for 90 seconds.",
+                "operationId": "holdSlot",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "held_slots",
+                                    "customer_id",
+                                    "expert_id"
+                                ],
+                                "properties": {
+                                    "held_slots": {
+                                        "description": "Array of slot IDs",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "customer_id": {
+                                        "description": "ID of the customer",
+                                        "type": "integer"
+                                    },
+                                    "expert_id": {
+                                        "description": "ID of the expert",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Slots held successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Slots held successfully"
+                                        },
+                                        "held_until": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-10-30T12:00:00Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict, user already has slots held",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You already have slots held"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1.0/client/blocked-slots/{expert_id}": {
             "get": {
                 "tags": [
@@ -32403,12 +32703,12 @@
             "description": "dashboard_management.data_collector"
         },
         {
-            "name": "z.unused",
-            "description": "z.unused"
-        },
-        {
             "name": "template_management.email",
             "description": "template_management.email"
+        },
+        {
+            "name": "z.unused",
+            "description": "z.unused"
         },
         {
             "name": "template_management.wrapper.email",
@@ -32515,6 +32815,10 @@
             "description": "notification_management"
         },
         {
+            "name": "notification_setting",
+            "description": "notification_setting"
+        },
+        {
             "name": "template_management.notification",
             "description": "template_management.notification"
         },
@@ -32593,6 +32897,10 @@
         {
             "name": "client.booking",
             "description": "client.booking"
+        },
+        {
+            "name": "slot.management",
+            "description": "slot.management"
         },
         {
             "name": "client.coupon",
