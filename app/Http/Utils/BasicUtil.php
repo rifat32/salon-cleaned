@@ -133,7 +133,7 @@ trait BasicUtil
         return $timeFormat;
     }
 
-    public function validateBookingSlots($id, $slots, $date, $expert_id, $total_time)
+    public function validateBookingSlots($id, $customer_id,$slots, $date, $expert_id, $total_time)
     {
         // Get all bookings for the provided date except the rejected ones
         $bookings = Booking::when(!empty($id), function ($query) use ($id) {
@@ -153,7 +153,7 @@ $my_bookings = Booking::when(!empty($id), function ($query) use ($id) {
 ->whereDate("job_start_date", $date)
 ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
 ->where([
-    "customer_id" => $expert_id
+    "customer_id" => $customer_id
 ])
 ->get();
 
