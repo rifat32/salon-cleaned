@@ -96,28 +96,30 @@ class SettingController extends Controller
 
 
 
-          // Verify the Stripe credentials before updating
-$stripeValid = false;
-try {
-    // Set Stripe client with the provided secret
-    $stripe = new \Stripe\StripeClient($request_data['STRIPE_SECRET']);
+           if(!empty($request_data['STRIPE_SECRET'])){
+  // Verify the Stripe credentials before updating
+  $stripeValid = false;
+  try {
+      // Set Stripe client with the provided secret
+      $stripe = new \Stripe\StripeClient($request_data['STRIPE_SECRET']);
 
-    // Make a test API call (for example, retrieve account details)
-    $stripe->accounts->retrieve('me');
+      // Make a test API call (for example, retrieve account details)
+      $stripe->accounts->retrieve('me');
 
-    // If the request is successful, mark the Stripe credentials as valid
-    $stripeValid = true;
-} catch (\Stripe\Exception\AuthenticationException $e) {
-    // Handle invalid API key or secret
-    return response()->json([
-        "message" => "Invalid Stripe credentials: " . $e->getMessage()
-    ], 401);
-} catch (\Exception $e) {
-    // Handle other exceptions related to Stripe
-    return response()->json([
-        "message" => "An error occurred while verifying Stripe credentials: " . $e->getMessage()
-    ], 500);
-}
+      // If the request is successful, mark the Stripe credentials as valid
+      $stripeValid = true;
+  } catch (\Stripe\Exception\AuthenticationException $e) {
+      // Handle invalid API key or secret
+      return response()->json([
+          "message" => "Invalid Stripe credentials: " . $e->getMessage()
+      ], 401);
+  } catch (\Exception $e) {
+      // Handle other exceptions related to Stripe
+      return response()->json([
+          "message" => "An error occurred while verifying Stripe credentials: " . $e->getMessage()
+      ], 500);
+  }
+           }
 
 $busunessSetting = BusinessSetting::
 where([
