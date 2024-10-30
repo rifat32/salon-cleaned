@@ -43,11 +43,11 @@ class GarageTimesUpdateRequest extends FormRequest
                 new TimeOrderRule
             ],
             "times.*.is_closed" => ['required', "boolean"],
-            'times.*.busy_slots' => [
+            'times.*.time_slots' => [
                 'present',
                 'array',
             ],
-            'times.*.busy_slots.*' => [
+            'times.*.time_slots.*' => [
                 'date_format:g:i A',
             ],
 
