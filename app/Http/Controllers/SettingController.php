@@ -94,17 +94,40 @@ class SettingController extends Controller
            $request_data = $request->validated();
 
 
-          $busunessSetting = BusinessSetting::
-          where([
-            "business_id" => auth()->user()->business_id
-        ])
-        ->first();
 
-          if (!$busunessSetting) {
-              return response()->json([
-                  "message" => "no business setting found"
-              ], 404);
-          }
+
+          // Verify the Stripe credentials before updating
+$stripeValid = false;
+try {
+    // Set Stripe client with the provided secret
+    $stripe = new \Stripe\StripeClient($request_data['STRIPE_SECRET']);
+
+    // Make a test API call (for example, retrieve account details)
+    $stripe->accounts->retrieve('me');
+
+    // If the request is successful, mark the Stripe credentials as valid
+    $stripeValid = true;
+} catch (\Stripe\Exception\AuthenticationException $e) {
+    // Handle invalid API key or secret
+    return response()->json([
+        "message" => "Invalid Stripe credentials: " . $e->getMessage()
+    ], 401);
+} catch (\Exception $e) {
+    // Handle other exceptions related to Stripe
+    return response()->json([
+        "message" => "An error occurred while verifying Stripe credentials: " . $e->getMessage()
+    ], 500);
+}
+
+$busunessSetting = BusinessSetting::
+where([
+  "business_id" => auth()->user()->business_id
+])
+->first();
+
+if (!$busunessSetting) {
+    BusinessSetting::create($request_data);
+}
 
               $busunessSetting->fill(collect($request_data)->only([
                 'STRIPE_KEY',

@@ -491,10 +491,6 @@ class BookingController extends Controller
             $request_data["payment_status"] = "pending";
             $request_data["booking_type"] = "admin_panel_booking";
 
-     
-
-
-
 
             $booking =  Booking::create($request_data);
 
