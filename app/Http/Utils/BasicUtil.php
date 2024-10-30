@@ -87,7 +87,9 @@ trait BasicUtil
         ->where('held_until', '>', Carbon::now())
         ->get();
 
-        $data["busy_slots"] = array_merge($data["busy_slots"], $currentHeldSlots->held_slots);
+        $held_slots  = $currentHeldSlots->pluck('held_slots')->flatten()->toArray();
+
+        $data["busy_slots"] = array_merge($data["busy_slots"], $held_slots);
 
         return $data;
     }
@@ -170,7 +172,10 @@ trait BasicUtil
         ->where('held_until', '>', Carbon::now())
         ->get();
 
-        $allBusySlots = array_merge($allBusySlots, $currentHeldSlots->held_slots);
+        $held_slots  = $currentHeldSlots->pluck('held_slots')->flatten()->toArray();
+
+
+        $allBusySlots = array_merge($allBusySlots, $held_slots);
 
         // Find overlapping slots between the input slots and the combined allBusySlots
         $overlappingSlots = array_intersect($slots, $allBusySlots);
