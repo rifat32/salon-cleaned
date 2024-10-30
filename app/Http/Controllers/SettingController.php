@@ -313,6 +313,9 @@ class SettingController extends Controller
 
            $busunessSetting = BusinessSetting::first();
 
+
+           $busunessSettingArray["STRIPE_KEY"] = $busunessSetting->STRIPE_KEY;
+
            return response()->json($busunessSetting, 200);
 
        } catch (Exception $e) {
