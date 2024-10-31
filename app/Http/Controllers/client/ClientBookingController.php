@@ -425,7 +425,7 @@ class ClientBookingController extends Controller
 
                     )->send(new BookingCreateMail($booking));
                 }
-
+                $booking = $booking->load(["payments"]);
                 return response($booking, 201);
             });
         } catch (Exception $e) {
@@ -941,6 +941,7 @@ class ClientBookingController extends Controller
                     $recipientEmails = array_merge($recipientEmails, $receptionists);
                     Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
                 }
+                $booking = $booking->load(["payments"]);
                 return response($booking, 201);
             });
         } catch (Exception $e) {

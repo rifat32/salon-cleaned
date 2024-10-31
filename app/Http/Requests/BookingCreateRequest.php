@@ -46,8 +46,8 @@ class BookingCreateRequest extends FormRequest
 "reason" => "nullable|string",
 
             'customer_id' => 'nullable|numeric|exists:users,id',
-'first_Name' => 'required_without:customer_id|string|max:255',
-'last_Name' => 'required_without:customer_id|string|max:255',
+'first_Name' => 'nullable|required_without:customer_id|string|max:255',
+'last_Name' => 'nullable|required_without:customer_id|string|max:255',
 'phone' => 'nullable|string',
 
             "garage_id" => "required|numeric|exists:garages,id",

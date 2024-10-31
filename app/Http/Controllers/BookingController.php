@@ -669,6 +669,8 @@ $recipientEmails = [$booking->customer->email];
 
 Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
 }
+
+$booking = $booking->load(["payments"]);
             DB::commit();
             return response($booking, 201);
         } catch (Exception $e) {
@@ -1031,6 +1033,7 @@ Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
                     Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
                 }
 
+                $booking = $booking->load(["payments"]);
 
                 return response($booking, 201);
             });
