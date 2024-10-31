@@ -675,6 +675,7 @@ if ($booking->customer && !empty($booking->customer->email)) {
 if (!empty($recipientEmails)) {
     Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
 }
+
 }
 
 $booking = $booking->load(["payments"]);

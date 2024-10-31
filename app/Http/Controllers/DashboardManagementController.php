@@ -1790,6 +1790,10 @@ class DashboardManagementController extends Controller
             "arrived",
             "converted_to_job"
         ];
+        if(request()->filled("status")) {
+            $statuses = explode(',', request()->input("status"));
+        }
+
 
         $data = [];
 
@@ -2267,7 +2271,6 @@ class DashboardManagementController extends Controller
                 ], 401);
             }
 
-
             $experts = User::with("translation")
                 ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
                 ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id') // Join job_payments on
@@ -2300,8 +2303,6 @@ class DashboardManagementController extends Controller
                 if(request()->filled("start_date") && request()->filled("end_date")){
                     $expert["by_date"] = $this->bookingsByStatus('all', $expert->id);
                 }
-
-
 
             }
 
