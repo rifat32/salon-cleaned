@@ -19,7 +19,7 @@ class CreateErrorLogsTable extends Migration
             $table->string("api_url")->nullable();
             $table->text("fields")->nullable();
             $table->string("token")->nullable();
-
+            $table->string("request_method")->nullable();
 
             $table->text("user")->nullable();
             $table->unsignedBigInteger("user_id")->nullable();

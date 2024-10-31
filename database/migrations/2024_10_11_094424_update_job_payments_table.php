@@ -16,10 +16,9 @@ class UpdateJobPaymentsTable extends Migration
         Schema::table('job_payments', function (Blueprint $table) {
             // Make job_id nullable
             $table->unsignedBigInteger('job_id')->nullable()->change();
-            $table->string('payment_type')->nullable();
             // Add foreign key for booking_id
             $table->unsignedBigInteger('booking_id')->nullable()->after('job_id');
-            $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('restrict');
+            $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('cascade');
         });
     }
 
