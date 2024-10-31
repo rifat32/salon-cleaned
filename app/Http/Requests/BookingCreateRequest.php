@@ -34,7 +34,7 @@ class BookingCreateRequest extends FormRequest
             "next_visit_date" => "nullable|date",
             "send_notification" => "nullable|boolean",
 
-            "payment_method" => "nullable|string",
+"payment_method" => "nullable|string",
    'booked_slots' => [
     'required',
     'array',

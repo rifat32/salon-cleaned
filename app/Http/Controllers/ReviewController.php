@@ -2774,7 +2774,12 @@ class ReviewController extends Controller
                 "value.star",
                 "value.tag",
                 "value.question",
-            )->where([
+            )
+            ->when(!empty($request->status), function($query) use ($request) {
+                $statusArray = explode(',', $request->status);
+                return $query->whereIn("status", $statusArray);
+            })
+            ->where([
                 "garage_id" => $garage_id,
             ])
             ->when($request->filled("id"), function ($query) use ($request) {
