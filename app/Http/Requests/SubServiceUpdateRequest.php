@@ -29,7 +29,7 @@ class SubServiceUpdateRequest extends FormRequest
             "description" => "nullable|string",
             "is_fixed_price" => "nullable|numeric",
             "service_time_in_minute" => "required|numeric",
-            "default_price" => "nullable|numeric"
+            "default_price" => "required|numeric"
 
             // "automobile_category_id" => "required|numeric"
         ];
