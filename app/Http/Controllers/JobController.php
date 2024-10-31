@@ -1300,12 +1300,7 @@ class JobController extends Controller
 
 // Check if job_id is provided
 $payments = JobPayment::with([
-    "bookings" => function($query) {
-        $query->select("bookings.id", "bookings.payment_method", "bookings.job_start_date");
-    },
-    "bookings.customer" => function($query) {
-        $query->select('id', 'is_walk_in_customer');
-    }
+    "bookings.customer"
 ])
 ->whereHas("bookings", function ($query) use ($garage_id, $request) {
     $query
