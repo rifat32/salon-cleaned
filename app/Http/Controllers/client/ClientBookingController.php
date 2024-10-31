@@ -917,7 +917,14 @@ class ClientBookingController extends Controller
                     }
 
 
-                    if ($total_payable == $total_payment) {
+                    if ($total_payable <= $total_payment) {
+                        if($total_payable < $total_payment) {
+                            JobPayment::create([
+                                "booking_id" => $booking->id,
+                                "payment_type" => "change",
+                                "amount" => ($total_payable - $total_payment),
+                            ]);
+                        }
                         Booking::where([
                             "id" => $booking->id
                         ])
@@ -926,6 +933,7 @@ class ClientBookingController extends Controller
                                 "payment_method" => "cash"
                             ]);
                     }
+
                 }
 
                 if (env("SEND_EMAIL") == true) {

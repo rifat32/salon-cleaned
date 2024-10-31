@@ -67,8 +67,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/v1.0/expert-users', [UserManagementController::class, "getExpertUsers"]);
-
-
 Route::post('/create-payment-intent', [BookingController::class, 'createPaymentIntent']);
 Route::post('/create-refund', [BookingController::class, 'createRefund']);
 

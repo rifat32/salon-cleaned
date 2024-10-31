@@ -27,6 +27,8 @@ class CreateJobPaymentsTable extends Migration
 
 
 
+
+
             $table->timestamps();
         });
     }

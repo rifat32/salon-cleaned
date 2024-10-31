@@ -13,6 +13,7 @@ class JobPayment extends Model
         "job_id",
         "payment_type",
         "amount",
+        "net_amount",
     ];
 
 

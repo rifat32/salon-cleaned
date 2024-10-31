@@ -1016,7 +1016,14 @@ $booking = $booking->load(["payments"]);
                     }
 
 
-                    if ($total_payable == $total_payment) {
+                    if ($total_payable <= $total_payment) {
+                        if($total_payable < $total_payment) {
+                            JobPayment::create([
+                                "booking_id" => $booking->id,
+                                "payment_type" => "change",
+                                "amount" => ($total_payable - $total_payment),
+                            ]);
+                        }
                         Booking::where([
                             "id" => $booking->id
                         ])
