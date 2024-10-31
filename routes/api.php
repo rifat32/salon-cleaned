@@ -1186,6 +1186,12 @@ Route::get('/client/review-new/get/questions-all', [ClientReviewController::clas
 Route::get('/client/review-new/get/questions-all-report', [ClientReviewController::class, "getQuestionAllReportUnauthorized"]);
 
 Route::get('/review-new/getreviewAll/{garageId}', [ReviewController::class, "getReviewByGarageIdAll"]);
+Route::get('/v1.0/review-new/getreviewAll/{garageId}', [ReviewController::class, "getReviewByGarageIdAllV1"]);
+
+
+
+
+
 Route::get('/review-new/getreviewAll/{garageId}/{perPage}', [ReviewController::class, "getReviewByGarageId"]);
 
 

@@ -2605,8 +2605,7 @@ class ReviewController extends Controller
             return $this->sendError($e, 500, $request);
         }
     }
-
-    /**
+ /**
      *
      * @OA\Get(
      *      path="/review-new/getreviewAll/{garageId}",
@@ -2671,6 +2670,124 @@ class ReviewController extends Controller
             ])
             ->where("status","approved")
                 ->get();
+
+            $info = [];
+            $totalCount = 0;
+            $totalRating = 0;
+
+            foreach (Star::get() as $star) {
+
+                $data2["star_" . $star->value . "_selected_count"] = ReviewValueNew::leftjoin('review_news', 'review_value_news.review_id', '=', 'review_news.id')
+                    ->where([
+                        "review_news.garage_id" => $garage_id,
+                        "star_id" => $star->id,
+                        // "review_news.guest_id" => NULL
+                    ])
+                    ->distinct("review_value_news.review_id", "review_value_news.question_id");
+                if (!empty($request->start_date) && !empty($request->end_date)) {
+
+                    $data2["star_" . $star->value . "_selected_count"] = $data2["star_" . $star->value . "_selected_count"]->whereBetween('review_news.created_at', [
+                        $request->start_date,
+                        $request->end_date
+                    ]);
+                }
+                $data2["star_" . $star->value . "_selected_count"] = $data2["star_" . $star->value . "_selected_count"]->count();
+
+                $totalCount += $data2["star_" . $star->value . "_selected_count"] * $star->value;
+
+                $totalRating += $data2["star_" . $star->value . "_selected_count"];
+            }
+            if ($totalCount > 0) {
+                $data2["average_rating"] = $totalCount / $totalRating;
+            } else {
+                $data2["average_rating"] = 0;
+            }
+
+            $info["average_rating"]  = $data2["average_rating"];
+            $info["total_rating_count"] = $totalCount;
+
+
+
+            return response(["review" => $reviewValue, "info" => $info], 200);
+        } catch (Exception $e) {
+            return $this->sendError($e, 500, $request);
+        }
+    }
+
+    /**
+     *
+     * @OA\Get(
+     *      path="/v1.0/review-new/getreviewAll/{garageId}",
+     *      operationId="getReviewByGarageIdAllV1",
+     *      tags={"review"},
+     *        security={
+     *           {"bearerAuth": {}}
+     *       },
+     *  @OA\Parameter(
+     * name="garageId",
+     * in="path",
+     * description="garageId",
+     * required=true,
+     * example="1"
+     * ),
+
+     *      summary="This method is to get review by garage id",
+     *      description="This method is to get review by garage id",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request"
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found"
+     *   ),
+     *@OA\JsonContent()
+     *      )
+     *     )
+     */
+
+    public function  getReviewByGarageIdAllV1($garage_id, Request $request)
+    {
+        try {
+            $this->storeActivity($request, "");
+
+            // with
+            $reviewValue = ReviewNew::with(
+                "value.star",
+                "value.tag",
+                "value.question",
+            )->where([
+                "garage_id" => $garage_id,
+            ])
+            ->when($request->filled("id"), function ($query) use ($request) {
+                return $query
+                    ->where("id", $request->input("id"))
+                    ->first();
+            }, function ($query) {
+                return $query->when(!empty(request()->per_page), function ($query) {
+                    return $query->paginate(request()->per_page);
+                }, function ($query) {
+                    return $query->get();
+                });
+            });
 
             $info = [];
             $totalCount = 0;
