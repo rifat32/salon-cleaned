@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UpdateNotificationSettingRequest;
+use App\Http\Requests\UpdateCommissionSettingRequest;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
 
-use App\Models\NotificationSetting;
+use App\Models\CommissionSetting;
 use Exception;
 use Illuminate\Http\Request;
 
-class NotificationSettingController extends Controller
+class CommissionController extends Controller
 {
     use ErrorUtil,UserActivityUtil;
 
     /**
    *
    * @OA\Put(
-   *      path="/v1.0/notification-settings",
-   *      operationId="updateNotificationSetting",
-   *      tags={"notification_setting"},
+   *      path="/v1.0/commission-settings",
+   *      operationId="updateCommissionSetting",
+   *      tags={"commission_setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },
@@ -30,11 +30,8 @@ class NotificationSettingController extends Controller
    *         required=true,
    *         @OA\JsonContent(
    *
-   * *         @OA\Property(property="STRIPE_KEY", type="string", format="string",example="STRIPE_KEY"),
-   *           @OA\Property(property="STRIPE_SECRET", type="string", format="string",example="STRIPE_SECRET"),
-    *     @OA\Property(property="notify_expert", type="boolean", example=true),
- *     @OA\Property(property="notify_customer", type="boolean", example=true),
- *     @OA\Property(property="notify_receptionist", type="boolean", example=false),
+ *     @OA\Property(property="target_amount", type="number", format="float"),
+ *     @OA\Property(property="commission_percentage", type="number", format="float"),
  *     @OA\Property(property="notify_business_owner", type="boolean", example=true)
    *
    *
@@ -74,7 +71,7 @@ class NotificationSettingController extends Controller
    *     )
    */
 
-   public function updateNotificationSetting(UpdateNotificationSettingRequest $request)
+   public function updateCommissionSetting(UpdateCommissionSettingRequest $request)
    {
 
        try {
@@ -85,29 +82,28 @@ class NotificationSettingController extends Controller
                ], 401);
            }
            $request_data = $request->validated();
+           $request_data["frequency"] = "monthly";
            $request_data["business_id"] = auth()->user()->business_id;
 
-          $notificationSetting = NotificationSetting::
+          $commissionSetting = CommissionSetting::
           where([
             "business_id" => auth()->user()->business_id
         ])
         ->first();
 
-        if (!$notificationSetting) {
-            NotificationSetting::create($request_data);
+        if (!$commissionSetting) {
+            commissionSetting::create($request_data);
         }
 
-
-              $notificationSetting->fill(collect($request_data)->only([
-                'notify_expert',
-                'notify_customer',
-                'notify_receptionist',
-                'notify_business_owner'
+              $commissionSetting->fill(collect($request_data)->only([
+                'target_amount',
+                'commission_percentage',
+                'frequency',
               ])->toArray());
-              $notificationSetting->save();
+              $commissionSetting->save();
 
 
-           return response()->json($notificationSetting, 200);
+           return response()->json($commissionSetting, 200);
        } catch (Exception $e) {
            error_log($e->getMessage());
            return $this->sendError($e, 500, $request);
@@ -117,9 +113,9 @@ class NotificationSettingController extends Controller
 /**
    *
    * @OA\Get(
-   *      path="/v1.0/notification-settings",
-   *      operationId="getNotificationSetting",
-   *      tags={"notification_setting"},
+   *      path="/v1.0/commission-settings",
+   *      operationId="getCommissionSetting",
+   *      tags={"commission_setting"},
    *       security={
    *           {"bearerAuth": {}}
    *       },
@@ -160,7 +156,7 @@ class NotificationSettingController extends Controller
    *     )
    */
 
-   public function getNotificationSetting(Request $request)
+   public function getCommissionSetting(Request $request)
    {
        try {
            $this->storeActivity($request, "DUMMY activity","DUMMY description");
@@ -171,7 +167,7 @@ class NotificationSettingController extends Controller
            }
 
 
-           $notificationSetting = NotificationSetting::
+           $commissionSetting = CommissionSetting::
            where([
                "business_id" => auth()->user()->business_id
            ])
@@ -182,7 +178,7 @@ class NotificationSettingController extends Controller
 
 
 
-           return response()->json($notificationSetting, 200);
+           return response()->json($commissionSetting, 200);
        } catch (Exception $e) {
 
            return $this->sendError($e, 500, $request);

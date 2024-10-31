@@ -1537,7 +1537,7 @@ class ClientBookingController extends Controller
 
 
         // Hold the slots for 90 seconds
-        SlotHold::create($request_data);
+      $heldUntil =  SlotHold::create($request_data);
 
         return response()->json(['message' => 'Slots held successfully', 'held_until' => $heldUntil]);
     }

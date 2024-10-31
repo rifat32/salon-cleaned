@@ -1405,7 +1405,10 @@ class UserManagementController extends Controller
 
             $usersQuery = User::with("roles","translation")
             ->when(!empty(auth()->user()->business_id), function($query) {
-            $query->where("business_id", auth()->user()->business_id);
+                if(request()->input("role") !== "customer") {
+                    $query->where("business_id", auth()->user()->business_id);
+                }
+
             },
             function($query) use($request) {
                 if(!$request->user()->hasRole('superadmin')) {

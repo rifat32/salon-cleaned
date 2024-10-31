@@ -92,6 +92,7 @@ class SettingController extends Controller
                ], 401);
            }
            $request_data = $request->validated();
+           $request_data["business_id"] = auth()->user()->business_id;
 
 
 

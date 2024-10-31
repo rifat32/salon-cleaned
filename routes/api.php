@@ -10,6 +10,7 @@ use App\Http\Controllers\client\ClientCouponController;
 use App\Http\Controllers\client\ClientJobController;
 use App\Http\Controllers\client\ClientPreBookingController;
 use App\Http\Controllers\client\ClientReviewController;
+use App\Http\Controllers\CommissionController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\CustomWebhookController;
 use App\Http\Controllers\DashboardManagementController;
@@ -283,6 +284,18 @@ Route::post('/v1.0/users', [UserManagementController::class, "createUser"]);
 
     Route::put('/v1.0/notification-settings', [NotificationSettingController::class, "updateNotificationSetting"]);
     Route::get('/v1.0/notification-settings', [NotificationSettingController::class, "getNotificationSetting"]);
+
+
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // end notification setting  section
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+      // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // notification setting  management section
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    Route::put('/v1.0/commission-settings', [CommissionController::class, "updateCommissionSetting"]);
+    Route::get('/v1.0/commission-settings', [CommissionController::class, "getCommissionSetting"]);
 
 
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
