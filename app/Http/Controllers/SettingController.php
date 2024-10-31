@@ -247,10 +247,17 @@ if (!$busunessSetting) {
            ])
            ->first();
 
-           $busunessSettingArray = $busunessSetting->toArray();
+           if ($busunessSetting) {
+            $busunessSettingArray = $busunessSetting->toArray();
+            $busunessSettingArray["STRIPE_KEY"] = $busunessSetting->STRIPE_KEY;
+            $busunessSettingArray["STRIPE_SECRET"] = $busunessSetting->STRIPE_SECRET;
+        } else {
+            $busunessSettingArray["STRIPE_KEY"] = NULL;
+            $busunessSettingArray["STRIPE_SECRET"] = NULL;
+        }
 
-           $busunessSettingArray["STRIPE_KEY"] = $busunessSetting->STRIPE_KEY;
-           $busunessSettingArray["STRIPE_SECRET"] = $busunessSetting->STRIPE_SECRET;
+
+
 
 
            return response()->json($busunessSettingArray, 200);
@@ -359,9 +366,16 @@ if (!$busunessSetting) {
            $busunessSetting = BusinessSetting::first();
 
 
-           $busunessSettingArray["STRIPE_KEY"] = $busunessSetting->STRIPE_KEY;
+           if ($busunessSetting) {
+            $businessSettingArray = $busunessSetting->toArray();
 
-           return response()->json($busunessSetting, 200);
+            $businessSettingArray["STRIPE_KEY"] = $busunessSetting->STRIPE_KEY;
+        } else {
+            // Handle the case where no BusinessSetting is found, if necessary
+            $businessSettingArray["STRIPE_KEY"] = null; // or any default value you'd prefer
+        }
+
+           return response()->json($businessSettingArray, 200);
 
        } catch (Exception $e) {
 
