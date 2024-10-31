@@ -656,8 +656,13 @@ foreach ($recipientIds as $recipientId) {
             //     ));
             // }
             if (env("SEND_EMAIL") == true) {
-                // Get the customer's email
-$recipientEmails = [$booking->customer->email];
+               // Initialize an array to hold recipient emails
+$recipientEmails = [];
+
+// Get the customer's email
+if ($booking->customer && !empty($booking->customer->email)) {
+    $recipientEmails[] = $booking->customer->email;
+}
 
 //  // Retrieve emails of users with the role 'business_receptionist'
 //  $receptionists = User::role('business_receptionist')
@@ -667,7 +672,9 @@ $recipientEmails = [$booking->customer->email];
 //  // Merge the two arrays
 //  $recipientEmails = array_merge($recipientEmails, $receptionists);
 
-Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
+if (!empty($recipientEmails)) {
+    Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
+}
 }
 
 $booking = $booking->load(["payments"]);
@@ -1019,8 +1026,12 @@ $booking = $booking->load(["payments"]);
                     }
                 }
                 if (env("SEND_EMAIL") == true) {
+
+                    $recipientEmails = [];
                                          // Get the customer's email
- $recipientEmails = [$booking->customer->email];
+                                         if ($booking->customer && !empty($booking->customer->email)) {
+                                            $recipientEmails[] = $booking->customer->email;
+                                        }
 
 //  // Retrieve emails of users with the role 'business_receptionist'
 //  $receptionists = User::role('business_receptionist')
@@ -1030,7 +1041,11 @@ $booking = $booking->load(["payments"]);
 //  // Merge the two arrays
 //  $recipientEmails = array_merge($recipientEmails, $receptionists);
 
-                    Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
+
+if (!empty($recipientEmails)) {
+    Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
+}
+
                 }
 
                 $booking = $booking->load(["payments"]);
@@ -1243,7 +1258,17 @@ $booking = $booking->load(["payments"]);
 
                 if (env("SEND_EMAIL") == true) {
                                                         // Get the customer's email
- $recipientEmails = [$booking->customer->email];
+
+
+  $recipientEmails = [];
+                                         // Get the customer's email
+                                         if ($booking->customer && !empty($booking->customer->email)) {
+                                            $recipientEmails[] = $booking->customer->email;
+                                        }
+
+if (!empty($recipientEmails)) {
+    Mail::to($recipientEmails)->send(new BookingStatusUpdateMail($booking));
+}
 
  //  // Retrieve emails of users with the role 'business_receptionist'
  //  $receptionists = User::role('business_receptionist')
@@ -1252,7 +1277,7 @@ $booking = $booking->load(["payments"]);
 
  //  // Merge the two arrays
  //  $recipientEmails = array_merge($recipientEmails, $receptionists);
-                    Mail::to($recipientEmails)->send(new BookingStatusUpdateMail($booking));
+
                 }
                 // if (env("SEND_EMAIL") == true) {
                 //     Mail::to($booking->customer->email)->send(new DynamicMail(
