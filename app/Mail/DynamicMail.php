@@ -40,7 +40,7 @@ class DynamicMail extends Mailable
         ])->first();
 
         if(!$email_content){
-            return $this->view('email.dummy');
+            return $this->view('emails.dummy');
         }
 
 
@@ -102,6 +102,6 @@ class DynamicMail extends Mailable
 
 
 
-        return $this->view('email.dynamic_mail',["html_content"=>$html_final]);
+        return $this->view('emails.dynamic_mail',["html_content"=>$html_final]);
     }
 }

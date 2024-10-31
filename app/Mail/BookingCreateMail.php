@@ -73,6 +73,6 @@ class BookingCreateMail extends Mailable
         $html_content = str_replace("[SERVICES_LIST]", $services_html, $html_content);
 
         $subject = "Booking Confirmation at " . ($salon ? ($salon->name) : env("APP_NAME"));
-        return $this->subject($subject)->view('email.dynamic_mail', ["html_content" => $html_content]);
+        return $this->subject($subject)->view('emails.dynamic_mail', ["html_content" => $html_content]);
     }
 }

@@ -59,6 +59,6 @@ class VerifyMail extends Mailable
 
 
 
-        return $this->view('email.verify_mail',["user"=>$this->user]);
+        return $this->view('emails.verify_mail',["user"=>$this->user]);
     }
 }

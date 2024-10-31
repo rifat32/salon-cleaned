@@ -52,5 +52,5 @@ Route::get("/test",function() {
         "is_active" => 1
 
     ])->first()->template;
-    return view('email.dynamic_mail',["contactEmail"=>"rest@gmail.com","user"=>[],"html_content"=>$html_content]);
+    return view('emails.dynamic_mail',["contactEmail"=>"rest@gmail.com","user"=>[],"html_content"=>$html_content]);
 });

@@ -37,6 +37,6 @@ class SendPassword extends Mailable
 
 
 
-        return $this->subject(("Your Account Password for") . env("APP_NAME"))->view('email.send-password',["user" => $this->user,"password"=>$this->password]);
+        return $this->subject(("Your Account Password for") . env("APP_NAME"))->view('emails.send-password',["user" => $this->user,"password"=>$this->password]);
     }
 }

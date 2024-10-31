@@ -87,7 +87,7 @@ class ForgetPasswordMail extends Mailable
 
 
 
-        return $this->view('email.dynamic_mail',["html_content"=>$html_final]);
+        return $this->view('emails.dynamic_mail',["html_content"=>$html_final]);
 
     }
 }

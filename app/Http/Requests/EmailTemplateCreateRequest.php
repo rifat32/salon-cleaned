@@ -25,7 +25,7 @@ class EmailTemplateCreateRequest extends FormRequest
     {
         return [
             "name" => "nullable|string",
-            "type" => "required|string|in:booking_update,booking_status_update,booking_create",
+            "type" => "required|string|in:booking_update,booking_status_update,booking_create,next_visit_reminder",
             "template" => "required|string",
             "is_active" => "required|boolean",
             "wrapper_id" => "nullable|numeric",
@@ -36,7 +36,7 @@ class EmailTemplateCreateRequest extends FormRequest
     {
         return [
             "type.required" => "The type field is required.",
-            "type.in" => "The selected type is invalid. Allowed values are 'booking_update' and 'booking_status_update' and 'booking_create'.",
+            "type.in" => "The selected type is invalid. Allowed values are 'booking_update' and 'booking_status_update' and 'booking_create' and 'next_visit_reminder'.",
             "template.required" => "The template field is required.",
             "is_active.required" => "The is_active field is required.",
             "is_active.boolean" => "The is_active field must be true or false.",
