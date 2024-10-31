@@ -1300,7 +1300,8 @@ class JobController extends Controller
 
 // Check if job_id is provided
 $payments = JobPayment::with([
-    "bookings.customer"
+    "bookings.customer",
+        "bookings.sub_services"
 ])
 ->whereHas("bookings", function ($query) use ($garage_id, $request) {
     $query
