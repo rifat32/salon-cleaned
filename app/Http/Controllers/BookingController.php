@@ -454,16 +454,16 @@ class BookingController extends Controller
             if(empty($request_data["customer_id"])) {
                 $walkInCustomer = new User(); // Assuming you are using the User model for walk-in customers
                 $walkInCustomer->business_id = auth()->user()->business_id;
-                $walkInCustomer->first_Name = $request_data['first_Name'];
-                $walkInCustomer->last_Name = $request_data['last_Name'];
-                $walkInCustomer->phone = $request_data['phone'];
-                $walkInCustomer->email = $request_data['email'];
+                $walkInCustomer->first_Name = !empty($request_data['first_Name']) ? $request_data['first_Name'] : null;
+                $walkInCustomer->last_Name = !empty($request_data['last_Name']) ? $request_data['last_Name'] : null;
+                $walkInCustomer->phone = !empty($request_data['phone']) ? $request_data['phone'] : null;
+                $walkInCustomer->email = !empty($request_data['email']) ? $request_data['email'] : null;
                 $walkInCustomer->is_walk_in_customer = 1;
-                $walkInCustomer->address_line_1 = $request_data['address_line_1'];
-                $walkInCustomer->address_line_2 = $request_data['address_line_2'];
-                $walkInCustomer->country = $request_data['country'];
-                $walkInCustomer->city = $request_data['city'];
-                $walkInCustomer->postcode = $request_data['postcode'];
+                $walkInCustomer->address_line_1 = !empty($request_data['address_line_1']) ? $request_data['address_line_1'] : null;
+                $walkInCustomer->address_line_2 = !empty($request_data['address_line_2']) ? $request_data['address_line_2'] : null;
+                $walkInCustomer->country = !empty($request_data['country']) ? $request_data['country'] : null;
+                $walkInCustomer->city = !empty($request_data['city']) ? $request_data['city'] : null;
+                $walkInCustomer->postcode = !empty($request_data['postcode']) ? $request_data['postcode'] : null;
                 $walkInCustomer->is_active = true; // Assuming walk-in customers are active by default
 
                 // Set a dummy password
