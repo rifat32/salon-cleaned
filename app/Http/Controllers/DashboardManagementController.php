@@ -1817,7 +1817,7 @@ class DashboardManagementController extends Controller
 
         return $data;
     }
-    public function revenue($range = 'today')
+    public function revenue($range = 'today',$expert_id=NULL)
     {
         $garage_id = auth()->user()->business_id; // Get the garage ID
 
@@ -1825,9 +1825,12 @@ class DashboardManagementController extends Controller
         whereHas("bookings.customer", function($query) {
             $query->where("users.is_walk_in_customer",0);
         })
-        ->whereHas('bookings', function ($query) use ($garage_id, $range) {
+        ->whereHas('bookings', function ($query) use ($garage_id, $range,$expert_id) {
             $query
             ->where('bookings.garage_id', $garage_id)
+            ->when(!empty($expert_id), function($query) use($expert_id) {
+                $query->where('bookings.expert_id', $expert_id);
+            })
             ->when(auth()->user()->hasRole("business_experts"), function($query)  {
                 $query->where('bookings.expert_id', auth()->user()->id);
            })
@@ -2303,6 +2306,14 @@ class DashboardManagementController extends Controller
                 if(request()->filled("start_date") && request()->filled("end_date")){
                     $expert["by_date"] = $this->bookingsByStatus('all', $expert->id);
                 }
+
+                $data["today_revenue"] = $this->revenue('today',$expert->id);
+                $data["this_week_revenue"] = $this->revenue('this_week',$expert->id);
+                $data["this_month_revenue"] = $this->revenue('this_month',$expert->id);
+                $data["next_week_revenue"] = $this->revenue('next_week',$expert->id);
+                $data["next_month_revenue"] = $this->revenue('next_month',$expert->id);
+                $data["previous_week_revenue"] = $this->revenue('previous_week',$expert->id);
+                $data["previous_month_revenue"] = $this->revenue('previous_month',$expert->id);
 
             }
 
