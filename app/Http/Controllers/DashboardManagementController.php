@@ -2293,7 +2293,8 @@ class DashboardManagementController extends Controller
                 ->orderBy('this_month_revenue', 'desc') // Order by this month's revenue
                 ->get();
 
-            foreach ($experts as $expert) {
+            foreach (json_decode(json_encode($experts)) as $expert) {
+
                 if (request()->filled("start_date") && request()->filled("end_date")) {
                     // Generate the date range
                     $date_range = Carbon::parse(request()->input("start_date"))
@@ -2303,7 +2304,7 @@ class DashboardManagementController extends Controller
                         // Format the date to a string for array key
                         $formattedDate = $date->toDateString(); // You can customize the format as needed
                         // Populate blocked slots for each date
-                        $expert["blocked_slots"][$formattedDate] = $this->blockedSlots($formattedDate, $expert->id)["all_blocked_slots"];
+                        $expert["blocked_slots"][$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
                     }
                 }
 
