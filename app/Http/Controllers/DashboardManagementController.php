@@ -1834,7 +1834,8 @@ class DashboardManagementController extends Controller
     })
 
     ->whereHas('bookings', function ($query) use ($garage_id, $range, $expert_id) {
-        $query->where('bookings.garage_id', $garage_id)
+        $query->selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
+        ->where('bookings.garage_id', $garage_id)
 
             ->when(!empty($expert_id), function ($query) use ($expert_id) {
                 $query->where('bookings.expert_id', $expert_id);
@@ -1842,6 +1843,11 @@ class DashboardManagementController extends Controller
             ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                 $query->where('bookings.expert_id', auth()->user()->id);
             })
+            ->when(request()->filled("duration_in_minute"), function ($query) {
+                $total_slots = request()->input("duration_in_minute") / 15;
+                $query->having('total_booked_slots', '>', $total_slots);
+            })
+
             ->when(request()->filled("slots"), function ($query) {
                 $slotsArray = explode(',', request()->input("slots"));
                 $query ->where(function ($subQuery) use ($slotsArray) {
@@ -2336,8 +2342,8 @@ class DashboardManagementController extends Controller
     }
 
 
-    // Assign the blocked slots to the expert's blocked_slots property
-    $expert->blocked_slots = $blockedSlots;
+
+    $expert->busy_slots = $blockedSlots;
 
                     // Use object property syntax instead of array-like syntax
                     $expert->today_bookings = $this->bookingsByStatus('today', $expert->id);
