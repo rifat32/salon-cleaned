@@ -2298,8 +2298,8 @@ class DashboardManagementController extends Controller
                 ->orderBy('this_month_revenue', 'desc') // Order by this month's revenue
                 ->get();
 
-            foreach (json_decode(json_encode($experts),true) as $expert) {
-
+            foreach ($experts as $expert) {
+                $expert = $expert->toArray();
                 if (request()->filled("start_date") && request()->filled("end_date")) {
                     // Generate the date range
                     $date_range = Carbon::parse(request()->input("start_date"))
