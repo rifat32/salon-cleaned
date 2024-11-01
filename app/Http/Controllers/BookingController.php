@@ -450,8 +450,11 @@ class BookingController extends Controller
                   "conflicted_holidays" => $holidays
                 ], 409);
             }
+            $request_data["booking_type"] = "admin_panel_booking";
 
             if(empty($request_data["customer_id"])) {
+                $request_data["booking_type"] = "walk_in_customer_booking";
+
                 $walkInCustomer = new User(); // Assuming you are using the User model for walk-in customers
                 $walkInCustomer->business_id = auth()->user()->business_id;
                 $walkInCustomer->first_Name = !empty($request_data['first_Name']) ? $request_data['first_Name'] : null;
@@ -489,7 +492,7 @@ class BookingController extends Controller
             $request_data["created_by"] = $request->user()->id;
             $request_data["created_from"] = "garage_owner_side";
             $request_data["payment_status"] = "pending";
-            $request_data["booking_type"] = "admin_panel_booking";
+
 
 
             $booking =  Booking::create($request_data);
@@ -1795,6 +1798,7 @@ public function changeMultipleBookingStatuses(Request $request)
                 // If status is provided, include the condition in the query
                 $bookingQuery->whereIn("booking_type", $booking_typeArray);
             }
+
 
             if (!empty($request->payment_status)) {
                 $statusArray = explode(',', request()->payment_status);

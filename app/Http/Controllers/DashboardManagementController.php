@@ -1834,7 +1834,7 @@ class DashboardManagementController extends Controller
             ->when(auth()->user()->hasRole("business_experts"), function($query)  {
                 $query->where('bookings.expert_id', auth()->user()->id);
            })
-           ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
+           ->when(!empty($request->sub_service_ids), function ($query)  {
 
             $sub_service_ids = explode(',', request()->sub_service_ids);
 

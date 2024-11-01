@@ -1311,9 +1311,18 @@ class JobController extends Controller
                             // If status is provided, include the condition in the query
                             $query->whereIn("status", $statusArray);
                         })
+                        ->when(request()->filled("booking_type"), function ($query) {
+                            $booking_typeArray = explode(',', request()->input("booking_type"));
+                            // If status is provided, include the condition in the query
+                            $query->whereIn("booking_type", $booking_typeArray);
+                        })
+
                         ->where("bookings.garage_id", $garage_id)
                         ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                             $query->where('bookings.expert_id', auth()->user()->id);
+                        })
+                        ->when(request()->filled("expert_id"), function($query) {
+                            $query->where('bookings.expert_id', request()->filled("expert_id"));
                         })
                         ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
 
