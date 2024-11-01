@@ -2295,7 +2295,7 @@ class DashboardManagementController extends Controller
 
             foreach ($experts as $expert) {
 
-                $expert["booked_slots"] = $this->blockedSlots((request()->filled("date")?request()->input("date"):today()), $expert->id);
+                $expert["blocked_slots"] = $this->blockedSlots((request()->filled("date")?request()->input("date"):today()), $expert->id)["all_blocked_slots"];
 
                 $expert["today_bookings"] = $this->bookingsByStatus('today', $expert->id);
                 $expert["this_week_bookings"] = $this->bookingsByStatus('this_week', $expert->id);

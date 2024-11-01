@@ -139,6 +139,11 @@ trait BasicUtil
 
         $data["busy_slots"] = array_merge($data["busy_slots"], $held_slots);
 
+        $data["all_blocked_slots"] = array_merge(
+            $data["booking_slots"],
+            $data["busy_slots"]
+        );
+
         return $data;
     }
 
