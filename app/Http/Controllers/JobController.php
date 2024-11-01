@@ -1304,6 +1304,7 @@ class JobController extends Controller
                 "bookings.customer",
                 "bookings.sub_services"
             ])
+
             ->when(request()->filled("payment_type"), function($query) {
                 $payment_typeArray = explode(',', request()->status);
                 $query->whereIn("job_payments.payment_type", $payment_typeArray);
@@ -1315,6 +1316,12 @@ class JobController extends Controller
             })
                 ->whereHas("bookings", function ($query) use ($garage_id, $request) {
                     $query
+                    ->selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
+                    ->when(request()->filled("duration_in_minute"), function ($query) {
+                        $total_slots = request()->input("duration_in_minute") / 15;
+                        $query->having('total_booked_slots', '>', $total_slots);
+                    })
+        ->where('bookings.garage_id', $garage_id)
                     ->when(request()->filled("slots"), function ($query) {
                         $slotsArray = explode(',', request()->input("slots"));
                         $query ->where(function ($subQuery) use ($slotsArray) {
