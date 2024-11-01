@@ -865,7 +865,9 @@ class UserManagementController extends Controller
                 'postcode',
                 "lat",
                 "long",
-                "image"
+                "image",
+                'weekly_minimum_days',
+                'weekly_minimum_hours',
 
             ])->toArray()
             )

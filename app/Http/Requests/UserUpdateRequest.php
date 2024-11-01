@@ -41,7 +41,9 @@ class UserUpdateRequest extends FormRequest
             'postcode' => 'nullable|string',
             'lat' => 'nullable|string',
             'long' => 'nullable|string',
-            'role' => 'required|string'
+            'role' => 'required|string',
+            'weekly_minimum_days' => 'required_if:role,business_experts|integer|min:1',
+            'weekly_minimum_hours' => 'required_if:role,business_experts|integer|min:1',
         ];
     }
 }

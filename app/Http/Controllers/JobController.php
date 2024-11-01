@@ -1170,40 +1170,41 @@ class JobController extends Controller
 
             // Check if job_id is provided
             $query = JobPayment::with(
-                ["bookings" => function($query) {
-                    $query->select("bookings.id","bookings.payment_method","bookings.job_start_date");
-                }])
-            ->whereHas("bookings", function ($query) use ($garage_id, $request) {
-                $query
-                ->when(request()->filled("status"), function($query) {
-                    $statusArray = explode(',', request()->input("status"));
-                    // If status is provided, include the condition in the query
-                    $query->whereIn("status", $statusArray);
+                ["bookings" => function ($query) {
+                    $query->select("bookings.id", "bookings.payment_method", "bookings.job_start_date");
+                }]
+            )
+                ->whereHas("bookings", function ($query) use ($garage_id, $request) {
+                    $query
+                        ->when(request()->filled("status"), function ($query) {
+                            $statusArray = explode(',', request()->input("status"));
+                            // If status is provided, include the condition in the query
+                            $query->whereIn("status", $statusArray);
+                        })
+                        ->where("bookings.garage_id", $garage_id)
+                        ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                            $query->where('bookings.expert_id', auth()->user()->id);
+                        });
+                    // Additional date filters using date_filter
+                    if ($request->date_filter === 'today') {
+                        $query = $query->whereDate('bookings.job_start_date', Carbon::today());
+                    } elseif ($request->date_filter === 'this_week') {
+                        $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'previous_week') {
+                        $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'next_week') {
+                        $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'this_month') {
+                        $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->year);
+                    } elseif ($request->date_filter === 'previous_month') {
+                        $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+                    } elseif ($request->date_filter === 'next_month') {
+                        $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                    }
                 })
-                ->where("bookings.garage_id", $garage_id)
-                    ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                        $query->where('bookings.expert_id', auth()->user()->id);
-                    });
-                // Additional date filters using date_filter
-                if ($request->date_filter === 'today') {
-                    $query = $query->whereDate('bookings.job_start_date', Carbon::today());
-                } elseif ($request->date_filter === 'this_week') {
-                    $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-                } elseif ($request->date_filter === 'previous_week') {
-                    $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-                } elseif ($request->date_filter === 'next_week') {
-                    $query = $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
-                } elseif ($request->date_filter === 'this_month') {
-                    $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
-                        ->whereYear('bookings.job_start_date', Carbon::now()->year);
-                } elseif ($request->date_filter === 'previous_month') {
-                    $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
-                        ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
-                } elseif ($request->date_filter === 'next_month') {
-                    $query = $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
-                        ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
-                }
-            })
                 ->when($request->has('booking_id'), function ($query) {
                     $query->where('booking_id', request()->input("booking_id"));
                 });
@@ -1298,73 +1299,89 @@ class JobController extends Controller
             }
 
 
-// Check if job_id is provided
-$payments = JobPayment::with([
-    "bookings.customer",
-        "bookings.sub_services"
-])
-->whereHas("bookings", function ($query) use ($garage_id, $request) {
-    $query
-        ->when(request()->filled("status"), function($query) {
-            $statusArray = explode(',', request()->input("status"));
-            // If status is provided, include the condition in the query
-            $query->whereIn("status", $statusArray);
-        })
-        ->where("bookings.garage_id", $garage_id)
-        ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-            $query->where('bookings.expert_id', auth()->user()->id);
-        });
+            // Check if job_id is provided
+            $payments = JobPayment::with([
+                "bookings.customer",
+                "bookings.sub_services"
+            ])
+                ->whereHas("bookings", function ($query) use ($garage_id, $request) {
+                    $query
+                        ->when(request()->filled("status"), function ($query) {
+                            $statusArray = explode(',', request()->input("status"));
+                            // If status is provided, include the condition in the query
+                            $query->whereIn("status", $statusArray);
+                        })
+                        ->where("bookings.garage_id", $garage_id)
+                        ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                            $query->where('bookings.expert_id', auth()->user()->id);
+                        })
+                        ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
 
-    // Additional date filters using date_filter
-    if ($request->date_filter === 'today') {
-        $query->whereDate('bookings.job_start_date', Carbon::today());
-    } elseif ($request->date_filter === 'this_week') {
-        $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-    } elseif ($request->date_filter === 'previous_week') {
-        $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-    } elseif ($request->date_filter === 'next_week') {
-        $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
-    } elseif ($request->date_filter === 'this_month') {
-        $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
-              ->whereYear('bookings.job_start_date', Carbon::now()->year);
-    } elseif ($request->date_filter === 'previous_month') {
-        $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
-              ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
-    } elseif ($request->date_filter === 'next_month') {
-        $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
-              ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
-    }
-})
-->when($request->has('booking_id'), function ($query) {
-    $query->where('booking_id', request()->input("booking_id"));
-})
-->select('job_payments.*')
-->join('bookings', 'bookings.id', '=', 'job_payments.booking_id') // Join the bookings table
-->join('users', 'users.id', '=', 'bookings.customer_id') // Join the customers table
-->addSelect(DB::raw("CASE
+                            $sub_service_ids = explode(',', request()->sub_service_ids);
+
+                            return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                                return $query->whereIn('sub_services.id', $sub_service_ids)
+                                    ->when(!empty($request->service_ids), function ($query) {
+                                        $service_ids = explode(',', request()->service_ids);
+
+                                        return $query->whereHas('service', function ($query) use ($service_ids) {
+                                            return $query->whereIn('services.id', $service_ids);
+                                        });
+                                    })
+                                ;
+                            });
+                        })
+                        ;
+
+                    // Additional date filters using date_filter
+                    if ($request->date_filter === 'today') {
+                        $query->whereDate('bookings.job_start_date', Carbon::today());
+                    } elseif ($request->date_filter === 'this_week') {
+                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'previous_week') {
+                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'next_week') {
+                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                    } elseif ($request->date_filter === 'this_month') {
+                        $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->year);
+                    } elseif ($request->date_filter === 'previous_month') {
+                        $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+                    } elseif ($request->date_filter === 'next_month') {
+                        $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                            ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                    }
+                })
+                ->when($request->has('booking_id'), function ($query) {
+                    $query->where('booking_id', request()->input("booking_id"));
+                })
+                ->select('job_payments.*')
+                ->join('bookings', 'bookings.id', '=', 'job_payments.booking_id') // Join the bookings table
+                ->join('users', 'users.id', '=', 'bookings.customer_id') // Join the customers table
+                ->addSelect(DB::raw("CASE
     WHEN users.is_walk_in_customer = 0 THEN 'app_customer'
     ELSE 'walk_customer'
 END AS customer_type"))
-->when($request->filled("id"), function ($query) use ($request) {
-    return $query
-        ->where("users.id", $request->input("id")) // Change to customers.id
-        ->first();
-}, function ($query) {
-    return $query->when(!empty(request()->per_page), function ($query) {
-        return $query->paginate(request()->per_page);
-    }, function ($query) {
-        return $query->get();
-    });
-});
+                ->when($request->filled("id"), function ($query) use ($request) {
+                    return $query
+                        ->where("users.id", $request->input("id")) // Change to customers.id
+                        ->first();
+                }, function ($query) {
+                    return $query->when(!empty(request()->per_page), function ($query) {
+                        return $query->paginate(request()->per_page);
+                    }, function ($query) {
+                        return $query->get();
+                    });
+                });
 
-// Organize response data into a single collection
-$responseData = [
-    "payments" => $payments
-];
+            // Organize response data into a single collection
+            $responseData = [
+                "payments" => $payments
+            ];
 
 
             return response()->json($responseData, 200);
-
         } catch (Exception $e) {
             return $this->sendError($e, 500, $request);
         }

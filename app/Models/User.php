@@ -22,6 +22,8 @@ class User extends Authenticatable
      */
     protected $guard_name = "api";
     protected $fillable = [
+        'weekly_minimum_days',
+        'weekly_minimum_hours',
         'first_Name',
         'last_Name',
         "business_id",

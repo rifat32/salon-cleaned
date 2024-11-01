@@ -65,15 +65,24 @@ This will give list of affiliation of garage with thier expiry date
 
 
 
-1. expert bonus option(ui pending). 
+1. expert bonus option(ui pending).
 2. coupon(ui pending)
 3. hide things based on the business setting(ui pending)
 4. next visit date (ui pending) (chron job is left)
 5. slot hold (ui pending) ✅
 6. notify setting (UI pending)
-7. email send based on notification setting(API task)
 6. review create error and approve option (UI pending)
 7. expert attendance (API pending, UI pending)
 8. closing periods ui pending.
-9. review translation (API pending, UI pending)
-10. expert bonus (chron job is left)
+9. expert bonus (chron job is left)
+10. new reports
+11 inventory
+
+1. chron jobs
+2. expert attendance
+3. new reports
+4. inventory
+
+
+front end tasks.
+add service_ids, sub_service_ids filter for the revenue

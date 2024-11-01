@@ -1834,6 +1834,22 @@ class DashboardManagementController extends Controller
             ->when(auth()->user()->hasRole("business_experts"), function($query)  {
                 $query->where('bookings.expert_id', auth()->user()->id);
            })
+           ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
+
+            $sub_service_ids = explode(',', request()->sub_service_ids);
+
+            return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                return $query->whereIn('sub_services.id', $sub_service_ids)
+                    ->when(!empty($request->service_ids), function ($query) {
+                        $service_ids = explode(',', request()->service_ids);
+
+                        return $query->whereHas('service', function ($query) use ($service_ids) {
+                            return $query->whereIn('services.id', $service_ids);
+                        });
+                    })
+                ;
+            });
+        })
                 ->when($range === 'today', function ($query) {
                     $query->whereDate('bookings.job_start_date', Carbon::today());
                 })
@@ -2307,13 +2323,13 @@ class DashboardManagementController extends Controller
                     $expert["by_date"] = $this->bookingsByStatus('all', $expert->id);
                 }
 
-                $data["today_revenue"] = $this->revenue('today',$expert->id);
-                $data["this_week_revenue"] = $this->revenue('this_week',$expert->id);
-                $data["this_month_revenue"] = $this->revenue('this_month',$expert->id);
-                $data["next_week_revenue"] = $this->revenue('next_week',$expert->id);
-                $data["next_month_revenue"] = $this->revenue('next_month',$expert->id);
-                $data["previous_week_revenue"] = $this->revenue('previous_week',$expert->id);
-                $data["previous_month_revenue"] = $this->revenue('previous_month',$expert->id);
+                $expert["today_revenue"] = $this->revenue('today',$expert->id);
+                $expert["this_week_revenue"] = $this->revenue('this_week',$expert->id);
+                $expert["this_month_revenue"] = $this->revenue('this_month',$expert->id);
+                $expert["next_week_revenue"] = $this->revenue('next_week',$expert->id);
+                $expert["next_month_revenue"] = $this->revenue('next_month',$expert->id);
+                $expert["previous_week_revenue"] = $this->revenue('previous_week',$expert->id);
+                $expert["previous_month_revenue"] = $this->revenue('previous_month',$expert->id);
 
             }
 
