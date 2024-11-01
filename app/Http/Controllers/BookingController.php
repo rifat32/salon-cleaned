@@ -656,21 +656,7 @@ foreach ($recipientIds as $recipientId) {
             //     ));
             // }
             if (env("SEND_EMAIL") == true) {
-               // Initialize an array to hold recipient emails
-$recipientEmails = [];
-
-// Get the customer's email
-if ($booking->customer && !empty($booking->customer->email)) {
-    $recipientEmails[] = $booking->customer->email;
-}
-
-//  // Retrieve emails of users with the role 'business_receptionist'
-//  $receptionists = User::role('business_receptionist')
-//  ->where("business_id",$booking->garage_id)
-//  ->pluck('email')->toArray();
-
-//  // Merge the two arrays
-//  $recipientEmails = array_merge($recipientEmails, $receptionists);
+                $recipientEmails = $this->getNotificationRecipients($booking);
 
 if (!empty($recipientEmails)) {
     Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
@@ -1035,20 +1021,7 @@ $booking = $booking->load(["payments"]);
                 }
                 if (env("SEND_EMAIL") == true) {
 
-                    $recipientEmails = [];
-                                         // Get the customer's email
-                                         if ($booking->customer && !empty($booking->customer->email)) {
-                                            $recipientEmails[] = $booking->customer->email;
-                                        }
-
-//  // Retrieve emails of users with the role 'business_receptionist'
-//  $receptionists = User::role('business_receptionist')
-//  ->where("business_id",$booking->garage_id)
-//  ->pluck('email')->toArray();
-
-//  // Merge the two arrays
-//  $recipientEmails = array_merge($recipientEmails, $receptionists);
-
+                    $recipientEmails = $this->getNotificationRecipients($booking);
 
 if (!empty($recipientEmails)) {
     Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
@@ -1267,13 +1240,7 @@ if (!empty($recipientEmails)) {
                 if (env("SEND_EMAIL") == true) {
                                                         // Get the customer's email
 
-
-  $recipientEmails = [];
-                                         // Get the customer's email
-                                         if ($booking->customer && !empty($booking->customer->email)) {
-                                            $recipientEmails[] = $booking->customer->email;
-                                        }
-
+                                                        $recipientEmails = $this->getNotificationRecipients($booking);
 if (!empty($recipientEmails)) {
     Mail::to($recipientEmails)->send(new BookingStatusUpdateMail($booking));
 }
@@ -1777,15 +1744,13 @@ public function changeMultipleBookingStatuses(Request $request)
                 ], 401);
             }
 
-
             $bookingQuery = Booking::with(
                 "sub_services.service",
                 "booking_packages.garage_package",
                 "customer",
                 "garage",
                 "expert",
-                "payments",
-
+                "payments"
             )
                 ->when(!auth()->user()->hasRole("garage_owner") && !auth()->user()->hasRole("business_receptionist"), function ($query) {
                     $query->where([
@@ -1795,6 +1760,11 @@ public function changeMultipleBookingStatuses(Request $request)
                 ->where([
                     "garage_id" => auth()->user()->business_id
                 ])
+                ->when(request()->input("booking_id"), function ($query) {
+                    $query->where([
+                        "id" => request()->input("booking_id")
+                    ]);
+                })
                 ->when(request()->input("expert_id"), function ($query) {
                     $query->where([
                         "expert_id" => request()->input("expert_id")

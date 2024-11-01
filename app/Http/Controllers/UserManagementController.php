@@ -1769,6 +1769,14 @@ protected function applyDateFilter($query, $date_filter) {
             })
 
            ->orderBy('this_month_revenue', 'desc') ->get();
+
+
+
+
+
+
+
+
             return response()->json($users, 200);
         } catch(Exception $e){
 

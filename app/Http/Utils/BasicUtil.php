@@ -6,14 +6,62 @@ use App\Models\Booking;
 use App\Models\Coupon;
 use App\Models\ExpertRota;
 use App\Models\GarageTime;
+use App\Models\NotificationSetting;
 use App\Models\ReviewNew;
 use App\Models\SlotHold;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Http;
 
 trait BasicUtil
 {
+
+    public static function getNotificationRecipients($booking)
+{
+    $recipientEmails = [];
+
+    // Retrieve the notification setting
+    $notification_setting = NotificationSetting::where([
+        "business_id" => $booking->id
+    ])->first();
+
+    if (!$notification_setting) {
+        return $recipientEmails; // Return empty if no settings found
+    }
+
+    // Notify customer
+    if (!empty($notification_setting->notify_customer) &&
+        $booking->customer &&
+        !empty($booking->customer->email)) {
+
+        $recipientEmails[] = $booking->customer->email;
+    }
+
+    // Notify receptionist(s)
+    if (!empty($notification_setting->notify_receptionist)) {
+        $receptionists = User::role('business_receptionist')
+            ->where("business_id", $booking->garage_id)
+            ->pluck('email')
+            ->toArray();
+
+        $recipientEmails = array_merge($recipientEmails, $receptionists);
+    }
+
+    // Notify business owner
+    if (!empty($notification_setting->notify_business_owner) &&
+        $booking->garage &&
+        !empty($booking->garage->owner->email)) {
+
+        $recipientEmails[] = $booking->garage->owner->email;
+    }
+
+    return $recipientEmails;
+}
+
+
+
+
     public function calculateAverageRating($expert_id)
     {
         // Get the total count of reviews and sum of rates for approved reviews with the specified expert
@@ -84,8 +132,8 @@ trait BasicUtil
         }
 
         $currentHeldSlots = SlotHold::where('expert_id', $expert_id)
-        ->where('held_until', '>', Carbon::now())
-        ->get();
+            ->where('held_until', '>', Carbon::now())
+            ->get();
 
         $held_slots  = $currentHeldSlots->pluck('held_slots')->flatten()->toArray();
 
@@ -133,12 +181,12 @@ trait BasicUtil
         return $timeFormat;
     }
 
-    public function validateBookingSlots($id, $customer_id,$slots, $date, $expert_id, $total_time)
+    public function validateBookingSlots($id, $customer_id, $slots, $date, $expert_id, $total_time)
     {
         // Get all bookings for the provided date except the rejected ones
         $bookings = Booking::when(!empty($id), function ($query) use ($id) {
-                $query->whereNotIn("id", [$id]);
-            })
+            $query->whereNotIn("id", [$id]);
+        })
             ->whereDate("job_start_date", $date)
             ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
             ->where([
@@ -146,16 +194,16 @@ trait BasicUtil
             ])
             ->get();
 
-// Get all bookings for the provided date except the rejected ones
-$my_bookings = Booking::when(!empty($id), function ($query) use ($id) {
-    $query->whereNotIn("id", [$id]);
-})
-->whereDate("job_start_date", $date)
-->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-->where([
-    "customer_id" => $customer_id
-])
-->get();
+        // Get all bookings for the provided date except the rejected ones
+        $my_bookings = Booking::when(!empty($id), function ($query) use ($id) {
+            $query->whereNotIn("id", [$id]);
+        })
+            ->whereDate("job_start_date", $date)
+            ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+            ->where([
+                "customer_id" => $customer_id
+            ])
+            ->get();
 
         // $allBusySlots = $my_bookings->pluck('booked_slots')->flatten()->toArray();
         $allBusySlots = [];
@@ -180,8 +228,8 @@ $my_bookings = Booking::when(!empty($id), function ($query) use ($id) {
         }
 
         $currentHeldSlots = SlotHold::where('expert_id', $expert_id)
-        ->where('held_until', '>', Carbon::now())
-        ->get();
+            ->where('held_until', '>', Carbon::now())
+            ->get();
 
         $held_slots  = $currentHeldSlots->pluck('held_slots')->flatten()->toArray();
 
@@ -326,4 +374,8 @@ $my_bookings = Booking::when(!empty($id), function ($query) use ($id) {
             }
         }
     }
+
+
+
+
 }

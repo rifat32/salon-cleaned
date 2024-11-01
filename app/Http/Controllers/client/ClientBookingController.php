@@ -410,20 +410,11 @@ class ClientBookingController extends Controller
 
                 if (env("SEND_EMAIL") == true) {
                     // Get the customer's email
-                    $recipientEmails = [$booking->customer->email];
-
-                    // Retrieve emails of users with the role 'business_receptionist'
-                    $receptionists = User::role('business_receptionist')
-                        ->where("business_id", $booking->garage_id)
-                        ->pluck('email')->toArray();
-
-                    // Merge the two arrays
-                    $recipientEmails = array_merge($recipientEmails, $receptionists);
-
+                    $recipientEmails = $this->getNotificationRecipients($booking);
                     Mail::to(
                         $recipientEmails
-
-                    )->send(new BookingCreateMail($booking));
+                    )
+                    ->send(new BookingCreateMail($booking));
                 }
                 $booking = $booking->load(["payments"]);
                 return response($booking, 201);
@@ -581,16 +572,8 @@ class ClientBookingController extends Controller
                 // }
 
                 if (env("SEND_EMAIL") == true) {
-                    // Get the customer's email
-                    $recipientEmails = [$booking->customer->email];
 
-                    // Retrieve emails of users with the role 'business_receptionist'
-                    $receptionists = User::role('business_receptionist')
-                        ->where("business_id", $booking->garage_id)
-                        ->pluck('email')->toArray();
-
-                    // Merge the two arrays
-                    $recipientEmails = array_merge($recipientEmails, $receptionists);
+                    $recipientEmails = $this->getNotificationRecipients($booking);
 
                     Mail::to(
                         $recipientEmails
@@ -937,16 +920,7 @@ class ClientBookingController extends Controller
                 }
 
                 if (env("SEND_EMAIL") == true) {
-                    // Get the customer's email
-                    $recipientEmails = [$booking->customer->email];
-
-                    // Retrieve emails of users with the role 'business_receptionist'
-                    $receptionists = User::role('business_receptionist')
-                        ->where("business_id", $booking->garage_id)
-                        ->pluck('email')->toArray();
-
-                    // Merge the two arrays
-                    $recipientEmails = array_merge($recipientEmails, $receptionists);
+                     $recipientEmails = $this->getNotificationRecipients($booking);
                     Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
                 }
                 $booking = $booking->load(["payments"]);
