@@ -14,7 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasRoles,SoftDeletes;
-
+    public $blocked_slots = [];
     /**
      * The attributes that are mass assignable.
      *

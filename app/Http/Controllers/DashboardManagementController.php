@@ -2311,18 +2311,33 @@ class DashboardManagementController extends Controller
                 ->orderBy('this_month_revenue', 'desc') // Order by this month's revenue
                 ->get();
                 foreach ($experts as $expert) {
-                    if (request()->filled("start_date") && request()->filled("end_date")) {
-                        // Generate the date range
-                        $date_range = Carbon::parse(request()->input("start_date"))
-                                            ->daysUntil(Carbon::parse(request()->input("end_date"))->addDay());
+                      // Initialize an array for blocked slots
+    $blockedSlots = []; // Separate variable for blocked slots
 
-                        foreach ($date_range as $date) {
-                            // Format the date to a string for array key
-                            $formattedDate = $date->toDateString(); // You can customize the format as needed
-                            // Populate blocked slots for each date
-                            $expert->blocked_slots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
-                        }
-                    }
+    if (request()->filled("start_date") && request()->filled("end_date")) {
+        $startDate = Carbon::parse(request()->input("start_date"));
+        $endDate = Carbon::parse(request()->input("end_date"));
+
+        if ($startDate->isSameDay($endDate)) {
+            // If start date and end date are the same, just add that date
+            $formattedDate = $startDate->toDateString();
+            $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
+        } else {
+            // Generate the date range
+            $date_range = $startDate->daysUntil($endDate->addDay());
+
+            foreach ($date_range as $date) {
+                // Format the date to a string for array key
+                $formattedDate = $date->toDateString(); // You can customize the format as needed
+                // Populate blocked slots for each date
+                $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
+            }
+        }
+    }
+
+
+    // Assign the blocked slots to the expert's blocked_slots property
+    $expert->blocked_slots = $blockedSlots;
 
                     // Use object property syntax instead of array-like syntax
                     $expert->today_bookings = $this->bookingsByStatus('today', $expert->id);
