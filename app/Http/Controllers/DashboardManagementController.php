@@ -1817,100 +1817,70 @@ class DashboardManagementController extends Controller
 
         return $data;
     }
+
+    protected function calculateRevenue($garage_id, $range, $expert_id, $is_walk_in_customer)
+{
+    return JobPayment::whereHas("bookings.customer", function ($query) use ($is_walk_in_customer) {
+        $query->where("users.is_walk_in_customer", $is_walk_in_customer)
+                  ->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
+                  ->groupBy('bookings.customer_id')
+                  ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
+
+    })
+
+    ->whereHas('bookings', function ($query) use ($garage_id, $range, $expert_id) {
+        $query->where('bookings.garage_id', $garage_id)
+            ->when(!empty($expert_id), function ($query) use ($expert_id) {
+                $query->where('bookings.expert_id', $expert_id);
+            })
+            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                $query->where('bookings.expert_id', auth()->user()->id);
+            })
+            ->when(!empty(request()->sub_service_ids), function ($query) {
+                $sub_service_ids = explode(',', request()->sub_service_ids);
+
+                return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                    $query->whereIn('sub_services.id', $sub_service_ids)
+                        ->when(!empty(request()->service_ids), function ($query) {
+                            $service_ids = explode(',', request()->service_ids);
+
+                            return $query->whereHas('service', function ($query) use ($service_ids) {
+                                return $query->whereIn('services.id', $service_ids);
+                            });
+                        });
+                });
+            })
+            ->when($range === 'today', function ($query) {
+                $query->whereDate('bookings.job_start_date', Carbon::today());
+            })
+            ->when($range === 'this_week', function ($query) {
+                $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+            })
+            ->when($range === 'this_month', function ($query) {
+                $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
+            })
+            ->when($range === 'next_week', function ($query) {
+                $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+            })
+            ->when($range === 'next_month', function ($query) {
+                $query->whereBetween('bookings.job_start_date', [Carbon::now()->addMonth()->startOfMonth(), Carbon::now()->endOfMonth()]);
+            })
+            ->when($range === 'previous_week', function ($query) {
+                $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+            })
+            ->when($range === 'previous_month', function ($query) {
+                $query->whereBetween('bookings.job_start_date', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->endOfMonth()]);
+            });
+    })->sum('amount');
+}
     public function revenue($range = 'today',$expert_id=NULL)
     {
         $garage_id = auth()->user()->business_id; // Get the garage ID
 
-        $app_customer_revenue = JobPayment::
-        whereHas("bookings.customer", function($query) {
-            $query->where("users.is_walk_in_customer",0);
-        })
-        ->whereHas('bookings', function ($query) use ($garage_id, $range,$expert_id) {
-            $query
-            ->where('bookings.garage_id', $garage_id)
-            ->when(!empty($expert_id), function($query) use($expert_id) {
-                $query->where('bookings.expert_id', $expert_id);
-            })
-            ->when(auth()->user()->hasRole("business_experts"), function($query)  {
-                $query->where('bookings.expert_id', auth()->user()->id);
-           })
-           ->when(!empty($request->sub_service_ids), function ($query)  {
-
-            $sub_service_ids = explode(',', request()->sub_service_ids);
-
-            return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
-                return $query->whereIn('sub_services.id', $sub_service_ids)
-                    ->when(!empty($request->service_ids), function ($query) {
-                        $service_ids = explode(',', request()->service_ids);
-
-                        return $query->whereHas('service', function ($query) use ($service_ids) {
-                            return $query->whereIn('services.id', $service_ids);
-                        });
-                    })
-                ;
-            });
-        })
-                ->when($range === 'today', function ($query) {
-                    $query->whereDate('bookings.job_start_date', Carbon::today());
-                })
-                ->when($range === 'this_week', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-                })
-                ->when($range === 'this_month', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
-                })
-                ->when($range === 'next_week', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
-                })
-                ->when($range === 'next_month', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->addMonth()->startOfMonth(), Carbon::now()->addMonth()->endOfMonth()]);
-                })
-                ->when($range === 'previous_week', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-                })
-                ->when($range === 'previous_month', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()]);
-                });
-        })->sum('amount');
-
-        $walk_in_customer_revenue = JobPayment::
-        whereHas("bookings.customer", function($query) {
-            $query->where("users.is_walk_in_customer",1);
-        })
-        ->whereHas('bookings', function ($query) use ($garage_id, $range) {
-            $query
-            ->where('bookings.garage_id', $garage_id)
-            ->when(auth()->user()->hasRole("business_experts"), function($query)  {
-                $query->where('bookings.expert_id', auth()->user()->id);
-           })
-                ->when($range === 'today', function ($query) {
-                    $query->whereDate('bookings.job_start_date', Carbon::today());
-                })
-                ->when($range === 'this_week', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-                })
-                ->when($range === 'this_month', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
-                })
-                ->when($range === 'next_week', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
-                })
-                ->when($range === 'next_month', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->addMonth()->startOfMonth(), Carbon::now()->addMonth()->endOfMonth()]);
-                })
-                ->when($range === 'previous_week', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-                })
-                ->when($range === 'previous_month', function ($query) {
-                    $query->whereBetween('bookings.job_start_date', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()]);
-                });
-        })
-        ->sum('amount');
-
         // Fetch payments and sum the amount
         return [
-            "app_customer_revenue" => $app_customer_revenue,
-            "walk_in_customer_revenue" => $walk_in_customer_revenue,
+           "app_customer_revenue" => $this->calculateRevenue($garage_id, $range, $expert_id, 0),
+           "walk_in_customer_revenue" => $this->calculateRevenue($garage_id, $range, $expert_id, 1),
         ];
     }
     public function getCustomersByPeriod($period)
@@ -2293,6 +2263,9 @@ class DashboardManagementController extends Controller
             $experts = User::with("translation")
                 ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
                 ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id') // Join job_payments on
+                ->when(request()->filled("expert_id"), function ($query) {
+                    $query->where('users.id', request()->input("expert_id"));
+                })
                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                     $query->where('users.id', auth()->user()->id);
                 })

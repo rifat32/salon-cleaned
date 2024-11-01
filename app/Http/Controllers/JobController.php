@@ -1304,6 +1304,11 @@ class JobController extends Controller
                 "bookings.customer",
                 "bookings.sub_services"
             ])
+            ->whereHas("bookings.customer", function ($query)  {
+                $query->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
+                          ->groupBy('bookings.customer_id')
+                          ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
+            })
                 ->whereHas("bookings", function ($query) use ($garage_id, $request) {
                     $query
                         ->when(request()->filled("status"), function ($query) {
