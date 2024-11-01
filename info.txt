@@ -90,7 +90,7 @@ add expert_id filter for the revenue
 add booking_type filter for the revenue
 add is_returning_customers boolean filter for the revenue
 add slots array filter for the revenue
-
+add payment_type array filter for the revenue
 
 
 

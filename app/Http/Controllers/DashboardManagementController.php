@@ -1820,7 +1820,12 @@ class DashboardManagementController extends Controller
 
     protected function calculateRevenue($garage_id, $range, $expert_id, $is_walk_in_customer)
 {
-    return JobPayment::whereHas("bookings.customer", function ($query) use ($is_walk_in_customer) {
+    return JobPayment::
+    when(request()->filled("payment_type"), function($query) {
+        $payment_typeArray = explode(',', request()->status);
+        $query->whereIn("job_payments.payment_type", $payment_typeArray);
+    })
+    ->whereHas("bookings.customer", function ($query) use ($is_walk_in_customer) {
         $query->where("users.is_walk_in_customer", $is_walk_in_customer)
                   ->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
                   ->groupBy('bookings.customer_id')
@@ -2293,7 +2298,7 @@ class DashboardManagementController extends Controller
                 ->orderBy('this_month_revenue', 'desc') // Order by this month's revenue
                 ->get();
 
-            foreach (json_decode(json_encode($experts)) as $expert) {
+            foreach (json_decode(json_encode($experts),true) as $expert) {
 
                 if (request()->filled("start_date") && request()->filled("end_date")) {
                     // Generate the date range
@@ -2304,29 +2309,29 @@ class DashboardManagementController extends Controller
                         // Format the date to a string for array key
                         $formattedDate = $date->toDateString(); // You can customize the format as needed
                         // Populate blocked slots for each date
-                        $expert["blocked_slots"][$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
+                        $expert["blocked_slots"][$formattedDate] = $this->blockedSlots($formattedDate, $expert["id"]);
                     }
                 }
 
-                $expert["today_bookings"] = $this->bookingsByStatus('today', $expert->id);
-                $expert["this_week_bookings"] = $this->bookingsByStatus('this_week', $expert->id);
-                $expert["this_month_bookings"] = $this->bookingsByStatus('this_month', $expert->id);
-                $expert["next_week_bookings"] = $this->bookingsByStatus('next_week', $expert->id);
-                $expert["next_month_bookings"] = $this->bookingsByStatus('next_month', $expert->id);
-                $expert["previous_week_bookings"] = $this->bookingsByStatus('previous_week', $expert->id);
-                $expert["previous_month_bookings"] = $this->bookingsByStatus('previous_month', $expert->id);
+                $expert["today_bookings"] = $this->bookingsByStatus('today', $expert["id"]);
+                $expert["this_week_bookings"] = $this->bookingsByStatus('this_week', $expert["id"]);
+                $expert["this_month_bookings"] = $this->bookingsByStatus('this_month', $expert["id"]);
+                $expert["next_week_bookings"] = $this->bookingsByStatus('next_week', $expert["id"]);
+                $expert["next_month_bookings"] = $this->bookingsByStatus('next_month', $expert["id"]);
+                $expert["previous_week_bookings"] = $this->bookingsByStatus('previous_week', $expert["id"]);
+                $expert["previous_month_bookings"] = $this->bookingsByStatus('previous_month', $expert["id"]);
 
                 if(request()->filled("start_date") && request()->filled("end_date")){
-                    $expert["by_date"] = $this->bookingsByStatus('all', $expert->id);
+                    $expert["by_date"] = $this->bookingsByStatus('all', $expert["id"]);
                 }
 
-                $expert["today_revenue"] = $this->revenue('today',$expert->id);
-                $expert["this_week_revenue"] = $this->revenue('this_week',$expert->id);
-                $expert["this_month_revenue"] = $this->revenue('this_month',$expert->id);
-                $expert["next_week_revenue"] = $this->revenue('next_week',$expert->id);
-                $expert["next_month_revenue"] = $this->revenue('next_month',$expert->id);
-                $expert["previous_week_revenue"] = $this->revenue('previous_week',$expert->id);
-                $expert["previous_month_revenue"] = $this->revenue('previous_month',$expert->id);
+                $expert["today_revenue"] = $this->revenue('today',$expert["id"]);
+                $expert["this_week_revenue"] = $this->revenue('this_week',$expert["id"]);
+                $expert["this_month_revenue"] = $this->revenue('this_month',$expert["id"]);
+                $expert["next_week_revenue"] = $this->revenue('next_week',$expert["id"]);
+                $expert["next_month_revenue"] = $this->revenue('next_month',$expert["id"]);
+                $expert["previous_week_revenue"] = $this->revenue('previous_week',$expert["id"]);
+                $expert["previous_month_revenue"] = $this->revenue('previous_month',$expert["id"]);
 
             }
 
