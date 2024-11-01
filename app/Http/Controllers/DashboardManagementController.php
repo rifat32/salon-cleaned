@@ -2294,8 +2294,18 @@ class DashboardManagementController extends Controller
                 ->get();
 
             foreach ($experts as $expert) {
+                if (request()->filled("start_date") && request()->filled("end_date")) {
+                    // Generate the date range
+                    $date_range = Carbon::parse(request()->input("start_date"))
+                                        ->daysUntil(Carbon::parse(request()->input("end_date"))->addDay());
 
-                $expert["blocked_slots"] = $this->blockedSlots((request()->filled("date")?request()->input("date"):today()), $expert->id)["all_blocked_slots"];
+                    foreach ($date_range as $date) {
+                        // Format the date to a string for array key
+                        $formattedDate = $date->toDateString(); // You can customize the format as needed
+                        // Populate blocked slots for each date
+                        $expert["blocked_slots"][$formattedDate] = $this->blockedSlots($formattedDate, $expert->id)["all_blocked_slots"];
+                    }
+                }
 
                 $expert["today_bookings"] = $this->bookingsByStatus('today', $expert->id);
                 $expert["this_week_bookings"] = $this->bookingsByStatus('this_week', $expert->id);
