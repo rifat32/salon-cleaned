@@ -1790,6 +1790,12 @@ public function changeMultipleBookingStatuses(Request $request)
                 // If status is provided, include the condition in the query
                 $bookingQuery->whereIn("status", $statusArray);
             }
+            if (!empty($request->booking_type)) {
+                $booking_typeArray = explode(',', request()->booking_type);
+                // If status is provided, include the condition in the query
+                $bookingQuery->whereIn("booking_type", $booking_typeArray);
+            }
+
             if (!empty($request->payment_status)) {
                 $statusArray = explode(',', request()->payment_status);
                 // If status is provided, include the condition in the query
