@@ -1311,6 +1311,14 @@ class JobController extends Controller
             })
                 ->whereHas("bookings", function ($query) use ($garage_id, $request) {
                     $query
+                    ->when(request()->filled("slots"), function ($query) {
+                        $slotsArray = explode(',', request()->input("slots"));
+                        $query ->where(function ($subQuery) use ($slotsArray) {
+                            foreach ($slotsArray as $slot) {
+                                $subQuery->orWhereRaw("JSON_CONTAINS(bookings.busy_slots, '\"$slot\"')");
+                            }
+                        });
+                    })
                         ->when(request()->filled("status"), function ($query) {
                             $statusArray = explode(',', request()->input("status"));
                             // If status is provided, include the condition in the query

@@ -1830,12 +1830,23 @@ class DashboardManagementController extends Controller
 
     ->whereHas('bookings', function ($query) use ($garage_id, $range, $expert_id) {
         $query->where('bookings.garage_id', $garage_id)
+
             ->when(!empty($expert_id), function ($query) use ($expert_id) {
                 $query->where('bookings.expert_id', $expert_id);
             })
             ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                 $query->where('bookings.expert_id', auth()->user()->id);
             })
+            ->when(request()->filled("slots"), function ($query) {
+                $slotsArray = explode(',', request()->input("slots"));
+                $query ->where(function ($subQuery) use ($slotsArray) {
+                    foreach ($slotsArray as $slot) {
+                        $subQuery->orWhereRaw("JSON_CONTAINS(bookings.busy_slots, '\"$slot\"')");
+                    }
+                });
+            })
+
+
             ->when(!empty(request()->sub_service_ids), function ($query) {
                 $sub_service_ids = explode(',', request()->sub_service_ids);
 
