@@ -2076,18 +2076,27 @@ public function changeMultipleBookingStatuses(Request $request)
                     // Adjust 'status' according to your actual status field
                 }
             ])
-            ->whereHas("reviews", function($query) {
+
                 // Filter by rating if provided
-                $query->when(request()->filled('rating'), function($q) {
-                    $q->where('review_news.rate', request()->input('rating'));
+                ->when(request()->filled('rating'), function($q) {
+                    $q->whereHas('reviews', function($query) {
+                        $query->where('review_news.rate', request()->input('rating'));
+                    });
                 })
                 ->when(request()->filled('review_start_date') && request()->filled('review_end_date'), function($q) {
-                    $q->whereBetween('review_news.updated_at', [request()->input('review_start_date'), request()->input('review_end_date')]);
+                    $q->whereHas('reviews', function($query) {
+                        $query->whereBetween('review_news.updated_at', [
+                            request()->input('review_start_date'),
+                            request()->input('review_end_date')
+                        ]);
+                    });
                 })
                 ->when(request()->filled('review_keyword'), function($q) {
-                    $q->where('review_news.comment', 'like', '%' . request('review_keyword') . '%');
-                });
-            })
+                    $q->whereHas('reviews', function($query) {
+                        $query->where('review_news.comment', 'like', '%' . request('review_keyword') . '%');
+                    });
+                })
+
             ->when(request()->has('frequency_visit'), function ($q) {
                 $frequency = request()->input('frequency_visit');
                  $q->whereHas("bookings.customer", function ($subQuery) use ($frequency) {
