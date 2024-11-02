@@ -2237,80 +2237,67 @@ class DashboardManagementController extends Controller
 * @OA\Parameter(
  *     name="start_date",
  *     in="query",
- *     description="Start date for filtering bookings",
- *     required=true
+ *     description="Start date for filtering bookings"
  * ),
  * @OA\Parameter(
  *     name="end_date",
  *     in="query",
- *     description="End date for filtering bookings",
- *     required=true
+ *     description="End date for filtering bookings"
  * ),
  * @OA\Parameter(
  *     name="expert_id",
  *     in="query",
- *     description="ID of the expert to filter bookings",
- *     required=false
+ *     description="ID of the expert to filter bookings"
  * ),
  * @OA\Parameter(
  *     name="slots",
  *     in="query",
- *     description="Comma-separated list of slots to filter bookings",
- *     required=false
+ *     description="Comma-separated list of slots to filter bookings"
  * ),
  * @OA\Parameter(
  *     name="is_returning_customers",
  *     in="query",
- *     description="Filter for returning customers",
- *     required=false
+ *     description="Filter for returning customers"
  * ),
  * @OA\Parameter(
  *     name="payment_type",
  *     in="query",
- *     description="Comma-separated list of payment types to filter bookings",
- *     required=false
+ *     description="Comma-separated list of payment types to filter bookings"
  * ),
  * @OA\Parameter(
  *     name="discount_applied",
  *     in="query",
- *     description="Filter for bookings with or without discounts",
- *     required=false
+ *     description="Filter for bookings with or without discounts"
  * ),
  * @OA\Parameter(
  *     name="status",
  *     in="query",
- *     description="Comma-separated list of statuses to filter bookings",
- *     required=false
+ *     description="Comma-separated list of statuses to filter bookings"
  * ),
  * @OA\Parameter(
  *     name="payment_status",
  *     in="query",
- *     description="Comma-separated list of payment statuses to filter bookings",
- *     required=false
+ *     description="Comma-separated list of payment statuses to filter bookings"
  * ),
  * @OA\Parameter(
  *     name="sub_service_ids",
  *     in="query",
- *     description="Comma-separated list of sub-service IDs to filter bookings",
- *     required=false
+ *     description="Comma-separated list of sub-service IDs to filter bookings"
  * ),
  * @OA\Parameter(
  *     name="duration_in_minute",
  *     in="query",
- *     description="Duration in minutes to filter bookings",
- *     required=false
+ *     description="Duration in minutes to filter bookings"
  * ),
  * @OA\Parameter(
  *     name="booking_type",
  *     in="query",
- *     description="Comma-separated list of booking types to filter bookings",
- *     required=false
+ *     description="Comma-separated list of booking types to filter bookings"
  * ),
  * @OA\Parameter(
  *     name="date_filter",
  *     in="query",
- *     description="Filter bookings by date range options",
- *     required=false,
+ *     description="Filter bookings by date range options"
 
  * ),
      *      summary="get all dashboard data combined",
@@ -2415,7 +2402,7 @@ class DashboardManagementController extends Controller
                                 });
                             }
                         })
-                        ->when(!empty($request->status), function($query) use ($request) {
+                        ->when((request()->filled("status") && request()->input("status") !== "all"), function($query) use ($request) {
                             $statusArray = explode(',', $request->status);
                              $query->whereIn("status", $statusArray);
                         })
@@ -2440,7 +2427,7 @@ class DashboardManagementController extends Controller
                             });
                         })
                         ->when($request->filled("duration_in_minute"), function ($query) {
-                            $total_slots = $request->input("duration_in_minute") / 15;
+                            $total_slots = request()->input("duration_in_minute") / 15;
                             $query->having('total_booked_slots', '>', $total_slots);
                         })
                         ->when(!empty($request->booking_type), function ($query) use ($request) {
