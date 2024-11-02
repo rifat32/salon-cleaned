@@ -2696,7 +2696,8 @@ public function changeMultipleBookingStatuses(Request $request)
                 "booking_packages.garage_package",
                 "customer",
                 "garage",
-                "expert"
+                "expert",
+                "payments"
             )
                 ->where([
                     "garage_id" => $garage_id,
