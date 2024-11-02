@@ -7,6 +7,7 @@ use App\Models\BusinessSetting;
 use App\Models\Coupon;
 use App\Models\ExpertRota;
 use App\Models\GarageTime;
+use App\Models\JobPayment;
 use App\Models\NotificationSetting;
 use App\Models\ReviewNew;
 use App\Models\Service;
@@ -23,9 +24,75 @@ trait BasicUtil
 
     public function addCustomerData($user){
           $user->bookings = $user->bookings;
-          $user->sub_services = SubService::whereHas("booking", function ($query) use($user) {
+          $user->top_sub_services = SubService::
+          withCount([
+            'bookingSubServices as all_sales_count' => function ($query) use($user) {
+                 $query->whereHas('booking', function ($query) use($user) {
+                     $query
+                     ->where("bookings.customer_id",$user->id)
+                     ->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+                     ->when(auth()->user()->hasRole("business_experts"), function($query)  {
+                         $query->where('bookings.expert_id', auth()->user()->id);
+                    }); // Sales this month
+                 });
+             }
+         ])
+          ->whereHas("booking", function ($query) use($user) {
                 $query->where("bookings.customer_id",$user->id);
-          });
+          })
+          ->orderBy('all_sales_count', 'desc')
+          ->get();
+
+        $user->top_experts = User::withCount([
+            'expert_bookings as all_booking_count' => function ($query) use ($user) {
+                    $query
+                    ->where("bookings.customer_id",$user->id)
+                    ->where('bookings.status', 'converted_to_job') // Only count converted bookings
+                          ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                              $query->where('bookings.expert_id', auth()->user()->id);
+                          });
+
+            }
+        ])
+        ->whereHas('expert_bookings', function ($query) use($user) {
+            $query->where("bookings.customer_id",$user->id);
+        })
+        ->orderBy('all_booking_count', 'desc') // Order by the count of converted bookings
+        ->take(1) // Get the top expert
+        ->get();
+
+          $user->total_payment = JobPayment::whereHas("bookings", function($query) use($user) {
+            $query->where("bookings.customer_id",$user->id);
+          })->get()->sum("amount");
+
+          $user->cash_payment = JobPayment::
+          whereHas("bookings", function($query) use($user) {
+            $query->where("bookings.customer_id",$user->id);
+          })
+          ->where("job_payments.payment_type","cash")
+          ->get()
+          ->sum("amount");
+
+          $user->card_payment = JobPayment::
+          whereHas("bookings", function($query) use($user) {
+            $query->where("bookings.customer_id",$user->id);
+          })
+          ->where("job_payments.payment_type","card")
+          ->get()
+          ->sum("amount");
+
+          $user->stripe_payment = JobPayment::
+          whereHas("bookings", function($query) use($user) {
+            $query->where("bookings.customer_id",$user->id);
+          })
+          ->where("job_payments.payment_type","stripe")
+          ->get()
+          ->sum("amount");
+
+
+
+          return $user;
+
     }
 
     public static function getNotificationRecipients($booking)

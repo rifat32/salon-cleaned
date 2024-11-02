@@ -395,6 +395,7 @@ class ClientBookingController extends Controller
                     JobPayment::create([
                         "booking_id" => $booking->id,
                         "amount" => $booking->final_price,
+                        "payment_type" => "stripe"
                     ]);
 
                     Booking::where([
