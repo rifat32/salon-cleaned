@@ -94,4 +94,11 @@ add payment_type array filter for the revenue
 add duration_in_minute integer filter for the revenue
 
 
+ customer report
+ name
+ id
+frequency_visit(New,Regular,VIP)
+service_ids
+sub_service_ids
+
 

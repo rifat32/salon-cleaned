@@ -1957,6 +1957,21 @@ public function changeMultipleBookingStatuses(Request $request)
                     // Adjust 'status' according to your actual status field
                 }
             ])
+            ->when(request()->has('frequency_visit'), function ($q) {
+                $frequency = request()->input('frequency_visit');
+                 $q->whereHas("bookings.customer", function ($subQuery) use ($frequency) {
+                    $subQuery->select('bookings.customer_id', DB::raw('COUNT(bookings.id) as bookings_count'))
+                             ->groupBy('bookings.customer_id')
+                             ->having(function ($query) use ($frequency) {
+                                match($frequency) {
+                                    'New' => $query->having('bookings_count', '=', 1),
+                                    'Regular' => $query->having('bookings_count', '>', 1)
+                                                        ->having('bookings_count', '<=', 5), // Limit to 5
+                                    'VIP' => $query->having('bookings_count', '>', 5), // More than 5
+                                };
+                            }); // Use 1 as base value for comparison
+                });
+            })
             ->whereHas("bookings", function($query) use($request) {
                 $query->where("bookings.garage_id", auth()->user()->business_id)
                 ->when(request()->input("expert_id"), function ($query) {
@@ -1994,10 +2009,16 @@ public function changeMultipleBookingStatuses(Request $request)
                 })
                 ->when($request->date_filter === 'next_month', function($query) {
                     return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
-                                 ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                 ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
                 });
             })
-
+            ->when(!empty($request->name), function($query) use ($request) {
+                $name = $request->name;
+                return $query->where(function($subQuery) use ($name) {
+                    $subQuery->where("first_Name", "like", "%" . $name . "%")
+                             ->orWhere("last_Name", "like", "%" . $name . "%");
+                });
+            })
             ->when(!empty($request->email), function ($query) use ($request) {
                 return $query->where('users.email', 'like', '%' . $request->email . '%');
             })
@@ -2014,26 +2035,27 @@ public function changeMultipleBookingStatuses(Request $request)
                  return $query->where('bookings.expert_id', request()->input("expert_id"));
                 });
             })
-            ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
 
+            ->when(!empty(request()->sub_service_ids), function ($query) {
                 $sub_service_ids = explode(',', request()->sub_service_ids);
 
-                return $query->whereHas('bookings.booking_sub_services', function($query) use($sub_service_ids){
-                 return $query->whereIn('booking_sub_services.id', $sub_service_ids);
+                return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                    $query->whereIn('sub_services.id', $sub_service_ids)
+                        ->when(!empty(request()->service_ids), function ($query) {
+                            $service_ids = explode(',', request()->service_ids);
+
+                            return $query->whereHas('service', function ($query) use ($service_ids) {
+                                return $query->whereIn('services.id', $service_ids);
+                            });
+                        });
                 });
             })
-
-
-
-
              ->when(!empty($request->search_key), function ($query) use ($request) {
                  return $query->where(function ($query) use ($request) {
                      $term = $request->search_key;
                      $query;
                  });
              })
-
-
              ->when(!empty($request->start_date), function ($query) use ($request) {
                  return $query->where('users.created_at', ">=", $request->start_date);
              })
@@ -2041,9 +2063,9 @@ public function changeMultipleBookingStatuses(Request $request)
                  return $query->where('users.created_at', "<=", ($request->end_date . ' 23:59:59'));
              })
              ->when(!empty($request->order_by) && in_array(strtoupper($request->order_by), ['ASC', 'DESC']), function ($query) use ($request) {
-                 return $query->orderBy("users.id", $request->order_by);
+                 return $query->orderBy("users.first_Name", $request->order_by);
              }, function ($query) {
-                 return $query->orderBy("users.id", "DESC");
+                 return $query->orderBy("users.first_Name", "DESC");
              })
              ->when($request->filled("id"), function ($query) use ($request) {
                  return $query

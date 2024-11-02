@@ -1306,13 +1306,15 @@ class JobController extends Controller
             ])
 
             ->when(request()->filled("payment_type"), function($query) {
-                $payment_typeArray = explode(',', request()->status);
+                $payment_typeArray = explode(',', request()->payment_type);
                 $query->whereIn("job_payments.payment_type", $payment_typeArray);
             })
-            ->whereHas("bookings.customer", function ($query)  {
-                $query->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
-                          ->groupBy('bookings.customer_id')
-                          ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
+            ->when(request()->has('is_returning_customers'), function ($q) {
+                $q->whereHas("bookings.customer", function ($query)  {
+                    $query->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
+                              ->groupBy('bookings.customer_id')
+                              ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
+                });
             })
                 ->whereHas("bookings", function ($query) use ($garage_id, $request) {
                     $query

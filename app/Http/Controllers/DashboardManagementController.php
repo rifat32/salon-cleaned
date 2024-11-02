@@ -1826,11 +1826,14 @@ class DashboardManagementController extends Controller
         $query->whereIn("job_payments.payment_type", $payment_typeArray);
     })
     ->whereHas("bookings.customer", function ($query) use ($is_walk_in_customer) {
-        $query->where("users.is_walk_in_customer", $is_walk_in_customer)
-                  ->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
-                  ->groupBy('bookings.customer_id')
-                  ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
-
+        $query->where("users.is_walk_in_customer", $is_walk_in_customer);
+    })
+    ->when(request()->has('is_returning_customers'), function ($q) {
+        $q->whereHas("bookings.customer", function ($query)  {
+            $query->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
+                      ->groupBy('bookings.customer_id')
+                      ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
+        });
     })
 
     ->whereHas('bookings', function ($query) use ($garage_id, $range, $expert_id) {
@@ -1856,7 +1859,6 @@ class DashboardManagementController extends Controller
                     }
                 });
             })
-
 
             ->when(!empty(request()->sub_service_ids), function ($query) {
                 $sub_service_ids = explode(',', request()->sub_service_ids);
