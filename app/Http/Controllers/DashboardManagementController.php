@@ -2234,20 +2234,97 @@ class DashboardManagementController extends Controller
      *       security={
      *           {"bearerAuth": {}}
      *       },
-  *              @OA\Parameter(
-     *         name="start_date",
-     *         in="query",
-     *         description="start_date",
-     *         required=true,
-     *  example="6"
-     *      ),
-     *   *              @OA\Parameter(
-     *         name="end_date",
-     *         in="query",
-     *         description="end_date",
-     *         required=true,
-     *  example="6"
-     *      ),
+ * @OA\Parameter(
+ *     name="start_date",
+ *     in="query",
+ *     description="Start date for filtering bookings",
+ *     required=true,
+ *     type="string" // or "date" if you have a specific date format
+ * ),
+ * @OA\Parameter(
+ *     name="end_date",
+ *     in="query",
+ *     description="End date for filtering bookings",
+ *     required=true,
+ *     type="string" // or "date" if you have a specific date format
+ * ),
+ * @OA\Parameter(
+ *     name="expert_id",
+ *     in="query",
+ *     description="ID of the expert to filter bookings",
+ *     required=false,
+ *     type="integer"
+ * ),
+ * @OA\Parameter(
+ *     name="slots",
+ *     in="query",
+ *     description="Comma-separated list of slots to filter bookings",
+ *     required=false,
+ *     type="string"
+ * ),
+ * @OA\Parameter(
+ *     name="is_returning_customers",
+ *     in="query",
+ *     description="Filter for returning customers",
+ *     required=false,
+ *     type="boolean"
+ * ),
+ * @OA\Parameter(
+ *     name="payment_type",
+ *     in="query",
+ *     description="Comma-separated list of payment types to filter bookings",
+ *     required=false,
+ *     type="string"
+ * ),
+ * @OA\Parameter(
+ *     name="discount_applied",
+ *     in="query",
+ *     description="Filter for bookings with or without discounts",
+ *     required=false,
+ *     type="boolean"
+ * ),
+ * @OA\Parameter(
+ *     name="status",
+ *     in="query",
+ *     description="Comma-separated list of statuses to filter bookings",
+ *     required=false,
+ *     type="string"
+ * ),
+ * @OA\Parameter(
+ *     name="payment_status",
+ *     in="query",
+ *     description="Comma-separated list of payment statuses to filter bookings",
+ *     required=false,
+ *     type="string"
+ * ),
+ * @OA\Parameter(
+ *     name="sub_service_ids",
+ *     in="query",
+ *     description="Comma-separated list of sub-service IDs to filter bookings",
+ *     required=false,
+ *     type="string"
+ * ),
+ * @OA\Parameter(
+ *     name="duration_in_minute",
+ *     in="query",
+ *     description="Duration in minutes to filter bookings",
+ *     required=false,
+ *     type="integer"
+ * ),
+ * @OA\Parameter(
+ *     name="booking_type",
+ *     in="query",
+ *     description="Comma-separated list of booking types to filter bookings",
+ *     required=false,
+ *     type="string"
+ * ),
+ * @OA\Parameter(
+ *     name="date_filter",
+ *     in="query",
+ *     description="Filter bookings by date range options",
+ *     required=false,
+ *     type="string"
+ * ),
      *      summary="get all dashboard data combined",
      *      description="get all dashboard data combined",
      *
