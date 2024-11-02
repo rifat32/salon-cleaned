@@ -112,3 +112,24 @@ review_start_date
 review_end_date
 
 
+
+expert report
+is_returning_customers:boolean
+slots:['10:15 AM',]
+expert_id: 1
+payment_type: "credit_card, cash"
+discount_applied: true or false
+status: "confirmed, pending"
+payment_status: "paid, unpaid"
+sub_service_ids: "3, 4, 5"
+service_ids: "1, 2"
+duration_in_minute: 60
+booking_type: "online, in_person"
+date_filter:
+today
+this_week
+previous_week
+next_week
+this_month
+previous_month
+next_month

@@ -5153,30 +5153,149 @@
                     {
                         "name": "per_page",
                         "in": "query",
-                        "description": "per_page",
+                        "description": "Number of results per page",
                         "required": true,
                         "example": "6"
                     },
                     {
                         "name": "start_date",
                         "in": "query",
-                        "description": "start_date",
-                        "required": true,
+                        "description": "Filter by user creation start date (YYYY-MM-DD)",
+                        "required": false,
                         "example": "2019-06-29"
                     },
                     {
                         "name": "end_date",
                         "in": "query",
-                        "description": "end_date",
-                        "required": true,
+                        "description": "Filter by user creation end date (YYYY-MM-DD)",
+                        "required": false,
                         "example": "2019-06-29"
                     },
                     {
                         "name": "search_key",
                         "in": "query",
-                        "description": "search_key",
-                        "required": true,
+                        "description": "Keyword for searching users by name, email, or phone",
+                        "required": false,
                         "example": "search_key"
+                    },
+                    {
+                        "name": "rating",
+                        "in": "query",
+                        "description": "Filter by review rating",
+                        "required": false,
+                        "example": "5"
+                    },
+                    {
+                        "name": "frequency_visit",
+                        "in": "query",
+                        "description": "Visit frequency category (New, Regular, VIP)",
+                        "required": false,
+                        "example": "Regular"
+                    },
+                    {
+                        "name": "review_start_date",
+                        "in": "query",
+                        "description": "Filter reviews by start date (YYYY-MM-DD)",
+                        "required": false,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "review_end_date",
+                        "in": "query",
+                        "description": "Filter reviews by end date (YYYY-MM-DD)",
+                        "required": false,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "review_keyword",
+                        "in": "query",
+                        "description": "Keyword to search within review comments",
+                        "required": false,
+                        "example": "Great service"
+                    },
+                    {
+                        "name": "frequency_visit",
+                        "in": "query",
+                        "description": "Filter users based on visit frequency",
+                        "required": false,
+                        "example": "Regular"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Comma-separated list of booking statuses",
+                        "required": false,
+                        "example": "completed,cancelled"
+                    },
+                    {
+                        "name": "payment_status",
+                        "in": "query",
+                        "description": "Comma-separated list of payment statuses",
+                        "required": false,
+                        "example": "paid,unpaid"
+                    },
+                    {
+                        "name": "sub_service_ids",
+                        "in": "query",
+                        "description": "Comma-separated list of sub-service IDs",
+                        "required": false,
+                        "example": "1,2,3"
+                    },
+                    {
+                        "name": "duration_in_minute",
+                        "in": "query",
+                        "description": "Filter by booking duration in minutes",
+                        "required": false,
+                        "example": "30"
+                    },
+                    {
+                        "name": "booking_type",
+                        "in": "query",
+                        "description": "Comma-separated list of booking types",
+                        "required": false,
+                        "example": "online,walk-in"
+                    },
+                    {
+                        "name": "date_filter",
+                        "in": "query",
+                        "description": "Filter bookings by date (e.g., today, this_week, previous_week, this_month, etc.)",
+                        "required": false,
+                        "example": "today"
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter users by name",
+                        "required": false,
+                        "example": "John"
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Filter users by email",
+                        "required": false,
+                        "example": "example@example.com"
+                    },
+                    {
+                        "name": "phone",
+                        "in": "query",
+                        "description": "Filter users by phone number",
+                        "required": false,
+                        "example": "1234567890"
+                    },
+                    {
+                        "name": "last_visited_date",
+                        "in": "query",
+                        "description": "Filter users by last visited date (YYYY-MM-DD)",
+                        "required": false,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "order_by",
+                        "in": "query",
+                        "description": "Sort order for users (ASC or DESC)",
+                        "required": false,
+                        "example": "ASC"
                     }
                 ],
                 "responses": {
@@ -5538,6 +5657,158 @@
                         "example": "1"
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/commission-settings": {
+            "get": {
+                "tags": [
+                    "commission_setting"
+                ],
+                "summary": "This method is to get busuness _setting",
+                "description": "This method is to get busuness setting",
+                "operationId": "getCommissionSetting",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "commission_setting"
+                ],
+                "summary": "This method is to update busuness setting",
+                "description": "This method is to update busuness setting",
+                "operationId": "updateCommissionSetting",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "target_amount": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "commission_percentage": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "notify_business_owner": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -6886,6 +7157,22 @@
                 "summary": "get all dashboard data combined",
                 "description": "get all dashboard data combined",
                 "operationId": "getExpertReport",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": "6"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -22426,6 +22713,64 @@
                 ]
             }
         },
+        "/v1.0/review-new/getreviewAll/{garageId}": {
+            "get": {
+                "tags": [
+                    "review"
+                ],
+                "summary": "This method is to get review by garage id",
+                "description": "This method is to get review by garage id",
+                "operationId": "getReviewByGarageIdAllV1",
+                "parameters": [
+                    {
+                        "name": "garageId",
+                        "in": "path",
+                        "description": "garageId",
+                        "required": true,
+                        "example": "1"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/review-new/getreviewAll/{garageId}/{perPage}": {
             "get": {
                 "tags": [
@@ -32677,6 +33022,10 @@
         {
             "name": "booking_management",
             "description": "booking_management"
+        },
+        {
+            "name": "commission_setting",
+            "description": "commission_setting"
         },
         {
             "name": "coupon_management",
