@@ -1711,7 +1711,8 @@ class ClientBookingController extends Controller
                 "booking_packages.garage_package",
                 "customer",
                 "garage",
-                "expert"
+                "expert",
+                "payments"
             )
                 ->where([
                     "id" => $id,

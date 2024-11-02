@@ -2325,7 +2325,7 @@ class DashboardManagementController extends Controller
                             });
                         })
                         ->when($request->has('is_returning_customers'), function ($q) {
-                            $q->whereHas("expert_bookings.customer", function ($query) {
+                            $q->whereHas("customer", function ($query) {
                                 $query->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
                                       ->groupBy('bookings.customer_id')
                                       ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
@@ -2352,25 +2352,24 @@ class DashboardManagementController extends Controller
                         })
                         ->when(!empty($request->status), function($query) use ($request) {
                             $statusArray = explode(',', $request->status);
-                            return $query->whereIn("status", $statusArray);
+                             $query->whereIn("status", $statusArray);
                         })
                         ->when(!empty($request->payment_status), function($query) use ($request) {
                             $statusArray = explode(',', $request->payment_status);
-                            return $query->whereIn("payment_status", $statusArray);
+                             $query->whereIn("payment_status", $statusArray);
                         })
                         ->when(!empty($request->expert_id), function ($query) use ($request) {
-                            return $query->whereHas('expert_bookings', function($query){
-                                return $query->where('bookings.expert_id', request()->input("expert_id"));
-                            });
+                                 $query->where('bookings.expert_id', request()->input("expert_id"));
+
                         })
                         ->when(!empty($request->sub_service_ids), function ($query) {
                             $sub_service_ids = explode(',', request()->sub_service_ids);
-                            return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                             $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
                                 $query->whereIn('sub_services.id', $sub_service_ids)
                                     ->when(!empty(request()->service_ids), function ($query) {
                                         $service_ids = explode(',', request()->service_ids);
-                                        return $query->whereHas('service', function ($query) use ($service_ids) {
-                                            return $query->whereIn('services.id', $service_ids);
+                                         $query->whereHas('service', function ($query) use ($service_ids) {
+                                             $query->whereIn('services.id', $service_ids);
                                         });
                                     });
                             });
