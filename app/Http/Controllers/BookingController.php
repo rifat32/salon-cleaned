@@ -1787,11 +1787,22 @@ public function changeMultipleBookingStatuses(Request $request)
                         "id" => request()->input("booking_id")
                     ]);
                 })
+
                 ->when(request()->filled("expert_id"), function ($query) {
                     $query->where([
                         "expert_id" => request()->input("expert_id")
                     ]);
                 })
+                ->when(request()->filled("expert_ids"), function ($query) {
+                    $expert_ids = explode(',', request()->expert_ids);
+                    $query->whereIn("expert_id", $expert_ids);
+                })
+                ->when(request()->filled("customer_ids"), function ($query) {
+                    $customer_ids = explode(',', request()->customer_ids);
+                    $query->whereIn("customer_id", $customer_ids);
+                })
+
+
                 ->when(request()->filled("start_price"), function ($query) {
                     $query->where("bookings.final_price",">=", request()->input("start_price"));
                 })
@@ -2087,14 +2098,8 @@ public function changeMultipleBookingStatuses(Request $request)
              }
 
 
-             $users = User::with(['bookings' => function($query) {
-                $query->join('booking_sub_services', 'bookings.id', '=', 'booking_sub_services.booking_id')
-                    ->join('sub_services', 'booking_sub_services.sub_service_id', '=', 'sub_services.id')
-                    ->where('bookings.garage_id', auth()->user()->business_id)
-                    ->select('bookings.customer_id', 'sub_services.id', 'sub_services.name')
-                    ->distinct();  // Ensure unique sub-services per booking
-            }])
-            ->withCount([
+             $users = User::
+            withCount([
                 'bookings as completed_booking_count' => function ($query) {
                     $query
                     ->where('bookings.garage_id', auth()->user()->business_id)
@@ -2286,6 +2291,15 @@ public function changeMultipleBookingStatuses(Request $request)
          if ($request->filled("id") && empty($users)) {
              throw new Exception("No data found", 404);
          }
+
+         if ($request->filled("id")) {
+        $users =  $this->addCustomerData($users);
+        } else {
+foreach($users as $user) {
+    $user = $this->addCustomerData($user);
+}
+        }
+
 
          return response()->json($users, 200);
 

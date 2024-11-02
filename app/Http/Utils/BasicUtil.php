@@ -9,7 +9,9 @@ use App\Models\ExpertRota;
 use App\Models\GarageTime;
 use App\Models\NotificationSetting;
 use App\Models\ReviewNew;
+use App\Models\Service;
 use App\Models\SlotHold;
+use App\Models\SubService;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -17,6 +19,14 @@ use Illuminate\Support\Facades\Http;
 
 trait BasicUtil
 {
+
+
+    public function addCustomerData($user){
+          $user->bookings = $user->bookings;
+          $user->sub_services = SubService::whereHas("booking", function ($query) use($user) {
+                $query->where("bookings.customer_id",$user->id);
+          });
+    }
 
     public static function getNotificationRecipients($booking)
 {

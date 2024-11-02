@@ -69,6 +69,11 @@ class SubService extends Model
     {
         return $this->hasMany(BookingSubService::class,"sub_service_id","id");
     }
+    public function booking()
+    {
+        return $this->belongsToMany(Booking::class,"booking_sub_services",'sub_service_id','booking_id');
+    }
+
 
     public function translation(){
         return $this->hasMany(SubServiceTranslation::class,'sub_service_id', 'id');
