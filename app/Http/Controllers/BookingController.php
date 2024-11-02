@@ -1865,147 +1865,147 @@ public function changeMultipleBookingStatuses(Request $request)
  *         in="query",
  *         description="Number of results per page",
  *         required=true,
- *         example="6"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="start_date",
  *         in="query",
  *         description="Filter by user creation start date (YYYY-MM-DD)",
  *         required=false,
- *         example="2019-06-29"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="end_date",
  *         in="query",
  *         description="Filter by user creation end date (YYYY-MM-DD)",
  *         required=false,
- *         example="2019-06-29"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="search_key",
  *         in="query",
  *         description="Keyword for searching users by name, email, or phone",
  *         required=false,
- *         example="search_key"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="rating",
  *         in="query",
  *         description="Filter by review rating",
  *         required=false,
- *         example="5"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="frequency_visit",
  *         in="query",
  *         description="Visit frequency category (New, Regular, VIP)",
  *         required=false,
- *         example="Regular"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="review_start_date",
  *         in="query",
  *         description="Filter reviews by start date (YYYY-MM-DD)",
  *         required=false,
- *         example="2019-06-29"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="review_end_date",
  *         in="query",
  *         description="Filter reviews by end date (YYYY-MM-DD)",
  *         required=false,
- *         example="2019-06-29"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="review_keyword",
  *         in="query",
  *         description="Keyword to search within review comments",
  *         required=false,
- *         example="Great service"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="frequency_visit",
  *         in="query",
  *         description="Filter users based on visit frequency",
  *         required=false,
- *         example="Regular"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="status",
  *         in="query",
  *         description="Comma-separated list of booking statuses",
  *         required=false,
- *         example="completed,cancelled"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="payment_status",
  *         in="query",
  *         description="Comma-separated list of payment statuses",
  *         required=false,
- *         example="paid,unpaid"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="sub_service_ids",
  *         in="query",
  *         description="Comma-separated list of sub-service IDs",
  *         required=false,
- *         example="1,2,3"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="duration_in_minute",
  *         in="query",
  *         description="Filter by booking duration in minutes",
  *         required=false,
- *         example="30"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="booking_type",
  *         in="query",
  *         description="Comma-separated list of booking types",
  *         required=false,
- *         example="online,walk-in"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="date_filter",
  *         in="query",
  *         description="Filter bookings by date (e.g., today, this_week, previous_week, this_month, etc.)",
  *         required=false,
- *         example="today"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="name",
  *         in="query",
  *         description="Filter users by name",
  *         required=false,
- *         example="John"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="email",
  *         in="query",
  *         description="Filter users by email",
  *         required=false,
- *         example="example@example.com"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="phone",
  *         in="query",
  *         description="Filter users by phone number",
  *         required=false,
- *         example="1234567890"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="last_visited_date",
  *         in="query",
  *         description="Filter users by last visited date (YYYY-MM-DD)",
  *         required=false,
- *         example="2019-06-29"
+ *         example=""
  *     ),
  *     @OA\Parameter(
  *         name="order_by",
  *         in="query",
  *         description="Sort order for users (ASC or DESC)",
  *         required=false,
- *         example="ASC"
+ *         example=""
  *     ),
      *      summary="This method is to get  bookings ",
      *      description="This method is to get bookings",
