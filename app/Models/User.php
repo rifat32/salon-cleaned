@@ -82,7 +82,10 @@ class User extends Authenticatable
         return $this->bookings()->latest()->limit(1);
     }
 
-
+    public function reviews()
+    {
+        return $this->hasMany(ReviewNew::class, 'user_id', 'id');
+    }
 
     public function services()
     {

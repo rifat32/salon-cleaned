@@ -1957,6 +1957,18 @@ public function changeMultipleBookingStatuses(Request $request)
                     // Adjust 'status' according to your actual status field
                 }
             ])
+            ->whereHas("reviews", function($query) {
+                // Filter by rating if provided
+                $query->when(request()->filled('rating'), function($q) {
+                    $q->where('review_news.rate', request()->input('rating'));
+                })
+                ->when(request()->filled('review_start_date') && request()->filled('review_end_date'), function($q) {
+                    $q->whereBetween('review_news.updated_at', [request()->input('review_start_date'), request()->input('review_end_date')]);
+                })
+                ->when(request()->filled('review_keyword'), function($q) {
+                    $q->where('review_news.comment', 'like', '%' . request('review_keyword') . '%');
+                });
+            })
             ->when(request()->has('frequency_visit'), function ($q) {
                 $frequency = request()->input('frequency_visit');
                  $q->whereHas("bookings.customer", function ($subQuery) use ($frequency) {
@@ -1979,6 +1991,28 @@ public function changeMultipleBookingStatuses(Request $request)
                         "expert_id" => request()->input("expert_id")
                     ]);
                 })
+                ->when(request()->filled("payment_type"), function($query) {
+                    $query
+                    ->whereHas("booking_payments", function($query) {
+                        $payment_typeArray = explode(',', request()->payment_type);
+                        $query->whereIn("job_payments.payment_type", $payment_typeArray);
+                    });
+
+                })
+                ->when(request()->filled("discount_applied"), function($query) {
+                    if(request()->boolean("discount_applied")){
+                        $query->where(function($query) {
+                             $query->where("discount_amount",">",0)
+                             ->orWhere("coupon_discount_amount",">",0);
+                        });
+                    }else {
+                        $query->where(function($query) {
+                            $query->where("discount_amount","<=",0)
+                            ->orWhere("coupon_discount_amount","<=",0);
+                       });
+                    }
+
+                })
                 ->when(!empty($request->status), function($query) use ($request) {
                     $statusArray = explode(',', $request->status);
                     return $query->whereIn("status", $statusArray);
@@ -1987,6 +2021,35 @@ public function changeMultipleBookingStatuses(Request $request)
                     $statusArray = explode(',', $request->payment_status);
                     return $query->whereIn("payment_status", $statusArray);
                 })
+                ->when(!empty($request->expert_id), function ($query) use ($request) {
+                    return $query->whereHas('bookings', function($query){
+                     return $query->where('bookings.expert_id', request()->input("expert_id"));
+                    });
+                })
+
+                ->when(!empty(request()->sub_service_ids), function ($query) {
+                    $sub_service_ids = explode(',', request()->sub_service_ids);
+
+                    return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                        $query->whereIn('sub_services.id', $sub_service_ids)
+                            ->when(!empty(request()->service_ids), function ($query) {
+                                $service_ids = explode(',', request()->service_ids);
+
+                                return $query->whereHas('service', function ($query) use ($service_ids) {
+                                    return $query->whereIn('services.id', $service_ids);
+                                });
+                            });
+                    });
+                })
+                ->when(request()->filled("duration_in_minute"), function ($query) {
+                    $total_slots = request()->input("duration_in_minute") / 15;
+                    $query->having('total_booked_slots', '>', $total_slots);
+                })
+              ->when(!empty($request->booking_type), function ($query) use ($request) {
+                    $booking_typeArray = explode(',', $request->booking_type);
+                    $query->whereIn("booking_type", $booking_typeArray);
+                })
+
                 ->when($request->date_filter === 'today', function($query) {
                     return $query->whereDate('bookings.job_start_date', Carbon::today());
                 })
@@ -2030,26 +2093,7 @@ public function changeMultipleBookingStatuses(Request $request)
                  return $query->where('bookings.job_start_date', request()->input("last_visited_date"));
                 });
             })
-            ->when(!empty($request->expert_id), function ($query) use ($request) {
-                return $query->whereHas('bookings', function($query){
-                 return $query->where('bookings.expert_id', request()->input("expert_id"));
-                });
-            })
 
-            ->when(!empty(request()->sub_service_ids), function ($query) {
-                $sub_service_ids = explode(',', request()->sub_service_ids);
-
-                return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
-                    $query->whereIn('sub_services.id', $sub_service_ids)
-                        ->when(!empty(request()->service_ids), function ($query) {
-                            $service_ids = explode(',', request()->service_ids);
-
-                            return $query->whereHas('service', function ($query) use ($service_ids) {
-                                return $query->whereIn('services.id', $service_ids);
-                            });
-                        });
-                });
-            })
              ->when(!empty($request->search_key), function ($query) use ($request) {
                  return $query->where(function ($query) use ($request) {
                      $term = $request->search_key;

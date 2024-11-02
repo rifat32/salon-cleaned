@@ -100,5 +100,15 @@ add duration_in_minute integer filter for the revenue
 frequency_visit(New,Regular,VIP)
 service_ids
 sub_service_ids
+duration_in_minute
+expert_id
+status
+booking_type
+payment_status
+payment_type array(cash, card, change)
+discount_applied boolean
+rating
+review_start_date
+review_end_date
 
 

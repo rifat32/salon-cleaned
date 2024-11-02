@@ -1304,7 +1304,6 @@ class JobController extends Controller
                 "bookings.customer",
                 "bookings.sub_services"
             ])
-
             ->when(request()->filled("payment_type"), function($query) {
                 $payment_typeArray = explode(',', request()->payment_type);
                 $query->whereIn("job_payments.payment_type", $payment_typeArray);

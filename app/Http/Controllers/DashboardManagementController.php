@@ -1822,7 +1822,7 @@ class DashboardManagementController extends Controller
 {
     return JobPayment::
     when(request()->filled("payment_type"), function($query) {
-        $payment_typeArray = explode(',', request()->status);
+        $payment_typeArray = explode(',', request()->payment_type);
         $query->whereIn("job_payments.payment_type", $payment_typeArray);
     })
     ->whereHas("bookings.customer", function ($query) use ($is_walk_in_customer) {
