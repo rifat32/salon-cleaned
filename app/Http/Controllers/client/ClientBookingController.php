@@ -1037,7 +1037,7 @@ class ClientBookingController extends Controller
                 ->where([
                     "customer_id" => $request->user()->id
                 ])
-                ->when(request()->input("expert_id"), function ($query) {
+                ->when(request()->filled("expert_id"), function ($query) {
                     $query->where([
                         "expert_id" => request()->input("expert_id")
                     ]);

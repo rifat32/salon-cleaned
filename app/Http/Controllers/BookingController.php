@@ -1708,6 +1708,16 @@ public function changeMultipleBookingStatuses(Request $request)
      * required=true,
      * example="search_key"
      * ),
+     * * *  @OA\Parameter(
+     * name="start_price",
+     * in="query",
+     * description="start_price"
+     * ),
+     *  * * *  @OA\Parameter(
+     * name="end_price",
+     * in="query",
+     * description="end_price"
+     * ),
      *      summary="This method is to get  bookings ",
      *      description="This method is to get bookings",
      *
@@ -1772,27 +1782,39 @@ public function changeMultipleBookingStatuses(Request $request)
                 ->where([
                     "garage_id" => auth()->user()->business_id
                 ])
-                ->when(request()->input("booking_id"), function ($query) {
+                ->when(request()->filled("booking_id"), function ($query) {
                     $query->where([
                         "id" => request()->input("booking_id")
                     ]);
                 })
-                ->when(request()->input("expert_id"), function ($query) {
+                ->when(request()->filled("expert_id"), function ($query) {
                     $query->where([
                         "expert_id" => request()->input("expert_id")
                     ]);
                 })
-                ->when(request()->input("customer_id"), function ($query) {
+                ->when(request()->filled("start_price"), function ($query) {
+                    $query->where("bookings.final_price",">=", request()->input("start_price"));
+                })
+                ->when(request()->filled("end_price"), function ($query) {
+                    $query->where("bookings.final_price","<=", request()->input("end_price"));
+                })
+                ->when(request()->filled("customer_id"), function ($query) {
                     $query->where([
                         "customer_id" => request()->input("customer_id")
                     ]);
                 })
-                ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
-
+                ->when(!empty(request()->sub_service_ids), function ($query) {
                     $sub_service_ids = explode(',', request()->sub_service_ids);
 
-                    return $query->whereHas('booking_sub_services', function($query) use($sub_service_ids){
-                     return $query->whereIn('booking_sub_services.id', $sub_service_ids);
+                    return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                        $query->whereIn('sub_services.id', $sub_service_ids)
+                            ->when(!empty(request()->service_ids), function ($query) {
+                                $service_ids = explode(',', request()->service_ids);
+
+                                return $query->whereHas('service', function ($query) use ($service_ids) {
+                                    return $query->whereIn('services.id', $service_ids);
+                                });
+                            });
                     });
                 });
 
@@ -2124,7 +2146,7 @@ public function changeMultipleBookingStatuses(Request $request)
             ->whereHas("bookings", function($query) use($request) {
                 $query->where("bookings.garage_id", auth()->user()->business_id)
 
-                ->when(request()->input("expert_id"), function ($query) {
+                ->when(request()->filled("expert_id"), function ($query) {
                     $query->where([
                         "expert_id" => request()->input("expert_id")
                     ]);
@@ -2372,7 +2394,7 @@ public function changeMultipleBookingStatuses(Request $request)
             ])
             ->whereHas("bookings", function($query) use($request) {
                 $query->where("bookings.garage_id", auth()->user()->business_id)
-                ->when(request()->input("expert_id"), function ($query) {
+                ->when(request()->filled("expert_id"), function ($query) {
                     $query->where([
                         "expert_id" => request()->input("expert_id")
                     ]);
