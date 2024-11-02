@@ -5155,147 +5155,147 @@
                         "in": "query",
                         "description": "Number of results per page",
                         "required": true,
-                        "example": "6"
+                        "example": ""
                     },
                     {
                         "name": "start_date",
                         "in": "query",
                         "description": "Filter by user creation start date (YYYY-MM-DD)",
                         "required": false,
-                        "example": "2019-06-29"
+                        "example": ""
                     },
                     {
                         "name": "end_date",
                         "in": "query",
                         "description": "Filter by user creation end date (YYYY-MM-DD)",
                         "required": false,
-                        "example": "2019-06-29"
+                        "example": ""
                     },
                     {
                         "name": "search_key",
                         "in": "query",
                         "description": "Keyword for searching users by name, email, or phone",
                         "required": false,
-                        "example": "search_key"
+                        "example": ""
                     },
                     {
                         "name": "rating",
                         "in": "query",
                         "description": "Filter by review rating",
                         "required": false,
-                        "example": "5"
+                        "example": ""
                     },
                     {
                         "name": "frequency_visit",
                         "in": "query",
                         "description": "Visit frequency category (New, Regular, VIP)",
                         "required": false,
-                        "example": "Regular"
+                        "example": ""
                     },
                     {
                         "name": "review_start_date",
                         "in": "query",
                         "description": "Filter reviews by start date (YYYY-MM-DD)",
                         "required": false,
-                        "example": "2019-06-29"
+                        "example": ""
                     },
                     {
                         "name": "review_end_date",
                         "in": "query",
                         "description": "Filter reviews by end date (YYYY-MM-DD)",
                         "required": false,
-                        "example": "2019-06-29"
+                        "example": ""
                     },
                     {
                         "name": "review_keyword",
                         "in": "query",
                         "description": "Keyword to search within review comments",
                         "required": false,
-                        "example": "Great service"
+                        "example": ""
                     },
                     {
                         "name": "frequency_visit",
                         "in": "query",
                         "description": "Filter users based on visit frequency",
                         "required": false,
-                        "example": "Regular"
+                        "example": ""
                     },
                     {
                         "name": "status",
                         "in": "query",
                         "description": "Comma-separated list of booking statuses",
                         "required": false,
-                        "example": "completed,cancelled"
+                        "example": ""
                     },
                     {
                         "name": "payment_status",
                         "in": "query",
                         "description": "Comma-separated list of payment statuses",
                         "required": false,
-                        "example": "paid,unpaid"
+                        "example": ""
                     },
                     {
                         "name": "sub_service_ids",
                         "in": "query",
                         "description": "Comma-separated list of sub-service IDs",
                         "required": false,
-                        "example": "1,2,3"
+                        "example": ""
                     },
                     {
                         "name": "duration_in_minute",
                         "in": "query",
                         "description": "Filter by booking duration in minutes",
                         "required": false,
-                        "example": "30"
+                        "example": ""
                     },
                     {
                         "name": "booking_type",
                         "in": "query",
                         "description": "Comma-separated list of booking types",
                         "required": false,
-                        "example": "online,walk-in"
+                        "example": ""
                     },
                     {
                         "name": "date_filter",
                         "in": "query",
                         "description": "Filter bookings by date (e.g., today, this_week, previous_week, this_month, etc.)",
                         "required": false,
-                        "example": "today"
+                        "example": ""
                     },
                     {
                         "name": "name",
                         "in": "query",
                         "description": "Filter users by name",
                         "required": false,
-                        "example": "John"
+                        "example": ""
                     },
                     {
                         "name": "email",
                         "in": "query",
                         "description": "Filter users by email",
                         "required": false,
-                        "example": "example@example.com"
+                        "example": ""
                     },
                     {
                         "name": "phone",
                         "in": "query",
                         "description": "Filter users by phone number",
                         "required": false,
-                        "example": "1234567890"
+                        "example": ""
                     },
                     {
                         "name": "last_visited_date",
                         "in": "query",
                         "description": "Filter users by last visited date (YYYY-MM-DD)",
                         "required": false,
-                        "example": "2019-06-29"
+                        "example": ""
                     },
                     {
                         "name": "order_by",
                         "in": "query",
                         "description": "Sort order for users (ASC or DESC)",
                         "required": false,
-                        "example": "ASC"
+                        "example": ""
                     }
                 ],
                 "responses": {
@@ -7161,16 +7161,80 @@
                     {
                         "name": "start_date",
                         "in": "query",
-                        "description": "start_date",
-                        "required": true,
-                        "example": "6"
+                        "description": "Start date for filtering bookings",
+                        "required": true
                     },
                     {
                         "name": "end_date",
                         "in": "query",
-                        "description": "end_date",
-                        "required": true,
-                        "example": "6"
+                        "description": "End date for filtering bookings",
+                        "required": true
+                    },
+                    {
+                        "name": "expert_id",
+                        "in": "query",
+                        "description": "ID of the expert to filter bookings",
+                        "required": false
+                    },
+                    {
+                        "name": "slots",
+                        "in": "query",
+                        "description": "Comma-separated list of slots to filter bookings",
+                        "required": false
+                    },
+                    {
+                        "name": "is_returning_customers",
+                        "in": "query",
+                        "description": "Filter for returning customers",
+                        "required": false
+                    },
+                    {
+                        "name": "payment_type",
+                        "in": "query",
+                        "description": "Comma-separated list of payment types to filter bookings",
+                        "required": false
+                    },
+                    {
+                        "name": "discount_applied",
+                        "in": "query",
+                        "description": "Filter for bookings with or without discounts",
+                        "required": false
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Comma-separated list of statuses to filter bookings",
+                        "required": false
+                    },
+                    {
+                        "name": "payment_status",
+                        "in": "query",
+                        "description": "Comma-separated list of payment statuses to filter bookings",
+                        "required": false
+                    },
+                    {
+                        "name": "sub_service_ids",
+                        "in": "query",
+                        "description": "Comma-separated list of sub-service IDs to filter bookings",
+                        "required": false
+                    },
+                    {
+                        "name": "duration_in_minute",
+                        "in": "query",
+                        "description": "Duration in minutes to filter bookings",
+                        "required": false
+                    },
+                    {
+                        "name": "booking_type",
+                        "in": "query",
+                        "description": "Comma-separated list of booking types to filter bookings",
+                        "required": false
+                    },
+                    {
+                        "name": "date_filter",
+                        "in": "query",
+                        "description": "Filter bookings by date range options",
+                        "required": false
                     }
                 ],
                 "responses": {
