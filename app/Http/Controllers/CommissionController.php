@@ -93,14 +93,16 @@ class CommissionController extends Controller
 
         if (!$commissionSetting) {
             commissionSetting::create($request_data);
-        }
-
-              $commissionSetting->fill(collect($request_data)->only([
+        } else {
+            $commissionSetting->fill(collect($request_data)->only([
                 'target_amount',
                 'commission_percentage',
                 'frequency',
               ])->toArray());
               $commissionSetting->save();
+        }
+
+
 
 
            return response()->json($commissionSetting, 200);

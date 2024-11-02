@@ -47,6 +47,9 @@ class CreateBookingsTable extends Migration
 
             $table->enum("tip_type",['fixed', 'percentage'])->default("fixed")->nullable();
             $table->double("tip_amount")->nullable()->default(0);
+            $table->double("vat_percentage")->nullable()->default(0);
+            $table->double("vat_amount")->nullable()->default(0);
+
 
 
 

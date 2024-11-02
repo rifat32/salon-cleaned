@@ -225,16 +225,12 @@ class ClientBookingController extends Controller
                         throw new Exception(json_encode($error), 422);
                     }
 
-
                     $total_price += $garage_package->price;
-
                     $booking->booking_packages()->create([
                         "garage_package_id" => $garage_package->id,
                         "price" => $garage_package->price
                     ]);
                 }
-
-
 
                 $booking->price = $total_price;
                 $booking->save();
@@ -247,11 +243,9 @@ class ClientBookingController extends Controller
                     );
 
                     if ($coupon_discount["success"]) {
-
                         $booking->coupon_discount_type = $coupon_discount["discount_type"];
                         $booking->coupon_discount_amount = $coupon_discount["discount_amount"];
                         $booking->coupon_code = $request_data["coupon_code"];
-
                         $booking->save();
 
                         Coupon::where([
@@ -269,18 +263,28 @@ class ClientBookingController extends Controller
                     }
                 }
                 $booking->final_price = $booking->price;
-                $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
-                $booking->final_price -= $this->canculate_discounted_price(
+                $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
+                $booking->final_price -= $this->canculate_discount_amount(
                     $booking->price,
                     $booking->coupon_discount_type,
-
                     $booking->coupon_discount_amount
                 );
-                $booking->final_price += $this->canculate_discounted_price(
+
+              $vat_information = $this->calculate_vat(
+                    $booking->final_price,
+                    $booking->business_id,
+                );
+                $booking->vat_percentage += $vat_information["vat_percentage"];
+                $booking->vat_amount += $vat_information["vat_amount"];
+                $booking->final_price += $vat_information["vat_amount"];
+
+                $booking->final_price += $this->canculate_discount_amount(
                     $booking->price,
                     $booking->tip_type,
                     $booking->tip_amount
                 );
+
+
 
 
                 $booking->save();
@@ -347,12 +351,12 @@ class ClientBookingController extends Controller
                     // Set Stripe client
                     $stripe = new \Stripe\StripeClient($stripeSetting->STRIPE_SECRET);
 
-                    $discount = $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
-                    $coupon_discount = $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+                    $discount = $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
+                    $coupon_discount = $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
 
                     $total_discount = $discount + $coupon_discount;
 
-                    $tipAmount = $this->canculate_discounted_price(
+                    $tipAmount = $this->canculate_discount_amount(
                         $booking->price,
                         $booking->tip_type,
                         $booking->tip_amount
@@ -811,11 +815,11 @@ class ClientBookingController extends Controller
 
 
                 $booking->final_price = $booking->price;
-                $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
+                $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
 
-                $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+                $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
 
-                $booking->final_price += $this->canculate_discounted_price(
+                $booking->final_price += $this->canculate_discount_amount(
                     $booking->price,
                     $booking->tip_type,
                     $booking->tip_amount

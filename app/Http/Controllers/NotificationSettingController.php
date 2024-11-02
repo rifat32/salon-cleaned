@@ -95,16 +95,18 @@ class NotificationSettingController extends Controller
 
         if (!$notificationSetting) {
             NotificationSetting::create($request_data);
-        }
-
-
-              $notificationSetting->fill(collect($request_data)->only([
+        } else {
+            $notificationSetting->fill(collect($request_data)->only([
                 'notify_expert',
                 'notify_customer',
                 'notify_receptionist',
                 'notify_business_owner'
               ])->toArray());
               $notificationSetting->save();
+        }
+
+
+
 
 
            return response()->json($notificationSetting, 200);

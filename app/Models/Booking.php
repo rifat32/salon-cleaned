@@ -34,9 +34,6 @@ class Booking extends Model
         "tip_amount",
         "created_by",
         "created_from"
-
-
-
     ];
     protected $casts = [
         'booked_slots' => 'array',

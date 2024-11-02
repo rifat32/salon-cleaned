@@ -75,12 +75,12 @@ class BookingController extends Controller
         // Set Stripe client
         $stripe = new \Stripe\StripeClient($stripeSetting->STRIPE_SECRET);
 
-        $discount = $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
-        $coupon_discount = $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+        $discount = $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
+        $coupon_discount = $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
 
         $total_discount = $discount + $coupon_discount;
 
-        $totalTip = $this->canculate_discounted_price(
+        $totalTip = $this->canculate_discount_amount(
             $booking->price,
             $booking->tip_type,
             $booking->tip_amount
@@ -279,12 +279,12 @@ class BookingController extends Controller
             $user->save();
         }
 
-        $discount = $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
-        $coupon_discount = $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+        $discount = $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
+        $coupon_discount = $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
 
         $total_discount = $discount + $coupon_discount;
 
-        $totalTip = $this->canculate_discounted_price(
+        $totalTip = $this->canculate_discount_amount(
             $booking->price,
             $booking->tip_type,
             $booking->tip_amount
@@ -598,11 +598,20 @@ class BookingController extends Controller
 
             $booking->final_price = $booking->price;
 
-            $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
+            $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
 
-            $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+            $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
 
-            $booking->final_price += $this->canculate_discounted_price(
+            $vat_information = $this->calculate_vat(
+                $booking->final_price,
+                $booking->business_id,
+
+            );
+            $booking->vat_percentage += $vat_information["vat_percentage"];
+            $booking->vat_amount += $vat_information["vat_amount"];
+            $booking->final_price += $vat_information["vat_amount"];
+
+            $booking->final_price += $this->canculate_discount_amount(
                 $booking->price,
                 $booking->tip_type,
                 $booking->tip_amount
@@ -922,9 +931,9 @@ $booking = $booking->load(["payments"]);
 
 
                 $booking->final_price = $booking->price;
-                $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->discount_type, $booking->discount_amount);
-                $booking->final_price -= $this->canculate_discounted_price($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
-                $booking->final_price += $this->canculate_discounted_price(
+                $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
+                $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+                $booking->final_price += $this->canculate_discount_amount(
                     $booking->price,
                     $booking->tip_type,
                     $booking->tip_amount

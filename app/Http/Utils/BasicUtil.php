@@ -3,6 +3,7 @@
 namespace App\Http\Utils;
 
 use App\Models\Booking;
+use App\Models\BusinessSetting;
 use App\Models\Coupon;
 use App\Models\ExpertRota;
 use App\Models\GarageTime;
@@ -270,15 +271,32 @@ trait BasicUtil
         ];
     }
 
+    public function calculate_vat($total_price,$business_id){
+        $business_setting = BusinessSetting::where([
+            "business_id" => $business_id
+        ])
+        ->first();
+        if(empty($business_setting) || empty($business_setting->vat_enabled)) {
+           return [
+            "vat_percentage" => 0,
+            "vat_amount" => 0
+           ];
+        }
+        return [
+            "vat_percentage" => $business_setting->vat_percentage,
+            "vat_amount" => ($total_price / 100) * $business_setting->vat_percentage
+           ];
+        return ;
+    }
 
 
-    public function canculate_discounted_price($total_price, $discount_type, $discount_amount)
+    public function canculate_discount_amount($total_price, $discount_type, $discount_amount)
     {
         if (!empty($discount_type) && !empty($discount_amount)) {
             if ($discount_type == "fixed") {
-                return round($discount_amount, 2);
+                return $discount_amount;
             } else if ($discount_type == "percentage") {
-                return round((($total_price / 100) * $discount_amount), 2);
+                return ($total_price / 100) * $discount_amount;
             } else {
                 return 0;
             }

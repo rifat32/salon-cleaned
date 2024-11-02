@@ -149,28 +149,32 @@ where([
 
 if (!$busunessSetting) {
     BusinessSetting::create($request_data);
+} else {
+
+
+    $busunessSetting->fill(collect($request_data)->only([
+        'STRIPE_KEY',
+        "STRIPE_SECRET",
+        "business_id",
+        'stripe_enabled',
+        'is_expert_price',
+        'is_auto_booking_approve',
+        'allow_pay_after_service',
+        'allow_expert_booking',
+        'allow_expert_self_busy',
+        'allow_expert_booking_cancel',
+        'allow_expert_view_revenue',
+        'allow_expert_view_customer_details',
+        'allow_receptionist_add_question',
+        'default_currency',
+        'default_language',
+        'vat_enabled',
+        'vat_percentage'
+      ])->toArray());
+      $busunessSetting->save();
 }
 
-              $busunessSetting->fill(collect($request_data)->only([
-                'STRIPE_KEY',
-                "STRIPE_SECRET",
-                "business_id",
-                'stripe_enabled',
-                'is_expert_price',
-                'is_auto_booking_approve',
-                'allow_pay_after_service',
-                'allow_expert_booking',
-                'allow_expert_self_busy',
-                'allow_expert_booking_cancel',
-                'allow_expert_view_revenue',
-                'allow_expert_view_customer_details',
-                'allow_receptionist_add_question',
-                'default_currency',
-                'default_language',
-                'vat_enabled',
-                'vat_percentage'
-              ])->toArray());
-              $busunessSetting->save();
+
 
               $busunessSettingArray = $busunessSetting->toArray();
 
