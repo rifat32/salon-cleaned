@@ -1894,7 +1894,11 @@ class DashboardManagementController extends Controller
             })
             ->when($range === 'previous_month', function ($query) {
                 $query->whereBetween('bookings.job_start_date', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->endOfMonth()]);
-            });
+            })
+            ->when($range === 'all' && request()->filled("start_date") && request()->filled("end_date"), function ($query) {
+                $query->whereBetween('bookings.job_start_date', [request()->start_date, request()->end_date]);
+            })
+            ;
     })->sum('amount');
 }
     public function revenue($range = 'today',$expert_id=NULL)
@@ -2485,6 +2489,7 @@ class DashboardManagementController extends Controller
                 foreach ($experts as $expert) {
                       // Initialize an array for blocked slots
     $blockedSlots = []; // Separate variable for blocked slots
+    $appointment_trends = [];
 
     if (request()->filled("start_date") && request()->filled("end_date")) {
         $startDate = Carbon::parse(request()->input("start_date"));
@@ -2494,6 +2499,8 @@ class DashboardManagementController extends Controller
             // If start date and end date are the same, just add that date
             $formattedDate = $startDate->toDateString();
             $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
+            $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
+
         } else {
             // Generate the date range
             $date_range = $startDate->daysUntil($endDate->addDay());
@@ -2503,13 +2510,39 @@ class DashboardManagementController extends Controller
                 $formattedDate = $date->toDateString(); // You can customize the format as needed
                 // Populate blocked slots for each date
                 $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
+                $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
             }
         }
+
     }
 
 
 
     $expert->busy_slots = $blockedSlots;
+    $expert->appointment_trends = $appointment_trends;
+
+    $expert->feedbacks = ReviewNew::whereHas("booking", function($query) use($expert) {
+          $query->where("bookings.expert_id",$expert->id);
+    })
+    ->get();
+
+    $data["top_services"] = SubService::withCount([
+        'bookingSubServices as all_sales_count' => function ($query) use($expert) {
+             $query->whereHas('booking', function ($query) use($expert) {
+                 $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+                 ->when(auth()->user()->hasRole("business_experts"), function($query)  {
+                     $query->where('bookings.expert_id', auth()->user()->id);
+                })
+                ->where('bookings.expert_id', $expert->id); // Sales this month
+             });
+         }
+
+     ])
+         ->orderBy('all_sales_count', 'desc') // Sort by this month's sales
+         ->get();
+
+
+
 
                     // Use object property syntax instead of array-like syntax
                     $expert->today_bookings = $this->bookingsByStatus('today', $expert->id);
@@ -2520,9 +2553,7 @@ class DashboardManagementController extends Controller
                     $expert->previous_week_bookings = $this->bookingsByStatus('previous_week', $expert->id);
                     $expert->previous_month_bookings = $this->bookingsByStatus('previous_month', $expert->id);
 
-                    if (request()->filled("start_date") && request()->filled("end_date")) {
-                        $expert->by_date = $this->bookingsByStatus('all', $expert->id);
-                    }
+
 
                     $expert->today_revenue = $this->revenue('today', $expert->id);
                     $expert->this_week_revenue = $this->revenue('this_week', $expert->id);
@@ -2531,6 +2562,12 @@ class DashboardManagementController extends Controller
                     $expert->next_month_revenue = $this->revenue('next_month', $expert->id);
                     $expert->previous_week_revenue = $this->revenue('previous_week', $expert->id);
                     $expert->previous_month_revenue = $this->revenue('previous_month', $expert->id);
+
+                    if (request()->filled("start_date") && request()->filled("end_date")) {
+                        $expert->booking_by_date = $this->bookingsByStatus('all', $expert->id);
+                        $expert->revenue_by_date = $this->revenue('all', $expert->id);
+                    }
+
                 }
 
             $data["top_experts"] = $experts;

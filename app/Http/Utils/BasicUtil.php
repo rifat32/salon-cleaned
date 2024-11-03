@@ -21,6 +21,23 @@ use Illuminate\Support\Facades\Http;
 trait BasicUtil
 {
 
+public function get_appointment_trend_data($date, $expert_id){
+
+    $data["revenue"] = JobPayment::whereHas("bookings", function($query) use($expert_id, $date) {
+          $query->where("bookings.expert_id",$expert_id)
+          ->whereDate("bookings.job_start_date",$date)
+          ->where("bookings.status","converted_to_job")
+          ;
+    })
+    ->sum("amount");
+
+    $data["bookings"] = Booking::where("bookings.expert_id",$expert_id)
+    ->whereDate("bookings.job_start_date",$date)
+    ->where("bookings.status","converted_to_job")
+    ->count();
+}
+
+
 
     public function addCustomerData($user){
           $user->previous_bookings = Booking::with(
