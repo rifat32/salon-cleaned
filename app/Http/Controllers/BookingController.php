@@ -804,11 +804,11 @@ $booking = $booking->load(["payments"]);
                         "message" => "booking not found"
                     ], 404);
                 }
-
-                if ($booking->status === "converted_to_job") {
+                if ($booking->status == "converted_to_job" && $booking->payment_status == "complete") {
                     // Return an error response indicating that the status cannot be updated
-                    return response()->json(["message" => "Status cannot be updated because it is converted_to_job"], 422);
+                    return response()->json(["message" => "Status cannot be updated because it is completed"], 422);
                 }
+
 
                 $holidays = Holiday::
                 whereDate("start_date", "<=", $request_data["job_start_date"])
@@ -824,7 +824,7 @@ $booking = $booking->load(["payments"]);
 
 
 
-                $booking->update(collect($request_data)->only([
+                $booking->fill(collect($request_data)->only([
                     "status",
                     "job_start_date",
                     "discount_type",
@@ -835,7 +835,6 @@ $booking = $booking->load(["payments"]);
                     "next_visit_date",
                     "send_notification"
                 ])->toArray());
-
 
                 BookingSubService::where([
                     "booking_id" => $booking->id
@@ -934,6 +933,13 @@ $booking = $booking->load(["payments"]);
                 $booking->final_price = $booking->price;
                 $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
                 $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+                $vat_information = $this->calculate_vat(
+                    $booking->final_price,
+                    $booking->business_id,
+                );
+                $booking->vat_percentage += $vat_information["vat_percentage"];
+                $booking->vat_amount += $vat_information["vat_amount"];
+                $booking->final_price += $vat_information["vat_amount"];
                 $booking->final_price += $this->canculate_discount_amount(
                     $booking->price,
                     $booking->tip_type,

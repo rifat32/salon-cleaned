@@ -701,29 +701,31 @@ class ClientBookingController extends Controller
                         "conflicted_holidays" => $holidays
                     ], 409);
                 }
+           $booking = Booking::where(["id" => $request_data["id"]])->first();
+
+           if (!$booking) {
+            return response()->json([
+                "message" => "booking not found"
+            ], 404);
+        }
+           if ($booking->status != "pending") {
+            // Return an error response indicating that the status cannot be updated
+            return response()->json(["message" => "only pending booking can be deleted"], 422);
+        }
 
 
 
+        $booking->fill(collect($request_data)->only([
+            "garage_id",
+            "additional_information",
+            "coupon_code",
+            "expert_id",
+            "booked_slots",
+            "reason",
+        ])->toArray());
 
-                $booking  =  tap(Booking::where(["id" => $request_data["id"]]))->update(
-                    collect($request_data)->only([
-                        "garage_id",
-                        "additional_information",
-                        "coupon_code",
-                        "expert_id",
-                        "booked_slots",
-                        "reason",
 
-                    ])->toArray()
-                )
-                    // ->with("somthing")
 
-                    ->first();
-                if (!$booking) {
-                    return response()->json([
-                        "message" => "booking not found"
-                    ], 404);
-                }
                 BookingSubService::where([
                     "booking_id" => $booking->id
                 ])->delete();
@@ -819,6 +821,14 @@ class ClientBookingController extends Controller
                 $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
 
                 $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
+
+                $vat_information = $this->calculate_vat(
+                    $booking->final_price,
+                    $booking->business_id,
+                );
+                $booking->vat_percentage += $vat_information["vat_percentage"];
+                $booking->vat_amount += $vat_information["vat_amount"];
+                $booking->final_price += $vat_information["vat_amount"];
 
                 $booking->final_price += $this->canculate_discount_amount(
                     $booking->price,
