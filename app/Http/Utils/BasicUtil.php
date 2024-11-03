@@ -40,6 +40,14 @@ public function get_appointment_trend_data($date, $expert_id){
 
 
     public function addCustomerData($user){
+
+        $user->feedbacks = ReviewNew::whereHas("booking", function($query) use($user) {
+            $query->where("bookings.customer_id",$user->id);
+      })
+      ->get();
+
+
+
           $user->previous_bookings = Booking::with(
             "sub_services.service",
             "booking_packages.garage_package",
@@ -84,6 +92,11 @@ public function get_appointment_trend_data($date, $expert_id){
                  });
              }
          ])
+         ->with(['booking' => function ($query) {
+            $query->with(['expert' => function ($query) {
+                $query->select('users.id', 'users.first_Name', 'users.last_Name'); // Select expert details
+            }]);
+        }])
           ->whereHas("booking", function ($query) use($user) {
                 $query->where("bookings.customer_id",$user->id);
           })
@@ -105,7 +118,6 @@ public function get_appointment_trend_data($date, $expert_id){
             $query->where("bookings.customer_id",$user->id);
         })
         ->orderBy('all_booking_count', 'desc') // Order by the count of converted bookings
-        ->take(1) // Get the top expert
         ->get();
 
           $user->total_payment = JobPayment::whereHas("bookings", function($query) use($user) {

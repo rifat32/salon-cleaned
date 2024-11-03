@@ -804,7 +804,7 @@ $booking = $booking->load(["payments"]);
                         "message" => "booking not found"
                     ], 404);
                 }
-                
+
                 if ($booking->status == "converted_to_job" && $booking->payment_status == "complete") {
                     // Return an error response indicating that the status cannot be updated
                     return response()->json(["message" => "Status cannot be updated because it is completed"], 422);
@@ -2120,7 +2120,6 @@ public function changeMultipleBookingStatuses(Request $request)
                     // Adjust 'status' according to your actual status field
                 }
             ])
-
                 // Filter by rating if provided
                 ->when(request()->filled('rating'), function($q) {
                     $q->whereHas('reviews', function($query) {
