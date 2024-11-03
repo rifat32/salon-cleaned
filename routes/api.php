@@ -991,6 +991,8 @@ Route::get('/v1.0/business-owner-dashboard', [DashboardManagementController::cla
 
 Route::get("/v1.0/expert-report",[DashboardManagementController::class, "getExpertReport"]);
 
+Route::get("/v1.0/vat-report",[DashboardManagementController::class, "getVatReport"]);
+
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // end dashboard section
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
