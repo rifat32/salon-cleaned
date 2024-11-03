@@ -23,7 +23,37 @@ trait BasicUtil
 
 
     public function addCustomerData($user){
-          $user->bookings = $user->bookings;
+          $user->previous_bookings = Booking::with(
+            "sub_services.service",
+            "booking_packages.garage_package",
+            "expert",
+            "payments"
+          )
+          ->where("customer_id",$user->id)
+          ->whereDate("job_start_date","<=",now())
+          ->get();
+
+          $user->upcoming_bookings = Booking::with(
+            "sub_services.service",
+            "booking_packages.garage_package",
+            "expert",
+            "payments"
+          )
+          ->where("customer_id",$user->id)
+          ->whereDate("job_start_date",">",now())
+          ->get();
+
+          $user->reminder_bookings = Booking::with(
+            "sub_services.service",
+            "booking_packages.garage_package",
+            "expert",
+            "payments"
+          )
+          ->where("customer_id",$user->id)
+          ->whereDate("next_visit_date",">=",now())
+          ->get();
+
+
           $user->top_sub_services = SubService::
           withCount([
             'bookingSubServices as all_sales_count' => function ($query) use($user) {
@@ -89,6 +119,13 @@ trait BasicUtil
           ->get()
           ->sum("amount");
 
+          $user->change_payment = JobPayment::
+          whereHas("bookings", function($query) use($user) {
+            $query->where("bookings.customer_id",$user->id);
+          })
+          ->where("job_payments.payment_type","change")
+          ->get()
+          ->sum("amount");
 
 
           return $user;
