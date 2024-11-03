@@ -810,6 +810,20 @@ $booking = $booking->load(["payments"]);
                     return response()->json(["message" => "Status cannot be updated because it is completed"], 422);
                 }
 
+                if ($request_data["status"] == "check_in") {
+                    $check_in_booking = Booking::where([
+                        "expert_id" => $request_data["expert_id"],
+                        "status" => "check_in"
+                    ])->first();
+
+                    if (!empty($check_in_booking)) {
+                        // Return an error response indicating that the expert already has a check-in
+                        return response()->json([
+                            "message" => "The expert is already checked in for another booking. Please complete the current booking before checking into a new one.",
+                            "current_booking" => $check_in_booking // Optional: include current booking details
+                        ], 422);
+                    }
+                }
 
                 $holidays = Holiday::
                 whereDate("start_date", "<=", $request_data["job_start_date"])
@@ -1150,6 +1164,23 @@ if (!empty($recipientEmails)) {
                     // Return an error response indicating that the status cannot be updated
                     return response()->json(["message" => "Status cannot be updated because it is in cancelled status"], 422);
                 }
+
+
+                if ($request_data["status"] == "check_in") {
+                    $check_in_booking = Booking::where([
+                        "expert_id" => $booking->expert_id,
+                        "status" => "check_in"
+                    ])->first();
+
+                    if (!empty($check_in_booking)) {
+                        // Return an error response indicating that the expert already has a check-in
+                        return response()->json([
+                            "message" => "The expert is already checked in for another booking. Please complete the current booking before checking into a new one.",
+                            "current_booking" => $check_in_booking // Optional: include current booking details
+                        ], 422);
+                    }
+                }
+
 
 
 
