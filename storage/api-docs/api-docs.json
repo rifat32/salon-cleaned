@@ -5082,6 +5082,16 @@
                         "description": "search_key",
                         "required": true,
                         "example": "search_key"
+                    },
+                    {
+                        "name": "start_price",
+                        "in": "query",
+                        "description": "start_price"
+                    },
+                    {
+                        "name": "end_price",
+                        "in": "query",
+                        "description": "end_price"
                     }
                 ],
                 "responses": {
@@ -7161,80 +7171,199 @@
                     {
                         "name": "start_date",
                         "in": "query",
-                        "description": "Start date for filtering bookings",
-                        "required": true
+                        "description": "Start date for filtering bookings"
                     },
                     {
                         "name": "end_date",
                         "in": "query",
-                        "description": "End date for filtering bookings",
-                        "required": true
+                        "description": "End date for filtering bookings"
                     },
                     {
                         "name": "expert_id",
                         "in": "query",
-                        "description": "ID of the expert to filter bookings",
-                        "required": false
+                        "description": "ID of the expert to filter bookings"
                     },
                     {
                         "name": "slots",
                         "in": "query",
-                        "description": "Comma-separated list of slots to filter bookings",
-                        "required": false
+                        "description": "Comma-separated list of slots to filter bookings"
                     },
                     {
                         "name": "is_returning_customers",
                         "in": "query",
-                        "description": "Filter for returning customers",
-                        "required": false
+                        "description": "Filter for returning customers"
                     },
                     {
                         "name": "payment_type",
                         "in": "query",
-                        "description": "Comma-separated list of payment types to filter bookings",
-                        "required": false
+                        "description": "Comma-separated list of payment types to filter bookings"
                     },
                     {
                         "name": "discount_applied",
                         "in": "query",
-                        "description": "Filter for bookings with or without discounts",
-                        "required": false
+                        "description": "Filter for bookings with or without discounts"
                     },
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Comma-separated list of statuses to filter bookings",
-                        "required": false
+                        "description": "Comma-separated list of statuses to filter bookings"
                     },
                     {
                         "name": "payment_status",
                         "in": "query",
-                        "description": "Comma-separated list of payment statuses to filter bookings",
-                        "required": false
+                        "description": "Comma-separated list of payment statuses to filter bookings"
                     },
                     {
                         "name": "sub_service_ids",
                         "in": "query",
-                        "description": "Comma-separated list of sub-service IDs to filter bookings",
-                        "required": false
+                        "description": "Comma-separated list of sub-service IDs to filter bookings"
                     },
                     {
                         "name": "duration_in_minute",
                         "in": "query",
-                        "description": "Duration in minutes to filter bookings",
-                        "required": false
+                        "description": "Duration in minutes to filter bookings"
                     },
                     {
                         "name": "booking_type",
                         "in": "query",
-                        "description": "Comma-separated list of booking types to filter bookings",
-                        "required": false
+                        "description": "Comma-separated list of booking types to filter bookings"
                     },
                     {
                         "name": "date_filter",
                         "in": "query",
-                        "description": "Filter bookings by date range options",
-                        "required": false
+                        "description": "Filter bookings by date range options"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/vat-report": {
+            "get": {
+                "tags": [
+                    "dashboard_management"
+                ],
+                "summary": "get all dashboard data combined",
+                "description": "get all dashboard data combined",
+                "operationId": "getVatReport",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date for filtering bookings"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date for filtering bookings"
+                    },
+                    {
+                        "name": "expert_id",
+                        "in": "query",
+                        "description": "ID of the expert to filter bookings"
+                    },
+                    {
+                        "name": "slots",
+                        "in": "query",
+                        "description": "Comma-separated list of slots to filter bookings"
+                    },
+                    {
+                        "name": "is_returning_customers",
+                        "in": "query",
+                        "description": "Filter for returning customers"
+                    },
+                    {
+                        "name": "payment_type",
+                        "in": "query",
+                        "description": "Comma-separated list of payment types to filter bookings"
+                    },
+                    {
+                        "name": "discount_applied",
+                        "in": "query",
+                        "description": "Filter for bookings with or without discounts"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Comma-separated list of statuses to filter bookings"
+                    },
+                    {
+                        "name": "payment_status",
+                        "in": "query",
+                        "description": "Comma-separated list of payment statuses to filter bookings"
+                    },
+                    {
+                        "name": "sub_service_ids",
+                        "in": "query",
+                        "description": "Comma-separated list of sub-service IDs to filter bookings"
+                    },
+                    {
+                        "name": "duration_in_minute",
+                        "in": "query",
+                        "description": "Duration in minutes to filter bookings"
+                    },
+                    {
+                        "name": "booking_type",
+                        "in": "query",
+                        "description": "Comma-separated list of booking types to filter bookings"
+                    },
+                    {
+                        "name": "date_filter",
+                        "in": "query",
+                        "description": "Filter bookings by date range options"
                     }
                 ],
                 "responses": {
@@ -8769,6 +8898,92 @@
                         "description": "ids",
                         "required": true,
                         "example": "1,2,3"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/expert-attendances": {
+            "get": {
+                "tags": [
+                    "expert_attendances"
+                ],
+                "summary": "This method is to get expert rotas  ",
+                "description": "This method is to get expert rotas ",
+                "operationId": "getExpertAttendances",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true
+                    },
+                    {
+                        "name": "expert_id",
+                        "in": "query",
+                        "description": "expert_id",
+                        "required": true,
+                        "example": "ASC"
                     }
                 ],
                 "responses": {
@@ -33130,6 +33345,10 @@
         {
             "name": "expert_rotas",
             "description": "expert_rotas"
+        },
+        {
+            "name": "expert_attendances",
+            "description": "expert_attendances"
         },
         {
             "name": "fuel_station_management",

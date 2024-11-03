@@ -820,7 +820,7 @@ $booking = $booking->load(["payments"]);
                         // Return an error response indicating that the expert already has a check-in
                         return response()->json([
                             "message" => "The expert is already checked in for another booking. Please complete the current booking before checking into a new one.",
-                            "current_booking" => $check_in_booking // Optional: include current booking details
+                            "current_booking_id" => $check_in_booking->id // Optional: include current booking details
                         ], 422);
                     }
                 }
@@ -1176,7 +1176,7 @@ if (!empty($recipientEmails)) {
                         // Return an error response indicating that the expert already has a check-in
                         return response()->json([
                             "message" => "The expert is already checked in for another booking. Please complete the current booking before checking into a new one.",
-                            "current_booking" => $check_in_booking // Optional: include current booking details
+                            "current_booking_id" => $check_in_booking->id // Optional: include current booking details
                         ], 422);
                     }
                 }

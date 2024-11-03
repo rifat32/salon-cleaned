@@ -2485,24 +2485,15 @@ class DashboardManagementController extends Controller
                      $startDate = Carbon::parse(request()->input("start_date"));
                      $endDate = Carbon::parse(request()->input("end_date"));
 
-                     if ($startDate->isSameDay($endDate)) {
-                         // If start date and end date are the same, just add that date
-                         $formattedDate = $startDate->toDateString();
-                         $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
-                         $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
-                     } else {
-                         // Generate the date range
-                         $date_range = $startDate->daysUntil($endDate->addDay());
+                     $date_range = $startDate->isSameDay($endDate) ? [$startDate] : $startDate->daysUntil($endDate->addDay());
 
-                         foreach ($date_range as $date) {
-                             // Format the date to a string for array key
-                             $formattedDate = $date->toDateString(); // You can customize the format as needed
-                             // Populate blocked slots for each date
-                             $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
-                             $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
-                         }
+                     foreach ($date_range as $date) {
+                         $formattedDate = $date->toDateString(); // Format the date to a string for array key
+                         // Populate blocked slots for each date
+                         $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
+                         // Populate appointment trends for each date
+                         $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
                      }
-                 }
 
 
 

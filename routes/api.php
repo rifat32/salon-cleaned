@@ -159,6 +159,7 @@ Route::put('/v1.0/expert-rotas/toggle-active', [ExpertRotaController::class, "to
 Route::get('/v1.0/expert-rotas', [ExpertRotaController::class, "getExpertRotas"]);
 Route::delete('/v1.0/expert-rotas/{ids}', [ExpertRotaController::class, "deleteExpertRotasByIds"]);
 
+Route::get('/v1.0/expert-attendances', [ExpertRotaController::class, "getExpertAttendances"]);
 
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

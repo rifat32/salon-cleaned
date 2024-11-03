@@ -591,6 +591,10 @@ class ExpertRotaController extends Controller
              return $this->sendError($e, 500, $request);
          }
      }
+
+
+
+
     /**
      *
      * @OA\Get(
@@ -745,12 +749,7 @@ class ExpertRotaController extends Controller
                     });
                 })
 
-                ->when(!empty($request->start_date), function ($query) use ($request) {
-                    return $query->where('expert_rotas.created_at', ">=", $request->start_date);
-                })
-                ->when(!empty($request->end_date), function ($query) use ($request) {
-                    return $query->where('expert_rotas.created_at', "<=", ($request->end_date . ' 23:59:59'));
-                })
+
                 ->when(!empty($request->order_by) && in_array(strtoupper($request->order_by), ['ASC', 'DESC']), function ($query) use ($request) {
                     return $query->orderBy("expert_rotas.id", $request->order_by);
                 }, function ($query) {
@@ -848,26 +847,20 @@ class ExpertRotaController extends Controller
             $idsArray = explode(',', $ids);
             $existingIds = ExpertRota::whereIn('id', $idsArray)
                 ->where('expert_rotas.business_id', auth()->user()->business_id)
-
                 ->select('id')
                 ->get()
                 ->pluck('id')
                 ->toArray();
+
             $nonExistingIds = array_diff($idsArray, $existingIds);
 
             if (!empty($nonExistingIds)) {
-
                 return response()->json([
                     "message" => "Some or all of the specified data do not exist."
                 ], 404);
             }
 
-
-
-
-
             ExpertRota::destroy($existingIds);
-
 
             return response()->json(["message" => "data deleted sussfully", "deleted_ids" => $existingIds], 200);
         } catch (Exception $e) {
@@ -875,4 +868,149 @@ class ExpertRotaController extends Controller
             return $this->sendError($e, 500, $request);
         }
     }
+
+
+
+        /**
+     *
+     * @OA\Get(
+     *      path="/v1.0/expert-attendances",
+     *      operationId="getExpertAttendances",
+     *      tags={"expert_attendances"},
+     *       security={
+     *           {"bearerAuth": {}}
+     *       },
+
+
+     *         @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="start_date",
+     *         required=true,
+     *      ),
+     *         @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="end_date",
+     *         required=true,
+     *      ),
+     * *  @OA\Parameter(
+     * name="expert_id",
+     * in="query",
+     * description="expert_id",
+     * required=true,
+     * example="ASC",
+     * ),
+
+     *      summary="This method is to get expert rotas  ",
+     *      description="This method is to get expert rotas ",
+     *
+
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
+
+     public function getExpertAttendances(Request $request)
+     {
+         try {
+             $this->storeActivity($request, "DUMMY activity", "DUMMY description");
+             if (!$request->user()->hasPermissionTo('expert_rota_view')) {
+                 return response()->json([
+                     "message" => "You can not perform this action"
+                 ], 401);
+             }
+              // Validate required fields
+    $validated = $request->validate([
+        'start_date' => 'required|date',
+        'end_date' => 'required|date',
+        'expert_id' => 'required|integer'
+    ], [
+        'start_date.required' => 'The start date is required.',
+        'end_date.required' => 'The end date is required.',
+        'expert_id.required' => 'The expert ID is required.'
+    ]);
+
+
+    $expert_rotas = ExpertRota::where('expert_rotas.business_id', auth()->user()->business_id)
+    ->whereDate('expert_rotas.date', '>=', $validated['start_date'])
+    ->whereDate('expert_rotas.date', '<=', $validated['end_date'] )
+    ->where('expert_rotas.expert_id', $validated['expert_id'])
+    ->get();
+
+    $startDate = Carbon::parse($validated['start_date']);
+    $endDate = Carbon::parse($validated['end_date']);
+
+    $date_range = $startDate->isSameDay($endDate) ? [$startDate] : $startDate->daysUntil($endDate->addDay());
+
+    $attendances = collect();
+
+                     foreach ($date_range as $date) {
+                        $date = Carbon::parse($date);
+
+                      $expert_rota = $expert_rotas->first(function ($rota) use ($date) {
+                            $rota_date = Carbon::parse($rota->date);
+                            return $rota_date->isSameDay($date);
+                        });
+
+                        if(!empty($expert_rota)) {
+                            $attendances->push([
+                              "worked_hours" => (53 - count($expert_rota->busy_slots)) * 15,
+                              "date" => $date->toDateString()
+                            ]);
+                        } else {
+                            $attendances->push([
+                            "worked_hours" => 53 * 15,
+                            "date" => $date->toDateString()
+                            ]);
+                        }
+
+                     }
+
+
+
+
+             return response()->json($attendances->toArray(), 200);
+         } catch (Exception $e) {
+
+             return $this->sendError($e, 500, $request);
+         }
+     }
+
+
+
+
+
+
+
+
 }
