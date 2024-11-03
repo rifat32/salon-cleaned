@@ -2495,7 +2495,7 @@ class DashboardManagementController extends Controller
                          $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
                      }
 
-
+                    }
 
                  $expert->busy_slots = $blockedSlots;
                  $expert->appointment_trends = $appointment_trends;

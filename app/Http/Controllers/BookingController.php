@@ -819,8 +819,8 @@ $booking = $booking->load(["payments"]);
                     if (!empty($check_in_booking)) {
                         // Return an error response indicating that the expert already has a check-in
                         return response()->json([
-                            "message" => "The expert is already checked in for another booking. Please complete the current booking before checking into a new one.",
-                            "current_booking_id" => $check_in_booking->id // Optional: include current booking details
+                            "message" => "Expert " . ($check_in_booking->expert->first_Name . " " . $check_in_booking->expert->last_Name) . " already has a booking checked in on " . $check_in_booking->job_start_date . " at " . $check_in_booking->booked_slots[0] . " (Booking ID: " . $check_in_booking->id . "). Please complete that booking to start a new one.",
+                            "current_booking_id" => $check_in_booking->id,
                         ], 422);
                     }
                 }
@@ -1175,8 +1175,8 @@ if (!empty($recipientEmails)) {
                     if (!empty($check_in_booking)) {
                         // Return an error response indicating that the expert already has a check-in
                         return response()->json([
-                            "message" => "The expert is already checked in for another booking. Please complete the current booking before checking into a new one.",
-                            "current_booking_id" => $check_in_booking->id // Optional: include current booking details
+                            "message" => "Expert " . ($check_in_booking->expert->first_Name . " " . $check_in_booking->expert->last_Name) . " already has a booking checked in on " . $check_in_booking->job_start_date . " at " . $check_in_booking->booked_slots[0] . " (Booking ID: " . $check_in_booking->id . "). Please complete that booking to start a new one.",
+                            "current_booking_id" => $check_in_booking->id,
                         ], 422);
                     }
                 }
