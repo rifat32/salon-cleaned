@@ -1,21 +1,54 @@
 <?php
 
+
 namespace App\Models;
 
+use App\Http\Utils\DefaultQueryScopesTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductCategory extends Model
 {
-    use HasFactory,SoftDeletes;
-
+    use HasFactory, DefaultQueryScopesTrait;
     protected $fillable = [
-        "name",
-        "icon",
-        "description",
-        "image"
-        // "is_active",
+                    'name',
+                    'description',
 
+                  "is_active",
+
+
+
+        "business_id",
+        "created_by"
     ];
+
+    protected $casts = [
+
+
+
+
+
+
+  ];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
+

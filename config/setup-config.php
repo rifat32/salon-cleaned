@@ -97,10 +97,15 @@ return [
                 "fuel_station_gallery_delete",
 
 
+
                 "product_category_create",
                 "product_category_update",
+                                    "product_category_activate",
+
                 "product_category_view",
                 "product_category_delete",
+
+
 
                 "product_create",
                 "product_update",
@@ -164,7 +169,7 @@ return [
         [
             "role" => "garage_owner",
             "permissions" => [
-                
+
                 "template_create",
                 "template_update",
                 "template_view",
@@ -749,10 +754,15 @@ return [
 
 
 
+
         "product_category_create",
         "product_category_update",
+                            "product_category_activate",
+
         "product_category_view",
         "product_category_delete",
+
+
 
         "product_create",
         "product_update",

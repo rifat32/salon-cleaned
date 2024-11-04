@@ -15,12 +15,18 @@ class CreateProductCategoriesTable extends Migration
     {
         Schema::create('product_categories', function (Blueprint $table) {
             $table->id();
-            $table->string("name")->unique();
-            $table->string("icon")->nullable();
-            $table->text("description")->nullable();
-            $table->text("image")->nullable();
 
-            $table->boolean("is_active")->default(1);
+
+            $table->string('name');
+
+            $table->longText('description');
+            $table->boolean('is_active')->default(false);
+            
+            $table->foreignId('business_id')
+            ->constrained('businesses')
+            ->onDelete('cascade');
+
+            $table->unsignedBigInteger("created_by");
             $table->softDeletes();
             $table->timestamps();
         });

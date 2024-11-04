@@ -1,511 +1,552 @@
 <?php
 
+
+
+
+
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductCategoryCreateRequest;
 use App\Http\Requests\ProductCategoryUpdateRequest;
+use App\Http\Requests\GetIdRequest;
+use App\Http\Utils\BusinessUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Models\ProductCategory;
+use App\Models\DisabledProductCategory;
+use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductCategoryController extends Controller
 {
-    use ErrorUtil,UserActivityUtil;
+
+    use ErrorUtil, UserActivityUtil, BusinessUtil;
+
+
     /**
      *
-  * @OA\Post(
-  *      path="/v1.0/product-categories",
-  *      operationId="createProductCategory",
-  *      tags={"shop_section.product_category_management"},
- *       security={
-  *           {"bearerAuth": {}}
-  *       },
-  *      summary="This method is to store product category",
-  *      description="This method is to store product category",
-  *
-  *  @OA\RequestBody(
-  *         required=true,
-  *         @OA\JsonContent(
-  *            required={"name","icon","description"},
-  *    @OA\Property(property="name", type="string", format="string",example="car"),
-  *  *    @OA\Property(property="icon", type="string", format="string",example="fa fa tui halua kha"),
-  *    @OA\Property(property="description", type="string", format="string",example="car"),
-
-
-  *
-  *         ),
-  *      ),
-  *      @OA\Response(
-  *          response=200,
-  *          description="Successful operation",
-  *       @OA\JsonContent(),
-  *       ),
-  *      @OA\Response(
-  *          response=401,
-  *          description="Unauthenticated",
-  * @OA\JsonContent(),
-  *      ),
-  *        @OA\Response(
-  *          response=422,
-  *          description="Unprocesseble Content",
-  *    @OA\JsonContent(),
-  *      ),
-  *      @OA\Response(
-  *          response=403,
-  *          description="Forbidden",
-  *   @OA\JsonContent()
-  * ),
-  *  * @OA\Response(
-  *      response=400,
-  *      description="Bad Request",
-  *   *@OA\JsonContent()
-  *   ),
-  * @OA\Response(
-  *      response=404,
-  *      description="not found",
-  *   *@OA\JsonContent()
-  *   )
-  *      )
-  *     )
-  */
-
- public function createProductCategory(ProductCategoryCreateRequest $request)
- {
-     try{
-
-        $this->storeActivity($request,"");
-
-         if(!$request->user()->hasPermissionTo('product_category_create')){
-              return response()->json([
-                 "message" => "You can not perform this action"
-              ],401);
-         }
-
-         $request_data = $request->validated();
-
-         $product_category =  ProductCategory::create($request_data);
-
-
-
-         return response($product_category, 201);
-     } catch(Exception $e){
-         error_log($e->getMessage());
-     return $this->sendError($e,500,$request);
-     }
- }
-/**
+     * @OA\Post(
+     *      path="/v1.0/product-categories",
+     *      operationId="createProductCategory",
+     *      tags={"product_categories"},
+     *       security={
+     *           {"bearerAuth": {}}
+     *       },
+     *      summary="This method is to store product categories",
+     *      description="This method is to store product categories",
      *
-  * @OA\Put(
-  *      path="/v1.0/product-categories",
-  *      operationId="updateProductCategory",
-  *      tags={"shop_section.product_category_management"},
- *       security={
-  *           {"bearerAuth": {}}
-  *       },
-  *      summary="This method is to update Product Category",
-  *      description="This method is to update Product Category",
-  *
-  *  @OA\RequestBody(
-  *         required=true,
-  *         @OA\JsonContent(
-  *            required={"id","name","icon","description"},
-  *             @OA\Property(property="id", type="number", format="number",example="1"),
-  *             @OA\Property(property="name", type="string", format="string",example="car"),
-  *   *  *    @OA\Property(property="icon", type="string", format="string",example="fa fa-- tui halua kha"),
-  *             @OA\Property(property="description", type="string", format="string",example="description"),
+     *  @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     * @OA\Property(property="name", type="string", format="string", example="name"),
+     * @OA\Property(property="description", type="string", format="string", example="description"),
+     *
+     *
+     *
+     *         ),
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
 
-  *
-  *         ),
-  *      ),
-  *      @OA\Response(
-  *          response=200,
-  *          description="Successful operation",
-  *       @OA\JsonContent(),
-  *       ),
-  *      @OA\Response(
-  *          response=401,
-  *          description="Unauthenticated",
-  * @OA\JsonContent(),
-  *      ),
-  *        @OA\Response(
-  *          response=422,
-  *          description="Unprocesseble Content",
-  *    @OA\JsonContent(),
-  *      ),
-  *      @OA\Response(
-  *          response=403,
-  *          description="Forbidden",
-  *   @OA\JsonContent()
-  * ),
-  *  * @OA\Response(
-  *      response=400,
-  *      description="Bad Request",
-  *   *@OA\JsonContent()
-  *   ),
-  * @OA\Response(
-  *      response=404,
-  *      description="not found",
-  *   *@OA\JsonContent()
-  *   )
-  *      )
-  *     )
-  */
+    public function createProductCategory(ProductCategoryCreateRequest $request)
+    {
 
- public function updateProductCategory(ProductCategoryUpdateRequest $request)
- {
-
-     try{
-        $this->storeActivity($request,"");
-         if(!$request->user()->hasPermissionTo('product_category_update')){
-             return response()->json([
-                "message" => "You can not perform this action"
-             ],401);
-        }
-         $request_data = $request->validated();
-
-
-
-             $product_category  =  tap(ProductCategory::where(["id" => $request_data["id"]]))->update(collect($request_data)->only([
-                 'name',
-                 'image',
-                 'icon',
-                 "description",
-
-             ])->toArray()
-             )
-                 // ->with("somthing")
-
-                 ->first();
-                 if(!$product_category) {
+        try {
+            $this->storeActivity($request, "DUMMY activity", "DUMMY description");
+            return DB::transaction(function () use ($request) {
+                if (!auth()->user()->hasPermissionTo('product_category_create')) {
                     return response()->json([
-                        "message" => "no product category found"
-                    ],404);
+                        "message" => "You can not perform this action"
+                    ], 401);
                 }
 
-         return response($product_category, 201);
-     } catch(Exception $e){
-         error_log($e->getMessage());
-     return $this->sendError($e,500,$request);
-     }
- }
-/**
-     *
-  * @OA\Get(
-  *      path="/v1.0/product-categories/{perPage}",
-  *      operationId="getProductCategories",
-  *      tags={"shop_section.product_category_management"},
- *       security={
-  *           {"bearerAuth": {}}
-  *       },
+                $request_data = $request->validated();
 
-  *              @OA\Parameter(
-  *         name="perPage",
-  *         in="path",
-  *         description="perPage",
-  *         required=true,
-  *  example="6"
-  *      ),
-  *      * *  @OA\Parameter(
-* name="start_date",
-* in="query",
-* description="start_date",
-* required=true,
-* example="2019-06-29"
-* ),
-  * *  @OA\Parameter(
-* name="end_date",
-* in="query",
-* description="end_date",
-* required=true,
-* example="2019-06-29"
-* ),
-  * *  @OA\Parameter(
-* name="search_key",
-* in="query",
-* description="search_key",
-* required=true,
-* example="search_key"
-* ),
+                $request_data["is_active"] = 1;
 
 
-  *      summary="This method is to get  Product Categories ",
-  *      description="This method is to get Product Categories",
-  *
 
-  *      @OA\Response(
-  *          response=200,
-  *          description="Successful operation",
-  *       @OA\JsonContent(),
-  *       ),
-  *      @OA\Response(
-  *          response=401,
-  *          description="Unauthenticated",
-  * @OA\JsonContent(),
-  *      ),
-  *        @OA\Response(
-  *          response=422,
-  *          description="Unprocesseble Content",
-  *    @OA\JsonContent(),
-  *      ),
-  *      @OA\Response(
-  *          response=403,
-  *          description="Forbidden",
-  *   @OA\JsonContent()
-  * ),
-  *  * @OA\Response(
-  *      response=400,
-  *      description="Bad Request",
-  *   *@OA\JsonContent()
-  *   ),
-  * @OA\Response(
-  *      response=404,
-  *      description="not found",
-  *   *@OA\JsonContent()
-  *   )
-  *      )
-  *     )
-  */
 
- public function getProductCategories($perPage,Request $request) {
-     try{
-        $this->storeActivity($request,"");
-         if(!$request->user()->hasPermissionTo('product_category_view')){
-             return response()->json([
-                "message" => "You can not perform this action"
-             ],401);
+
+                $request_data["created_by"] = auth()->user()->id;
+                $request_data["business_id"] = auth()->user()->business_id;
+
+                if (empty(auth()->user()->business_id)) {
+                    $request_data["business_id"] = NULL;
+                    if (auth()->user()->hasRole('superadmin')) {
+                        $request_data["is_default"] = 1;
+                    }
+                }
+
+
+
+
+                $product_category =  ProductCategory::create($request_data);
+
+
+
+
+                return response($product_category, 201);
+            });
+        } catch (Exception $e) {
+
+            return $this->sendError($e, 500, $request);
         }
-
-
-
-         $productCategoriesQuery = new ProductCategory();
-
-         if(!empty($request->search_key)) {
-             $productCategoriesQuery = $productCategoriesQuery->where(function($query) use ($request){
-                 $term = $request->search_key;
-                 $query->where("name", "like", "%" . $term . "%");
-             });
-
-         }
-
-         if (!empty($request->start_date)) {
-             $productCategoriesQuery = $productCategoriesQuery->where('created_at', ">=", $request->start_date);
-         }
-
-         if (!empty($request->end_date)) {
-             $productCategoriesQuery = $productCategoriesQuery->where('created_at', "<=", $request->end_date);
-         }
-
-
-         $product_categories = $productCategoriesQuery->orderByDesc("id")->paginate($perPage);
-
-         return response()->json($product_categories, 200);
-     } catch(Exception $e){
-
-     return $this->sendError($e,500,$request);
-     }
- }
-  /**
+    }
+    /**
      *
-  * @OA\Get(
-  *      path="/v1.0/product-categories/single/get/{id}",
-  *      operationId="getProductCategoryById",
-  *      tags={"shop_section.product_category_management"},
- *       security={
-  *           {"bearerAuth": {}}
-  *       },
-  *              @OA\Parameter(
-  *         name="id",
-  *         in="path",
-  *         description="id",
-  *         required=true,
-  *  example="6"
-  *      ),
-  *      summary="This method is to get Product Category by id",
-  *      description="This method is to get Product Category by id",
-  *
+     * @OA\Put(
+     *      path="/v1.0/product-categories",
+     *      operationId="updateProductCategory",
+     *      tags={"product_categories"},
+     *       security={
+     *           {"bearerAuth": {}}
+     *       },
+     *      summary="This method is to update product categories ",
+     *      description="This method is to update product categories ",
+     *
+     *  @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *      @OA\Property(property="id", type="number", format="number", example="1"),
+     * @OA\Property(property="name", type="string", format="string", example="name"),
+     * @OA\Property(property="description", type="string", format="string", example="description"),
+     *
+     *         ),
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
 
-  *      @OA\Response(
-  *          response=200,
-  *          description="Successful operation",
-  *       @OA\JsonContent(),
-  *       ),
-  *      @OA\Response(
-  *          response=401,
-  *          description="Unauthenticated",
-  * @OA\JsonContent(),
-  *      ),
-  *        @OA\Response(
-  *          response=422,
-  *          description="Unprocesseble Content",
-  *    @OA\JsonContent(),
-  *      ),
-  *      @OA\Response(
-  *          response=403,
-  *          description="Forbidden",
-  *   @OA\JsonContent()
-  * ),
-  *  * @OA\Response(
-  *      response=400,
-  *      description="Bad Request",
-  *   *@OA\JsonContent()
-  *   ),
-  * @OA\Response(
-  *      response=404,
-  *      description="not found",
-  *   *@OA\JsonContent()
-  *   )
-  *      )
-  *     )
-  */
+    public function updateProductCategory(ProductCategoryUpdateRequest $request)
+    {
+
+        try {
+            $this->storeActivity($request, "DUMMY activity", "DUMMY description");
+            return DB::transaction(function () use ($request) {
+                if (!auth()->user()->hasPermissionTo('product_category_update')) {
+                    return response()->json([
+                        "message" => "You can not perform this action"
+                    ], 401);
+                }
+                $request_data = $request->validated();
 
 
- public function getProductCategoryById($id,Request $request) {
-     try{
-        $this->storeActivity($request,"");
-         if(!$request->user()->hasPermissionTo('product_category_view')){
-             return response()->json([
-                "message" => "You can not perform this action"
-             ],401);
+
+                $product_category_query_params = [
+                    "id" => $request_data["id"],
+                ];
+
+                $product_category = ProductCategory::where($product_category_query_params)->first();
+
+                if ($product_category) {
+                    $product_category->fill(collect($request_data)->only([
+
+                        "name",
+                        "description",
+                        // "is_default",
+                        // "is_active",
+                        // "business_id",
+                        // "created_by"
+                    ])->toArray());
+                    $product_category->save();
+                } else {
+                    return response()->json([
+                        "message" => "something went wrong."
+                    ], 500);
+                }
+
+
+
+
+                return response($product_category, 201);
+            });
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return $this->sendError($e, 500, $request);
         }
-
-         $product_category =  ProductCategory::where([
-             "id" => $id
-         ])
-         ->first()
-         ;
-         if(!$product_category) {
-return response()->json([
-    "message" => "no product category found"
-],404);
-         }
-
-         return response()->json($product_category, 200);
-     } catch(Exception $e){
-
-     return $this->sendError($e,500,$request);
-     }
- }
+    }
 
 
-
-
-   /**
+    /**
      *
-  * @OA\Get(
-  *      path="/v1.0/product-categories/get/all",
-  *      operationId="getAllProductCategory",
-  *      tags={"basics"},
- *       security={
-  *           {"bearerAuth": {}}
-  *       },
+     * @OA\Put(
+     *      path="/v1.0/product-categories/toggle-active",
+     *      operationId="toggleActiveProductCategory",
+     *      tags={"product_categories"},
+     *       security={
+     *           {"bearerAuth": {}}
+     *       },
+     *      summary="This method is to toggle product categories",
+     *      description="This method is to toggle product categories",
+     *
+     *  @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+
+     *           @OA\Property(property="id", type="string", format="number",example="1"),
+     *
+     *         ),
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
+
+    public function toggleActiveProductCategory(GetIdRequest $request)
+    {
+
+        try {
+
+            $this->storeActivity($request, "DUMMY activity", "DUMMY description");
+
+            if (!$request->user()->hasPermissionTo('product_category_activate')) {
+                return response()->json([
+                    "message" => "You can not perform this action"
+                ], 401);
+            }
+            $request_data = $request->validated();
+
+            $product_category =  ProductCategory::where([
+                "id" => $request_data["id"],
+            ])
+                ->first();
+            if (!$product_category) {
+
+                return response()->json([
+                    "message" => "no data found"
+                ], 404);
+            }
+
+            $product_category->update([
+                'is_active' => !$product_category->is_active
+            ]);
 
 
-  *      * *  @OA\Parameter(
-* name="start_date",
-* in="query",
-* description="start_date",
-* required=true,
-* example="2019-06-29"
-* ),
-  * *  @OA\Parameter(
-* name="end_date",
-* in="query",
-* description="end_date",
-* required=true,
-* example="2019-06-29"
-* ),
-  * *  @OA\Parameter(
-* name="search_key",
-* in="query",
-* description="search_key",
-* required=true,
-* example="search_key"
-* ),
-  *      summary="This method is to get all product categories ",
-  *      description="This method is to get all product categories",
-  *
 
-  *      @OA\Response(
-  *          response=200,
-  *          description="Successful operation",
-  *       @OA\JsonContent(),
-  *       ),
-  *      @OA\Response(
-  *          response=401,
-  *          description="Unauthenticated",
-  * @OA\JsonContent(),
-  *      ),
-  *        @OA\Response(
-  *          response=422,
-  *          description="Unprocesseble Content",
-  *    @OA\JsonContent(),
-  *      ),
-  *      @OA\Response(
-  *          response=403,
-  *          description="Forbidden",
-  *   @OA\JsonContent()
-  * ),
-  *  * @OA\Response(
-  *      response=400,
-  *      description="Bad Request",
-  *   *@OA\JsonContent()
-  *   ),
-  * @OA\Response(
-  *      response=404,
-  *      description="not found",
-  *   *@OA\JsonContent()
-  *   )
-  *      )
-  *     )
-  */
 
- public function getAllProductCategory(Request $request) {
-     try{
+            return response()->json(['message' => 'product category status updated successfully'], 200);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return $this->sendError($e, 500, $request);
+        }
+    }
 
-        $this->storeActivity($request,"");
-         $productCategoriesQuery = new ProductCategory();
 
-         if(!empty($request->search_key)) {
-             $productCategoriesQuery = $productCategoriesQuery->where(function($query) use ($request){
-                 $term = $request->search_key;
-                 $query->where("name", "like", "%" . $term . "%");
-             });
 
-         }
+    /**
+     *
+     * @OA\Get(
+     *      path="/v1.0/product-categories",
+     *      operationId="getProductCategories",
+     *      tags={"product_categories"},
+     *       security={
+     *           {"bearerAuth": {}}
+     *       },
 
-         if (!empty($request->start_date)) {
-             $productCategoriesQuery = $productCategoriesQuery->where('created_at', ">=", $request->start_date);
-         }
-         if (!empty($request->end_date)) {
-             $productCategoriesQuery = $productCategoriesQuery->where('created_at', "<=", $request->end_date);
-         }
+     *         @OA\Parameter(
+     *         name="name",
+     *         in="query",
+     *         description="name",
+     *         required=true,
+     *  example="6"
+     *      ),
 
-         $product_categories = $productCategoriesQuery->orderByDesc("name")->get();
-         return response()->json($product_categories, 200);
-     } catch(Exception $e){
 
-     return $this->sendError($e,500,$request);
-     }
 
- }
+     *         @OA\Parameter(
+     *         name="description",
+     *         in="query",
+     *         description="description",
+     *         required=true,
+     *  example="6"
+     *      ),
 
-/**
-        *
+
+
+     *         @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="per_page",
+     *         required=true,
+     *  example="6"
+     *      ),
+
+     *     @OA\Parameter(
+     * name="is_active",
+     * in="query",
+     * description="is_active",
+     * required=true,
+     * example="1"
+     * ),
+     *     @OA\Parameter(
+     * name="start_date",
+     * in="query",
+     * description="start_date",
+     * required=true,
+     * example="2019-06-29"
+     * ),
+     * *  @OA\Parameter(
+     * name="end_date",
+     * in="query",
+     * description="end_date",
+     * required=true,
+     * example="2019-06-29"
+     * ),
+     * *  @OA\Parameter(
+     * name="search_key",
+     * in="query",
+     * description="search_key",
+     * required=true,
+     * example="search_key"
+     * ),
+     * *  @OA\Parameter(
+     * name="order_by",
+     * in="query",
+     * description="order_by",
+     * required=true,
+     * example="ASC"
+     * ),
+     * *  @OA\Parameter(
+     * name="id",
+     * in="query",
+     * description="id",
+     * required=true,
+     * example="ASC"
+     * ),
+
+
+
+
+     *      summary="This method is to get product categories  ",
+     *      description="This method is to get product categories ",
+     *
+
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
+
+    public function getProductCategories(Request $request)
+    {
+        try {
+            $this->storeActivity($request, "DUMMY activity", "DUMMY description");
+            if (!$request->user()->hasPermissionTo('product_category_view')) {
+                return response()->json([
+                    "message" => "You can not perform this action"
+                ], 401);
+            }
+            $created_by  = NULL;
+            if (auth()->user()->business) {
+                $created_by = auth()->user()->business->created_by;
+            }
+
+
+
+            $product_categories = ProductCategory::where('product_categories.business_id', auth()->user()->business_id)
+
+
+
+
+
+                ->when(!empty($request->name), function ($query) use ($request) {
+                    return $query->where('product_categories.name', $request->name);
+                })
+
+
+
+
+                ->when(!empty($request->description), function ($query) use ($request) {
+                    return $query->where('product_categories.description', $request->description);
+                })
+
+
+
+
+                ->when(!empty($request->search_key), function ($query) use ($request) {
+                    return $query->where(function ($query) use ($request) {
+                        $term = $request->search_key;
+                        $query
+
+                            ->orWhere("product_categories.name", "like", "%" . $term . "%")
+                            ->where("product_categories.description", "like", "%" . $term . "%")
+                        ;
+                    });
+                })
+
+
+                ->when(!empty($request->start_date), function ($query) use ($request) {
+                    return $query->whereDate('product_categories.created_at', ">=", $request->start_date);
+                })
+                ->when(!empty($request->end_date), function ($query) use ($request) {
+                    return $query->whereDate('product_categories.created_at', "<=", ($request->end_date));
+                })
+                ->when(!empty($request->order_by) && in_array(strtoupper($request->order_by), ['ASC', 'DESC']), function ($query) use ($request) {
+                    return $query->orderBy("product_categories.id", $request->order_by);
+                }, function ($query) {
+                    return $query->orderBy("product_categories.id", "DESC");
+                })
+                ->when($request->filled("id"), function ($query) use ($request) {
+                    return $query
+                        ->where("product_categories.id", $request->input("id"))
+                        ->first();
+                }, function ($query) {
+                    return $query->when(!empty(request()->per_page), function ($query) {
+                        return $query->paginate(request()->per_page);
+                    }, function ($query) {
+                        return $query->get();
+                    });
+                });
+
+            if ($request->filled("id") && empty($product_categories)) {
+                throw new Exception("No data found", 404);
+            }
+
+
+            return response()->json($product_categories, 200);
+        } catch (Exception $e) {
+
+            return $this->sendError($e, 500, $request);
+        }
+    }
+
+    /**
+     *
      *     @OA\Delete(
-     *      path="/v1.0/product-categories/{id}",
-     *      operationId="deleteProductCategoryById",
-     *      tags={"shop_section.product_category_management"},
-    *       security={
+     *      path="/v1.0/product-categories/{ids}",
+     *      operationId="deleteProductCategoriesByIds",
+     *      tags={"product_categories"},
+     *       security={
      *           {"bearerAuth": {}}
      *       },
      *              @OA\Parameter(
-     *         name="id",
+     *         name="ids",
      *         in="path",
-     *         description="id",
+     *         description="ids",
      *         required=true,
-     *  example="6"
+     *  example="1,2,3"
      *      ),
      *      summary="This method is to delete product category by id",
      *      description="This method is to delete product category by id",
@@ -545,26 +586,45 @@ return response()->json([
      *     )
      */
 
-    public function deleteProductCategoryById($id,Request $request) {
+    public function deleteProductCategoriesByIds(Request $request, $ids)
+    {
 
-        try{
-            $this->storeActivity($request,"");
-            if(!$request->user()->hasPermissionTo('product_category_delete')){
+        try {
+            $this->storeActivity($request, "DUMMY activity", "DUMMY description");
+            if (!$request->user()->hasPermissionTo('product_category_delete')) {
                 return response()->json([
-                   "message" => "You can not perform this action"
-                ],401);
-           }
-           ProductCategory::where([
-            "id" => $id
-           ])
-           ->delete();
+                    "message" => "You can not perform this action"
+                ], 401);
+            }
 
-            return response()->json(["ok" => true], 200);
-        } catch(Exception $e){
+            $idsArray = explode(',', $ids);
+            $existingIds = ProductCategory::whereIn('id', $idsArray)
+                ->where('product_categories.business_id', auth()->user()->business_id)
 
-        return $this->sendError($e,500,$request);
+                ->select('id')
+                ->get()
+                ->pluck('id')
+                ->toArray();
+            $nonExistingIds = array_diff($idsArray, $existingIds);
+
+            if (!empty($nonExistingIds)) {
+
+                return response()->json([
+                    "message" => "Some or all of the specified data do not exist."
+                ], 404);
+            }
+
+
+
+
+
+            ProductCategory::destroy($existingIds);
+
+
+            return response()->json(["message" => "data deleted sussfully", "deleted_ids" => $existingIds], 200);
+        } catch (Exception $e) {
+
+            return $this->sendError($e, 500, $request);
         }
-
     }
-
 }

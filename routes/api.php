@@ -147,6 +147,24 @@ Route::middleware(['auth:api','verified'])->group(function () {
 
 
 
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// product categories management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+Route::post('/v1.0/product-categories', [ProductCategoryController::class, "createProductCategory"]);
+Route::put('/v1.0/product-categories', [ProductCategoryController::class, "updateProductCategory"]);
+Route::put('/v1.0/product-categories/toggle-active', [ProductCategoryController::class, "toggleActiveProductCategory"]);
+Route::get('/v1.0/product-categories', [ProductCategoryController::class, "getProductCategories"]);
+Route::delete('/v1.0/product-categories/{ids}', [ProductCategoryController::class, "deleteProductCategoriesByIds"]);
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// end product categories management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+
     Route::get('/v2.0/expert-users', [UserManagementController::class, "getExpertUsersV2"]);
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -158,7 +176,6 @@ Route::put('/v1.0/expert-rotas', [ExpertRotaController::class, "updateExpertRota
 Route::put('/v1.0/expert-rotas/toggle-active', [ExpertRotaController::class, "toggleActiveExpertRota"]);
 Route::get('/v1.0/expert-rotas', [ExpertRotaController::class, "getExpertRotas"]);
 Route::delete('/v1.0/expert-rotas/{ids}', [ExpertRotaController::class, "deleteExpertRotasByIds"]);
-
 Route::get('/v1.0/expert-attendances', [ExpertRotaController::class, "getExpertAttendances"]);
 
 
@@ -1033,22 +1050,7 @@ Route::get('/v1.0/shops/by-shop-owner/all', [ShopsController::class, "getAllShop
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// product category management section
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-Route::post('/v1.0/product-categories', [ProductCategoryController::class, "createProductCategory"]);
-Route::put('/v1.0/product-categories', [ProductCategoryController::class, "updateProductCategory"]);
-Route::get('/v1.0/product-categories/{perPage}', [ProductCategoryController::class, "getProductCategories"]);
-Route::delete('/v1.0/product-categories/{id}', [ProductCategoryController::class, "deleteProductCategoryById"]);
-Route::get('/v1.0/product-categories/single/get/{id}', [ProductCategoryController::class, "getProductCategoryById"]);
-
-Route::get('/v1.0/product-categories/get/all', [ProductCategoryController::class, "getAllProductCategory"]);
-
-
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// end product category management section
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
