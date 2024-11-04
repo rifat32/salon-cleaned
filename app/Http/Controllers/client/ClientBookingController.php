@@ -364,7 +364,7 @@ class ClientBookingController extends Controller
 
                     // Prepare payment intent data
                     $paymentIntentData = [
-                        'amount' => ($booking->price + $tipAmount) * 100, // Adjusted amount in cents
+                        'amount' => ($booking->price + $tipAmount + ($booking->vat_amount ?? 0)) * 100, // Adjusted amount in cents
                         'currency' => 'usd',
                         'payment_method_types' => ['card'],
                         'metadata' => [

@@ -77,7 +77,6 @@ class BookingController extends Controller
 
         $discount = $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
         $coupon_discount = $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
-
         $total_discount = $discount + $coupon_discount;
 
         $totalTip = $this->canculate_discount_amount(
@@ -89,7 +88,7 @@ class BookingController extends Controller
 
         // Prepare payment intent data
         $paymentIntentData = [
-            'amount' => ($booking->price + $totalTip) * 100, // Adjusted amount in cents
+            'amount' => ($booking->price + $totalTip + ($booking->vat_amount ?? 0)) * 100, // Adjusted amount in cents
             'currency' => 'usd',
             'payment_method_types' => ['card'],
             'metadata' => [
@@ -305,7 +304,7 @@ class BookingController extends Controller
                         'product_data' => [
                             'name' => 'Your Service set up amount',
                         ],
-                        'unit_amount' => ($booking->price + $totalTip) * 100, // Amount in cents
+                        'unit_amount' => ($booking->price + $totalTip + ($booking->vat_amount ?? 0)) * 100, // Amount in cents
                     ],
                     'quantity' => 1,
                 ]
