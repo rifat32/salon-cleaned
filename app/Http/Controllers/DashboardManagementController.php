@@ -1828,11 +1828,17 @@ class DashboardManagementController extends Controller
             ->whereHas("bookings.customer", function ($query) use ($is_walk_in_customer) {
                 $query->where("users.is_walk_in_customer", $is_walk_in_customer);
             })
-            ->when(request()->has('is_returning_customers'), function ($q) {
-                $q->whereHas("bookings.customer", function ($query) {
-                    $query->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
-                        ->groupBy('bookings.customer_id')
-                        ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
+            ->when(request()->filled('is_returning_customers'), function ($q) {
+                $isReturning = request()->boolean("is_returning_customers");
+
+                $q->whereHas("bookings", function ($query) use ($isReturning) {
+                    // Separate subquery to count all bookings for each customer.
+                    $query->whereIn('bookings.customer_id', function ($subquery) use ($isReturning) {
+                        $subquery->select('customer_id')
+                                 ->from('bookings')
+                                 ->groupBy('customer_id')
+                                 ->having(DB::raw('COUNT(id)'), $isReturning ? '>' : '=', 1);
+                    });
                 });
             })
 
@@ -2376,13 +2382,17 @@ class DashboardManagementController extends Controller
                                      }
                                  });
                              })
-                             ->when($request->has('is_returning_customers'), function ($q) {
-                                 $q->whereHas("customer", function ($query) {
-                                     $query->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
-                                         ->groupBy('bookings.customer_id')
-                                         ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
-                                 });
-                             })
+                             ->when(request()->filled('is_returning_customers'), function ($q) {
+                                $isReturning = request()->boolean("is_returning_customers");
+                                
+                                $q->whereIn('bookings.customer_id', function ($subquery) use ($isReturning) {
+                                        $subquery->select('customer_id')
+                                                 ->from('bookings')
+                                                 ->groupBy('customer_id')
+                                                 ->having(DB::raw('COUNT(id)'), $isReturning ? '>' : '=', 1);
+                                    });
+
+                            })
                              ->when($request->filled("payment_type"), function ($query) {
                                  $payment_typeArray = explode(',', request()->payment_type);
                                  $query->whereHas("booking_payments", function ($query) use ($payment_typeArray) {

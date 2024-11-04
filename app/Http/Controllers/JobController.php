@@ -1305,9 +1305,23 @@ class JobController extends Controller
                 "bookings.sub_services"
             ])
                 ->selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
+
                 ->when(request()->filled("payment_type"), function ($query) {
                     $payment_typeArray = explode(',', request()->payment_type);
                     $query->whereIn("job_payments.payment_type", $payment_typeArray);
+                })
+                ->when(request()->filled('is_returning_customers'), function ($q) {
+                    $isReturning = request()->boolean("is_returning_customers");
+
+                    $q->whereHas("bookings", function ($query) use ($isReturning) {
+                        // Separate subquery to count all bookings for each customer.
+                        $query->whereIn('bookings.customer_id', function ($subquery) use ($isReturning) {
+                            $subquery->select('customer_id')
+                                     ->from('bookings')
+                                     ->groupBy('customer_id')
+                                     ->having(DB::raw('COUNT(id)'), $isReturning ? '>' : '=', 1);
+                        });
+                    });
                 })
 
                 ->whereHas("bookings", function ($query) use ($garage_id, $request) {
