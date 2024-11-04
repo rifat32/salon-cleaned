@@ -1347,7 +1347,7 @@ class JobController extends Controller
                             $query->where('bookings.expert_id', auth()->user()->id);
                         })
                         ->when(request()->filled("expert_id"), function($query) {
-                            $query->where('bookings.expert_id', request()->filled("expert_id"));
+                            $query->where('bookings.expert_id', request()->input("expert_id"));
                         })
                         ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
 
