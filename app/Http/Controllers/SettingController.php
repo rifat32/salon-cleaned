@@ -42,7 +42,8 @@ class SettingController extends Controller
  *   @OA\Property(property="default_currency", type="string", format="string", example="USD"),
  *   @OA\Property(property="default_language", type="string", format="string", example="en"),
  *   @OA\Property(property="vat_enabled", type="boolean", example=true),
- *   @OA\Property(property="vat_percentage", type="number", format="float", example=15.00)
+ *   @OA\Property(property="vat_percentage", type="number", format="float", example=15.00),
+ *  *   @OA\Property(property="vat_number", type="number", format="float", example=15.00)
    *
    *
    *         ),
@@ -169,7 +170,8 @@ if (!$busunessSetting) {
         'default_currency',
         'default_language',
         'vat_enabled',
-        'vat_percentage'
+        'vat_percentage',
+        'vat_number'
       ])->toArray());
       $busunessSetting->save();
 }

@@ -27,7 +27,8 @@ class BusinessSetting extends Model
         'default_currency',
         'default_language',
         'vat_enabled',
-        'vat_percentage'
+        'vat_percentage',
+        'vat_number'
     ];
 
 
