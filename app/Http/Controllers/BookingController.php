@@ -812,10 +812,13 @@ $booking = $booking->load(["payments"]);
                     return response()->json(["message" => "You cannot check out before check in."], 422);
                 }
                 if ($request_data["status"] == "check_in") {
-                    $check_in_booking = Booking::where([
+                    $check_in_booking = Booking::
+                    where([
                         "expert_id" => $request_data["expert_id"],
                         "status" => "check_in"
-                    ])->first();
+                    ])
+                    ->whereNotIn("bookings.id",[$booking->id])
+                    ->first();
 
                     if (!empty($check_in_booking)) {
                         // Return an error response indicating that the expert already has a check-in
@@ -1174,7 +1177,10 @@ if (!empty($recipientEmails)) {
                     $check_in_booking = Booking::where([
                         "expert_id" => $booking->expert_id,
                         "status" => "check_in"
-                    ])->first();
+                    ])
+                    ->whereNotIn("bookings.id",[$booking->id])
+                
+                    ->first();
 
                     if (!empty($check_in_booking)) {
                         // Return an error response indicating that the expert already has a check-in
