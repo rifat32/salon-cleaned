@@ -1179,7 +1179,7 @@ if (!empty($recipientEmails)) {
                         "status" => "check_in"
                     ])
                     ->whereNotIn("bookings.id",[$booking->id])
-                
+
                     ->first();
 
                     if (!empty($check_in_booking)) {
@@ -1823,6 +1823,7 @@ public function changeMultipleBookingStatuses(Request $request)
                 "expert",
                 "payments"
             )
+
                 ->when(!auth()->user()->hasRole("garage_owner") && !auth()->user()->hasRole("business_receptionist"), function ($query) {
                     $query->where([
                         "expert_id" => auth()->user()->id
@@ -1933,7 +1934,8 @@ public function changeMultipleBookingStatuses(Request $request)
             $bookings = $bookingQuery->orderByDesc("job_start_date")->paginate($perPage);
 
             return response()->json($bookings, 200);
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
 
             return $this->sendError($e, 500, $request);
         }

@@ -8,7 +8,7 @@ use App\Models\ProductCategory;
 use App\Rules\ValidateProductCategoryName;
 use Illuminate\Foundation\Http\FormRequest;
 
-class ProductCategoryUpdateRequest extends BaseFormRequest
+class ProductCategoryUpdateRequest extends FormRequest
 {
 /**
 * Determine if the user is authorized to make this request.

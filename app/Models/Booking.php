@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Booking extends Model
 {
     use HasFactory,SoftDeletes;
+    protected $appends = ['main_price']; // Append the main_price attribute
+
 
     protected $fillable = [
         "booking_type",
@@ -35,10 +37,30 @@ class Booking extends Model
         "created_by",
         "created_from"
     ];
-    protected $casts = [
+      protected $casts = [
         'booked_slots' => 'array',
       ];
 
+
+      public function getMainPriceAttribute()
+      {
+          $finalPrice = $this->final_price;
+          $tipAmount = $this->tip_amount;
+          $tipType = $this->tip_type;
+
+          if ($tipType === 'percentage') {
+              $calculatedTip = $finalPrice * ($tipAmount / 100);
+          } elseif ($tipType === 'fixed') {
+              $calculatedTip = $tipAmount;
+          } else {
+              $calculatedTip = 0; // Default to 0 if tip type is unknown
+          }
+
+          // Calculate the main price by subtracting the tip
+          $mainPrice = $finalPrice - $calculatedTip;
+
+          return $mainPrice;
+      }
 
 
     public function garage(){

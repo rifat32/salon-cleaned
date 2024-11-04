@@ -40,7 +40,7 @@ class UpdateBusinessSettingRequest extends FormRequest
         'default_currency' => 'string|nullable|max:10',
         'default_language' => 'string|nullable|max:10',
         'vat_enabled' => 'boolean',
-        'vat_percentage' => 'nullable|numeric|required_if:vat_enabled,true|min:0|max:100'
+        'vat_percentage' => 'nullable|numeric|required_if:vat_enabled,true|min:0|max:100',
         'vat_number' => 'nullable|string|required_if:vat_enabled,true'
 
         ];
