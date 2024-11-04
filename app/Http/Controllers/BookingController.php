@@ -2640,6 +2640,7 @@ foreach($users as $user) {
             }
 
             $experts = User::with("translation")
+            ->where("users.is_active",1)
                 ->whereHas('roles', function ($query) {
                     $query->where('roles.name', 'business_experts');
                 })

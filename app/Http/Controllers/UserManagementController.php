@@ -1942,11 +1942,23 @@ protected function applyDateFilter($query, $date_filter) {
 
         try{
             $this->storeActivity($request,"");
+
             if(!$request->user()->hasPermissionTo('user_delete')){
                 return response()->json([
                    "message" => "You can not perform this action"
                 ],401);
            }
+           $hasBookings = Booking::where('expert_id', $id)
+           ->orWhere('customer_id', $id)
+           ->exists();
+
+if ($hasBookings) {
+// Return an error response if bookings exist
+return response()->json([
+   'message' => 'User cannot be deleted because there are existing bookings associated with them.'
+], 400);
+}
+
            $user = User::where([
             "id" => $id
        ])
@@ -1970,8 +1982,7 @@ protected function applyDateFilter($query, $date_filter) {
                "message" => "superadmin can not be deleted"
             ],401);
        }
-           $user
-           ->delete();
+       $user->forceDelete();
 
             return response()->json(["ok" => true], 200);
         } catch(Exception $e){

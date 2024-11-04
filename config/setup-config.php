@@ -360,7 +360,7 @@ return [
                 "booking_create",
                 "booking_update",
                 "booking_view",
-                "booking_delete",
+
 
                 "job_create",
                 "job_update",
@@ -472,7 +472,6 @@ return [
                 "booking_create",
                 "booking_update",
                 "booking_view",
-                "booking_delete",
 
                 "job_create",
                 "job_update",

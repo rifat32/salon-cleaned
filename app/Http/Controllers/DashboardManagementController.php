@@ -2074,6 +2074,7 @@ class DashboardManagementController extends Controller
 
 
             //  $experts = User::with("translation")
+            //  ->where("users.is_active",1)
             //  ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
             //  ->select('users.*', DB::raw('count(bookings.id) as total_bookings'))
             //  ->whereHas('roles', function ($query) {
@@ -2085,6 +2086,7 @@ class DashboardManagementController extends Controller
             //  ->get();
 
             $experts = User::with("translation")
+            ->where("users.is_active",1)
                 ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
                 ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id') // Join job_payments on
                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
@@ -2345,6 +2347,7 @@ class DashboardManagementController extends Controller
              }
 
              $experts = User::with("translation")
+             ->where("users.is_active",1)
                  ->when($request->hasAny([
                      'expert_id',
                      'slots',

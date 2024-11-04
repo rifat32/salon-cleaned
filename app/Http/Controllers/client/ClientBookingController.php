@@ -1201,6 +1201,7 @@ class ClientBookingController extends Controller
 
 
             $experts = User::with("translation")
+            ->where("users.is_active",1)
                 ->whereHas('roles', function ($query) {
                     $query->where('roles.name', 'business_experts');
                 })
@@ -1361,6 +1362,7 @@ class ClientBookingController extends Controller
                 $dates[] = Carbon::today()->addDays($i)->toDateString();
             }
             $experts = User::with("translation")
+            ->where("users.is_active",1)
                 ->when(request()->filled("expert_id"), function ($query) {
                     $query->where("users.id", request()->input("expert_id"));
                 })
@@ -1806,6 +1808,12 @@ class ClientBookingController extends Controller
 
         try {
             $this->storeActivity($request, "");
+
+            if (!$request->user()->hasPermissionTo('booking_delete')) {
+                return response()->json([
+                    "message" => "You can not perform this action"
+                ], 401);
+            }
             $booking =  Booking::where([
                 "id" => $id,
                 "customer_id" => $request->user()->id

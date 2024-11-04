@@ -1304,33 +1304,34 @@ class JobController extends Controller
                 "bookings.customer",
                 "bookings.sub_services"
             ])
-            ->when(request()->filled("payment_type"), function($query) {
-                $payment_typeArray = explode(',', request()->payment_type);
-                $query->whereIn("job_payments.payment_type", $payment_typeArray);
-            })
-            ->when(request()->has('is_returning_customers'), function ($q) {
-                $q->whereHas("bookings.customer", function ($query)  {
-                    $query->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
-                              ->groupBy('bookings.customer_id')
-                              ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
-                });
-            })
+                ->selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
+                ->when(request()->filled("payment_type"), function ($query) {
+                    $payment_typeArray = explode(',', request()->payment_type);
+                    $query->whereIn("job_payments.payment_type", $payment_typeArray);
+                })
+                ->when(request()->has('is_returning_customers'), function ($q) {
+                    $q->whereHas("bookings.customer", function ($query) {
+                        $query->select('bookings.customer_id', DB::raw('COUNT(id) as bookings_count'))
+                            ->groupBy('bookings.customer_id')
+                            ->having('bookings_count', (request()->boolean("is_returning_customers") ? '>' : '='), 1);
+                    });
+                })
                 ->whereHas("bookings", function ($query) use ($garage_id, $request) {
                     $query
-                    ->selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
-                    ->when(request()->filled("duration_in_minute"), function ($query) {
-                        $total_slots = request()->input("duration_in_minute") / 15;
-                        $query->having('total_booked_slots', '>', $total_slots);
-                    })
-        ->where('bookings.garage_id', $garage_id)
-                    ->when(request()->filled("slots"), function ($query) {
-                        $slotsArray = explode(',', request()->input("slots"));
-                        $query ->where(function ($subQuery) use ($slotsArray) {
-                            foreach ($slotsArray as $slot) {
-                                $subQuery->orWhereRaw("JSON_CONTAINS(bookings.busy_slots, '\"$slot\"')");
-                            }
-                        });
-                    })
+
+                        ->when(request()->filled("duration_in_minute"), function ($query) {
+                            $total_slots = request()->input("duration_in_minute") / 15;
+                            $query->having('total_booked_slots', '>', $total_slots);
+                        })
+                        ->where('bookings.garage_id', auth()->user()->business_id)
+                        ->when(request()->filled("slots"), function ($query) {
+                            $slotsArray = explode(',', request()->input("slots"));
+                            $query->where(function ($subQuery) use ($slotsArray) {
+                                foreach ($slotsArray as $slot) {
+                                    $subQuery->orWhereRaw("JSON_CONTAINS(bookings.busy_slots, '\"$slot\"')");
+                                }
+                            });
+                        })
                         ->when(request()->filled("status"), function ($query) {
                             $statusArray = explode(',', request()->input("status"));
                             // If status is provided, include the condition in the query
@@ -1342,11 +1343,10 @@ class JobController extends Controller
                             $query->whereIn("booking_type", $booking_typeArray);
                         })
 
-                        ->where("bookings.garage_id", $garage_id)
                         ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                             $query->where('bookings.expert_id', auth()->user()->id);
                         })
-                        ->when(request()->filled("expert_id"), function($query) {
+                        ->when(request()->filled("expert_id"), function ($query) {
                             $query->where('bookings.expert_id', request()->input("expert_id"));
                         })
                         ->when(!empty($request->sub_service_ids), function ($query) use ($request) {
@@ -1365,12 +1365,15 @@ class JobController extends Controller
                                 ;
                             });
                         })
-                        ;
+                    ;
 
                     // Additional date filters using date_filter
                     if ($request->date_filter === 'today') {
                         $query->whereDate('bookings.job_start_date', Carbon::today());
-                    } elseif ($request->date_filter === 'this_week') {
+                    } elseif ($request->date_filter === 'yesterday') {
+                        $query->whereDate('bookings.job_start_date', Carbon::yesterday());
+                    }
+                    elseif ($request->date_filter === 'this_week') {
                         $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
                     } elseif ($request->date_filter === 'previous_week') {
                         $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
