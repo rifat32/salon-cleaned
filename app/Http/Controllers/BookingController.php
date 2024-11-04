@@ -181,19 +181,19 @@ class BookingController extends Controller
             $booking->payment_status = 'refunded';
             $booking->save();
             JobPayment::where([
-                "booking_id" => $booking->id,
-
+                "booking_id" => $booking->id
             ])
             ->delete();
             return response()->json([
                 "message" => "Refund successful",
                 "refund_id" => $refund->id
             ], 200);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 "message" => "Refund failed: " . $e->getMessage()
             ], 500);
         }
+
     }
 
 
@@ -809,7 +809,9 @@ $booking = $booking->load(["payments"]);
                     // Return an error response indicating that the status cannot be updated
                     return response()->json(["message" => "Unable to change the appointment status because it is already complete."], 422);
                 }
-
+                if ($request_data["status"] == "converted_to_job" && $booking->status != "check_in") {
+                    return response()->json(["message" => "You cannot check out before check in."], 422);
+                }
                 if ($request_data["status"] == "check_in") {
                     $check_in_booking = Booking::where([
                         "expert_id" => $request_data["expert_id"],
@@ -1165,6 +1167,9 @@ if (!empty($recipientEmails)) {
                     return response()->json(["message" => "Unable to change the appointment status because it is already cancelled."], 422);
                 }
 
+                if ($request_data["status"] == "converted_to_job" && $booking->status != "check_in") {
+                    return response()->json(["message" => "You cannot check out before check in."], 422);
+                }
 
                 if ($request_data["status"] == "check_in") {
                     $check_in_booking = Booking::where([
@@ -2889,11 +2894,32 @@ foreach($users as $user) {
                     "message" => "booking not found"
                 ], 404);
             }
+            $response_message = "";
 
-            if ($booking->status === "converted_to_job") {
-                // Return an error response indicating that the status cannot be updated
-                return response()->json(["message" => "can not be deleted if status is converted_to_job"], 422);
+            if ($booking->payment_method == "stripe") { // Check if card payment is associated
+                // Check if the 'is_refund' query parameter is provided
+
+                if (!request()->filled("is_refund")) {
+                    return response()->json(['message' => 'Bad Request: The is_refund parameter is required when the payment method is stripe.'], 400);
+                }
+
+                if (request()->boolean("is_refund")) {
+                    // Handle the refund logic here
+                    $this->processRefund($booking);
+                    $response_message = 'The payment has been refunded and the booking has been deleted.';
+
+                } else{
+                    $response_message =  'The booking has been deleted without refund.';
+                }
             }
+
+
+
+
+            // if ($booking->status === "converted_to_job") {
+            //     // Return an error response indicating that the status cannot be updated
+            //     return response()->json(["message" => "can not be deleted if status is converted_to_job"], 422);
+            // }
 
 
 
@@ -2957,7 +2983,10 @@ foreach($users as $user) {
             //     ));
             // }
             $booking->delete();
-            return response()->json(["ok" => true], 200);
+            return response()->json([
+        "ok" => true,
+        "message" => $response_message
+        ], 200);
         } catch (Exception $e) {
 
             return $this->sendError($e, 500, $request);
