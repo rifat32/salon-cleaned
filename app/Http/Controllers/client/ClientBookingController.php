@@ -508,12 +508,12 @@ class ClientBookingController extends Controller
                 }
                 if ($booking->status === "converted_to_job") {
                     // Return an error response indicating that the status cannot be updated
-                    return response()->json(["message" => "Status cannot be updated because it is completed"], 422);
+                    return response()->json(["message" => "Unable to change the appointment status because it is already complete."], 422);
                 }
 
                 if ($booking->status == "rejected_by_garage_owner" ||  $booking->status == "rejected_by_client") {
                     // Return an error response indicating that the status cannot be updated
-                    return response()->json(["message" => "Status cannot be updated because it is in cancelled status"], 422);
+                    return response()->json(["message" => "Unable to change the appointment status because it is already cancelled."], 422);
                 }
 
                 $jobStartDate = Carbon::parse($booking->job_start_date);

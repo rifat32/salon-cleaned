@@ -647,7 +647,7 @@ class JobController extends Controller
                 }
                 if ($job->status === "completed") {
                     // job an error response indicating that the status cannot be updated
-                    return response()->json(["message" => "Status cannot be updated because it is 'completed'"], 422);
+                    return response()->json(["message" => "Unable to change the appointment status because it is already complete."], 422);
                 }
 
                 if ($job) {

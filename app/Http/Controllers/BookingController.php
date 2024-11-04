@@ -807,7 +807,7 @@ $booking = $booking->load(["payments"]);
 
                 if ($booking->status == "converted_to_job" && $booking->payment_status == "complete") {
                     // Return an error response indicating that the status cannot be updated
-                    return response()->json(["message" => "Status cannot be updated because it is completed"], 422);
+                    return response()->json(["message" => "Unable to change the appointment status because it is already complete."], 422);
                 }
 
                 if ($request_data["status"] == "check_in") {
@@ -1157,12 +1157,12 @@ if (!empty($recipientEmails)) {
                 }
                 if ($booking->status === "converted_to_job") {
                     // Return an error response indicating that the status cannot be updated
-                    return response()->json(["message" => "Status cannot be updated because it is 'converted_to_job'"], 422);
+                    return response()->json(["message" => "Unable to change the appointment status because it is already complete."], 422);
                 }
 
                 if ($booking->status == "rejected_by_garage_owner" ||  $booking->status == "rejected_by_client") {
                     // Return an error response indicating that the status cannot be updated
-                    return response()->json(["message" => "Status cannot be updated because it is in cancelled status"], 422);
+                    return response()->json(["message" => "Unable to change the appointment status because it is already cancelled."], 422);
                 }
 
 
@@ -1551,7 +1551,7 @@ public function changeMultipleBookingStatuses(Request $request)
                 }
                 if ($booking->status === "converted_to_job") {
                     // Return an error response indicating that the status cannot be updated
-                    return response()->json(["message" => "Status cannot be updated because it is 'converted_to_job'"], 422);
+                    return response()->json(["message" => "Unable to change the appointment status because it is already complete."], 422);
                 }
 
 
