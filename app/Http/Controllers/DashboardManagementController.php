@@ -1819,7 +1819,9 @@ class DashboardManagementController extends Controller
 
     protected function calculateRevenue($garage_id, $range, $expert_id, $is_walk_in_customer)
     {
-        return JobPayment::when(request()->filled("payment_type"), function ($query) {
+        return JobPayment::
+        selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
+        ->when(request()->filled("payment_type"), function ($query) {
                 $payment_typeArray = explode(',', request()->payment_type);
                 $query->whereIn("job_payments.payment_type", $payment_typeArray);
             })
@@ -1835,7 +1837,7 @@ class DashboardManagementController extends Controller
             })
 
             ->whereHas('bookings', function ($query) use ($garage_id, $range, $expert_id) {
-                $query->selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
+                $query
                     ->where('bookings.garage_id', $garage_id)
 
                     ->when(!empty($expert_id), function ($query) use ($expert_id) {
