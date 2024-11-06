@@ -1817,20 +1817,21 @@ class DashboardManagementController extends Controller
 
     protected function calculateRevenue($garage_id, $range, $expert_id, $is_walk_in_customer)
     {
-        return JobPayment::
+        return Booking::
         selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
+        ->where("status","converted_to_job")
+        ->where("payment_status","complete")
         ->when(request()->filled("payment_type"), function ($query) {
                 $payment_typeArray = explode(',', request()->payment_type);
-                $query->whereIn("job_payments.payment_type", $payment_typeArray);
+                $query->whereIn("bookings.payment_method", $payment_typeArray);
             })
-            ->whereHas("bookings.customer", function ($query) use ($is_walk_in_customer) {
+            ->whereHas("customer", function ($query) use ($is_walk_in_customer) {
                 $query->where("users.is_walk_in_customer", $is_walk_in_customer);
             })
 
-            ->when(request()->filled('is_returning_customers'), function ($q) {
+            ->when(request()->filled('is_returning_customers'), function ($query) {
                 $isReturning = request()->boolean("is_returning_customers");
 
-                $q->whereHas("bookings", function ($query) use ($isReturning) {
                     // Separate subquery to count all bookings for each customer.
                     $query->whereIn('bookings.customer_id', function ($subquery) use ($isReturning) {
                         $subquery->select('customer_id')
@@ -1838,11 +1839,9 @@ class DashboardManagementController extends Controller
                                  ->groupBy('customer_id')
                                  ->having(DB::raw('COUNT(id)'), $isReturning ? '>' : '=', 1);
                     });
-                });
+
             })
 
-            ->whereHas('bookings', function ($query) use ($garage_id, $range, $expert_id) {
-                $query
                     ->where('bookings.garage_id', $garage_id)
 
                     ->when(!empty($expert_id), function ($query) use ($expert_id) {
@@ -1902,9 +1901,13 @@ class DashboardManagementController extends Controller
                     })
                     ->when($range === 'all' && request()->filled("start_date") && request()->filled("end_date"), function ($query) {
                         $query->whereBetween('bookings.job_start_date', [request()->start_date, request()->end_date]);
-                    })
-                ;
-            })->sum('amount');
+                    })  ->selectRaw('SUM(
+                        CASE
+                            WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
+                            ELSE tip_amount
+                        END
+                    ) as revenue')
+                    ->value('revenue');
     }
     public function revenue($range = 'today', $expert_id = NULL)
     {
@@ -2101,12 +2104,30 @@ class DashboardManagementController extends Controller
                 })
                 ->select(
                     'users.*',
-                    DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as this_month_revenue'),
-                    DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as last_month_revenue')
-                ) // Sum the amount field for both this month and last month
-                ->whereHas('roles', function ($query) {
-                    $query->where('roles.name', 'business_experts');
-                })
+                    DB::raw('SUM(
+                        CASE
+                            WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '"
+                            THEN
+                                CASE
+                                    WHEN bookings.tip_type = "percentage" THEN bookings.final_price * (bookings.tip_amount / 100)
+                                    ELSE bookings.tip_amount
+                                END
+                            ELSE 0
+                        END
+                    ) as this_month_revenue'),
+
+                    DB::raw('SUM(
+                        CASE
+                            WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '"
+                            THEN
+                                CASE
+                                    WHEN bookings.tip_type = "percentage" THEN bookings.final_price * (bookings.tip_amount / 100)
+                                    ELSE bookings.tip_amount
+                                END
+                            ELSE 0
+                        END
+                    ) as last_month_revenue')
+                )
                 ->where("business_id", auth()->user()->business_id)
                 ->groupBy('users.id') // Group by user ID (expert)
                 ->orderBy('this_month_revenue', 'desc') // Order by this month's revenue

@@ -1747,9 +1747,30 @@ protected function applyDateFilter($query, $date_filter) {
             })
             ->select(
                 'users.*',
-                DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as this_month_revenue'),
-                DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as last_month_revenue')
-            ) // Sum the amount field for both this month and last month
+                DB::raw('SUM(
+                    CASE
+                        WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '"
+                        THEN
+                            CASE
+                                WHEN bookings.tip_type = "percentage" THEN bookings.final_price * (bookings.tip_amount / 100)
+                                ELSE bookings.tip_amount
+                            END
+                        ELSE 0
+                    END
+                ) as this_month_revenue'),
+
+                DB::raw('SUM(
+                    CASE
+                        WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '"
+                        THEN
+                            CASE
+                                WHEN bookings.tip_type = "percentage" THEN bookings.final_price * (bookings.tip_amount / 100)
+                                ELSE bookings.tip_amount
+                            END
+                        ELSE 0
+                    END
+                ) as last_month_revenue')
+            )
             ->whereHas('roles', function ($query) {
                 $query->where('roles.name', 'business_experts');
             })

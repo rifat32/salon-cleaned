@@ -71,7 +71,7 @@ trait BasicUtil
             throw new Exception("Error processing refund: " . $e->getMessage(), 500);
         }
     }
-    function calculateExpertRevenue($expert_id, $month = null,$date)
+    function calculateExpertRevenue($expert_id, $month = null,$date=NULL)
     {
         $query = Booking::where([
             'garage_id' => auth()->user()->business_id,
@@ -97,6 +97,8 @@ trait BasicUtil
 
         return $query->value('revenue');
     }
+
+
 public function get_appointment_trend_data($date, $expert_id){
 
     $data["revenue"] = $this->calculateExpertRevenue($expert_id,NULL,$date);
