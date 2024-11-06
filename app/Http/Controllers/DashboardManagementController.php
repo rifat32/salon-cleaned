@@ -2574,10 +2574,20 @@ $expert->last_month_revenue = $this->calculateExpertRevenue($expert, now()->subM
                  ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
                  ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
 
-                 $expert->average_booked_slots = Booking::
+                 $expert->average_booked_slots_time = Booking::
     where("garage_id", auth()->user()->business_id)
     ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-    ->avg(DB::raw('JSON_LENGTH(booked_slots)'));
+    ->avg(DB::raw('JSON_LENGTH(booked_slots)')) * 15;
+
+    $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
+    $expert->booking_distribution = collect($bookingTypes)->mapWithKeys(function ($bookingType) {
+        return [
+            $bookingType => Booking::where('booking_type', $bookingType)
+                ->where('garage_id', auth()->user()->business_id)
+                ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+                ->count()
+        ];
+    })->toArray();
 
 
                  // Use object property syntax instead of array-like syntax
