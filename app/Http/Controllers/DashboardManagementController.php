@@ -2515,7 +2515,7 @@ class DashboardManagementController extends Controller
                  ->where("business_id", auth()->user()->business_id)
                  ->groupBy('users.id') // Group by user ID (expert)
                  ->get();
-                 
+
              foreach ($experts as $expert) {
                  // Initialize an array for blocked slots
                  $blockedSlots = []; // Separate variable for blocked slots
@@ -2607,7 +2607,9 @@ class DashboardManagementController extends Controller
                          });
                      }
                  ])
-                 ->where('bookings.expert_id', $expert->id)
+                 ->whereHas('bookings',function($query) use($expert){
+                     $query->where("bookings.expert_id",$expert->id);
+                 } )
                      ->orderBy('all_sales_count', 'desc')
                      ->get();
 
