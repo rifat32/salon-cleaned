@@ -2514,8 +2514,8 @@ class DashboardManagementController extends Controller
                  })
                  ->where("business_id", auth()->user()->business_id)
                  ->groupBy('users.id') // Group by user ID (expert)
-                 ->orderBy('this_month_revenue', 'desc') // Order by this month's revenue
                  ->get();
+                 
              foreach ($experts as $expert) {
                  // Initialize an array for blocked slots
                  $blockedSlots = []; // Separate variable for blocked slots
