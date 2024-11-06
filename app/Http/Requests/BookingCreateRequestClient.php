@@ -39,7 +39,10 @@ class BookingCreateRequestClient extends FormRequest
     'required',
     'date_format:g:i A',
 ],
-
+'booking_from' => [
+    'nullable',
+    'string',
+],
 
             "garage_id" => "required|numeric",
             "additional_information" => "nullable|string",

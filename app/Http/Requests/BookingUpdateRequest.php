@@ -37,7 +37,10 @@ class BookingUpdateRequest extends FormRequest
                 'numeric',
                  new ValidateExpert(NULL)
             ],
-
+'booking_from' => [
+    'nullable',
+    'string',
+],
    'booked_slots' => [
     'required',
     'array',

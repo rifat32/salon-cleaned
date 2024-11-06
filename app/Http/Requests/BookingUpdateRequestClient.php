@@ -42,6 +42,11 @@ class BookingUpdateRequestClient extends FormRequest
     'date_format:g:i A',
 ],
 
+'booking_from' => [
+    'nullable',
+    'string',
+],
+
 "reason" => "nullable|string",
             "garage_id" => "required|numeric",
              "additional_information" => "nullable|string",

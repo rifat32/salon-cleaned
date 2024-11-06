@@ -718,6 +718,7 @@ class ClientBookingController extends Controller
         $booking->fill(collect($request_data)->only([
             "garage_id",
             "additional_information",
+            'booking_from',
             "coupon_code",
             "expert_id",
             "booked_slots",

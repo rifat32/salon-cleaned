@@ -841,7 +841,8 @@ class BookingController extends Controller
                     "booked_slots",
                     "reason",
                     "next_visit_date",
-                    "send_notification"
+                    "send_notification",
+                    'booking_from'
                 ])->toArray());
 
                 BookingSubService::where([

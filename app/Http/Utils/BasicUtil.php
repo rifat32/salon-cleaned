@@ -97,7 +97,6 @@ public function get_appointment_trend_data($date, $expert_id){
       ->get();
 
 
-
           $user->previous_bookings = Booking::with(
             "sub_services.service",
             "booking_packages.garage_package",
@@ -170,41 +169,12 @@ public function get_appointment_trend_data($date, $expert_id){
         ->orderBy('all_booking_count', 'desc') // Order by the count of converted bookings
         ->get();
 
-          $user->total_payment = JobPayment::whereHas("bookings", function($query) use($user) {
-            $query->where("bookings.customer_id",$user->id);
-          })->get()->sum("amount");
 
-          $user->cash_payment = JobPayment::
-          whereHas("bookings", function($query) use($user) {
-            $query->where("bookings.customer_id",$user->id);
-          })
-          ->where("job_payments.payment_type","cash")
-          ->get()
-          ->sum("amount");
+        $user->bookings = Booking::where("bookings.customer_id",$user->id)
+        ->where("status","converted_to_job")
+        ->where("payment_status","complete")
+        ->get();
 
-          $user->card_payment = JobPayment::
-          whereHas("bookings", function($query) use($user) {
-            $query->where("bookings.customer_id",$user->id);
-          })
-          ->where("job_payments.payment_type","card")
-          ->get()
-          ->sum("amount");
-
-          $user->stripe_payment = JobPayment::
-          whereHas("bookings", function($query) use($user) {
-            $query->where("bookings.customer_id",$user->id);
-          })
-          ->where("job_payments.payment_type","stripe")
-          ->get()
-          ->sum("amount");
-
-          $user->change_payment = JobPayment::
-          whereHas("bookings", function($query) use($user) {
-            $query->where("bookings.customer_id",$user->id);
-          })
-          ->where("job_payments.payment_type","change")
-          ->get()
-          ->sum("amount");
 
 
           return $user;

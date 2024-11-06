@@ -50,6 +50,11 @@ class BookingCreateRequest extends FormRequest
 'last_Name' => 'nullable|required_without:customer_id|string|max:255',
 'phone' => 'nullable|string',
 
+'booking_from' => [
+    'nullable',
+    'string',
+],
+
             "garage_id" => "required|numeric|exists:garages,id",
 
             "additional_information" => "nullable|string",

@@ -25,6 +25,9 @@ class CreateBookingsTable extends Migration
 
                    $table->enum("booking_type", ["self_booking", "admin_panel_booking","walk_in_customer_booking"]);
 
+                   $table->enum("booking_from", ["slot_booking", "pos_booking","quick_booking","customer_booking"]);
+
+
 
             $table->unsignedBigInteger("pre_booking_id")->nullable();
             $table->foreign('pre_booking_id')->references('id')->on('pre_bookings')->onDelete('restrict');
