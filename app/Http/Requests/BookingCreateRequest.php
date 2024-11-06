@@ -58,6 +58,8 @@ class BookingCreateRequest extends FormRequest
             "garage_id" => "required|numeric|exists:garages,id",
 
             "additional_information" => "nullable|string",
+            "expert_note" => "nullable|string",
+            "receptionist_note" => "nullable|string",
             // "status",
             "job_start_date" => "required|date_format:Y-m-d",
             "job_start_time" => ['nullable','date_format:H:i', new TimeValidation

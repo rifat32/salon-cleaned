@@ -81,6 +81,19 @@ class User extends Authenticatable
     {
         return $this->bookings()->latest()->limit(1);
     }
+    public function completedBookings()
+    {
+        return $this->bookings()
+        ->where("status","converted_to_job")
+        ->where("payment_status","complete")
+        ;
+    }
+
+    public function feedbacks()
+    {
+        return $this->hasMany(ReviewNew::class, 'user_id', 'id');
+    }
+
 
     public function reviews()
     {

@@ -1766,12 +1766,9 @@ class DashboardManagementController extends Controller
                 ->when(!empty($expert_id), function ($query) use ($expert_id) {
                     $query->where('expert_id', $expert_id);
                 })
-
                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                     $query->where('bookings.expert_id', auth()->user()->id);
                 })
-
-
                 ->count();
         }
 
@@ -2370,7 +2367,14 @@ class DashboardManagementController extends Controller
                  ], 401);
              }
 
-             $experts = User::with("translation")
+             $experts = User::with([
+                "translation",
+                "feedbacks" => function($query) {
+                  $query->whereHas("booking", function($query) {
+                    $query->where("bookings.garage_id",auth()->user()->business_id);
+                  });
+                }
+                ])
              ->where("users.is_active",1)
                  ->when($request->hasAny([
                      'expert_id',
@@ -2530,10 +2534,7 @@ class DashboardManagementController extends Controller
                  $expert->busy_slots = $blockedSlots;
                  $expert->appointment_trends = $appointment_trends;
 
-                 $expert->feedbacks = ReviewNew::whereHas("booking", function ($query) use ($expert) {
-                     $query->where("bookings.expert_id", $expert->id);
-                 })
-                     ->get();
+
 
                  $expert->top_services = SubService::withCount([
                      'bookingSubServices as all_sales_count' => function ($query) use ($expert) {

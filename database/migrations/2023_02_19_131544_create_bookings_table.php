@@ -39,6 +39,9 @@ class CreateBookingsTable extends Migration
             $table->foreign('customer_id')->references('id')->on('users')->onDelete('cascade');
 
             $table->text("additional_information")->nullable();
+            $table->text("expert_note")->nullable();
+            $table->text("receptionist_note")->nullable();
+
             $table->text("reason")->nullable();
 
             $table->enum("coupon_discount_type",['fixed', 'percentage'])->default("fixed")->nullable();

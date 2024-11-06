@@ -91,10 +91,7 @@ public function get_appointment_trend_data($date, $expert_id){
 
     public function addCustomerData($user){
 
-        $user->feedbacks = ReviewNew::whereHas("booking", function($query) use($user) {
-            $query->where("bookings.customer_id",$user->id);
-      })
-      ->get();
+       
 
 
           $user->previous_bookings = Booking::with(
@@ -170,10 +167,7 @@ public function get_appointment_trend_data($date, $expert_id){
         ->get();
 
 
-        $user->bookings = Booking::where("bookings.customer_id",$user->id)
-        ->where("status","converted_to_job")
-        ->where("payment_status","complete")
-        ->get();
+
 
 
 

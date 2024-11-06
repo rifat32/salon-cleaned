@@ -29,20 +29,20 @@ class BookingCreateRequestClient extends FormRequest
             'expert_id' => [
                 'required',
                 'numeric',
-                 new ValidateExpert(NULL)
+                new ValidateExpert(NULL)
             ],
-   'booked_slots' => [
-    'required',
-    'array',
-],
-'booked_slots.*' => [
-    'required',
-    'date_format:g:i A',
-],
-'booking_from' => [
-    'nullable',
-    'string',
-],
+            'booked_slots' => [
+                'required',
+                'array',
+            ],
+            'booked_slots.*' => [
+                'required',
+                'date_format:g:i A',
+            ],
+            'booking_from' => [
+                'nullable',
+                'string',
+            ],
 
             "garage_id" => "required|numeric",
             "additional_information" => "nullable|string",
@@ -50,22 +50,25 @@ class BookingCreateRequestClient extends FormRequest
 
             // "status",
             "job_start_date" => "required|date_format:Y-m-d",
-            "job_start_time" => ['nullable','date_format:H:i', new TimeValidation
-        ],
+            "job_start_time" => [
+                'nullable',
+                'date_format:H:i',
+                new TimeValidation
+            ],
 
             // "job_end_date" => "required|date",
             "coupon_code" => "nullable|string",
             "payment_method" => "nullable|string",
 
 
-    'booking_sub_service_ids' => 'nullable|array',
-    'booking_sub_service_ids.*' => 'nullable|numeric',
+            'booking_sub_service_ids' => 'nullable|array',
+            'booking_sub_service_ids.*' => 'nullable|numeric',
 
-    'booking_garage_package_ids' => 'nullable|array',
-    'booking_garage_package_ids.*' => 'nullable|numeric',
+            'booking_garage_package_ids' => 'nullable|array',
+            'booking_garage_package_ids.*' => 'nullable|numeric',
 
-"tip_type" => "nullable|string|in:fixed,percentage",
-"tip_amount" => "required_if:tip_type,!=,null|numeric|min:0",
+            "tip_type" => "nullable|string|in:fixed,percentage",
+            "tip_amount" => "required_if:tip_type,!=,null|numeric|min:0",
 
 
         ];

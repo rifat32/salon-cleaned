@@ -13,6 +13,10 @@ class Booking extends Model
 
 
     protected $fillable = [
+
+
+        "receptionist_note",
+        "expert_note",
         "booking_type",
         "next_visit_date",
         "send_notification",

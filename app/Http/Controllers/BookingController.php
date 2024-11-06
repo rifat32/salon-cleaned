@@ -432,6 +432,16 @@ class BookingController extends Controller
 
             $request_data = $request->validated();
 
+            if (auth()->user()->hasRole("business_expert")) {
+                unset($request_data["receptionist_note"]);
+                if(auth()->user()->id !== $request_data["expert_id"]) {
+                    unset($request_data["expert_note"]);
+                }
+            } else {
+                unset($request_data["expert_note"]);
+            }
+
+
             $holidays = Holiday::whereDate("start_date", "<=", $request_data["job_start_date"])
                 ->whereDate("end_date", ">=", $request_data["job_start_date"])
                 ->get();
@@ -778,11 +788,24 @@ class BookingController extends Controller
                     ], 401);
                 }
                 $request_data = $request->validated();
+
+                if (auth()->user()->hasRole("business_expert")) {
+                    unset($request_data["receptionist_note"]);
+                    if(auth()->user()->id !== $request_data["expert_id"]) {
+                        unset($request_data["expert_note"]);
+                    }
+                } else {
+                    unset($request_data["expert_note"]);
+                }
+
+
+
                 if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                     return response()->json([
                         "message" => "you are not the owner of the garage or the requested garage does not exist."
                     ], 401);
                 }
+
 
                 $booking = Booking::where([
                     "id" => $request_data["id"],
@@ -832,7 +855,10 @@ class BookingController extends Controller
 
 
 
+
                 $booking->fill(collect($request_data)->only([
+                    "receptionist_note",
+                    "expert_note",
                     "status",
                     "job_start_date",
                     "discount_type",
@@ -2148,6 +2174,15 @@ class BookingController extends Controller
                         // Adjust 'status' according to your actual status field
                     }
                 ])
+                ->with([
+                    "completedBookings",
+                    "feedbacks" => function($query) {
+                        $query->whereHas("booking", function($query) {
+                              $query->where("bookings.garage_id",auth()->user()->business_id);
+                        });
+                    },
+                    "feedbacks.booking.sub_services"
+                    ])
                 // Filter by rating if provided
                 ->when(request()->filled('rating'), function ($q) {
                     $q->whereHas('reviews', function ($query) {
