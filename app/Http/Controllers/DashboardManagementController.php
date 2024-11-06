@@ -2243,28 +2243,7 @@ class DashboardManagementController extends Controller
             return $this->sendError($e, 500, $request);
         }
     }
-    function calculateExpertRevenue($expert, $month = null)
-{
-    $query = Booking::where([
-        'garage_id' => auth()->user()->business_id,
-        'expert_id' => $expert->id,
-    ])
-    ->where('status', 'converted_to_job')
-    ->where('payment_status', 'complete')
-    ->selectRaw('SUM(
-        CASE
-            WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
-            ELSE tip_amount
-        END
-    ) as revenue');
 
-    // Apply month filter if provided
-    if ($month) {
-        $query->whereMonth('created_at', $month);
-    }
-
-    return $query->value('revenue');
-}
  /**
      *
      * @OA\Get(
@@ -2563,11 +2542,11 @@ class DashboardManagementController extends Controller
                  $expert->appointment_trends = $appointment_trends;
 
              // Usage for each revenue type:
-$expert->life_time_revenue = $this->calculateExpertRevenue($expert);
+$expert->life_time_revenue = $this->calculateExpertRevenue($expert->id);
 
-$expert->this_month_revenue = $this->calculateExpertRevenue($expert, now()->month);
+$expert->this_month_revenue = $this->calculateExpertRevenue($expert->id, now()->month);
 
-$expert->last_month_revenue = $this->calculateExpertRevenue($expert, now()->subMonth()->month);
+$expert->last_month_revenue = $this->calculateExpertRevenue($expert->id, now()->subMonth()->month);
 
                 $expert->all_booked_slots = Booking::
                  where("garage_id", auth()->user()->business_id)

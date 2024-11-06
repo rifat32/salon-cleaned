@@ -71,15 +71,35 @@ trait BasicUtil
             throw new Exception("Error processing refund: " . $e->getMessage(), 500);
         }
     }
+    function calculateExpertRevenue($expert_id, $month = null,$date)
+    {
+        $query = Booking::where([
+            'garage_id' => auth()->user()->business_id,
+            'expert_id' => $expert_id,
+        ])
+        ->where('status', 'converted_to_job')
+        ->where('payment_status', 'complete')
+        ->when(!empty($date), function($query) use($date) {
+           $query->whereDate("job_start_date",$date);
+        })
+
+        ->selectRaw('SUM(
+            CASE
+                WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
+                ELSE tip_amount
+            END
+        ) as revenue');
+
+        // Apply month filter if provided
+        if ($month) {
+            $query->whereMonth('created_at', $month);
+        }
+
+        return $query->value('revenue');
+    }
 public function get_appointment_trend_data($date, $expert_id){
 
-    $data["revenue"] = JobPayment::whereHas("bookings", function($query) use($expert_id, $date) {
-          $query->where("bookings.expert_id",$expert_id)
-          ->whereDate("bookings.job_start_date",$date)
-          ->where("bookings.status","converted_to_job")
-          ;
-    })
-    ->sum("amount");
+    $data["revenue"] = $this->calculateExpertRevenue($expert_id,NULL,$date);
 
     $data["bookings"] = Booking::where("bookings.expert_id",$expert_id)
     ->whereDate("bookings.job_start_date",$date)
@@ -91,7 +111,7 @@ public function get_appointment_trend_data($date, $expert_id){
 
     public function addCustomerData($user){
 
-       
+
 
 
           $user->previous_bookings = Booking::with(
