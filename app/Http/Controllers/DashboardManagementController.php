@@ -2227,15 +2227,13 @@ class DashboardManagementController extends Controller
 
 
                 $data["today_all_busy_slots"] = ExpertRota::
-                where("garage_id", auth()->user()->business_id)
+                whereHas("user", function($query) {
+                    $query->where("users.business_id",auth()->user()->business_id);
+                 })
                 ->whereDate("date", today())
                 ->sum(DB::raw('JSON_LENGTH(busy_slots)'));
 
-               $data["today_all_booked_slots"] = Booking::
-               whereHas("user", function($query) {
-                  $query->where("users.business_id",auth()->user()->business_id);
-               })
-                ->where("garage_id", auth()->user()->business_id)
+               $data["today_all_booked_slots"] = Booking::where("garage_id", auth()->user()->business_id)
                 ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
                 ->whereDate("job_start_date", today())
                 ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
@@ -2559,10 +2557,7 @@ class DashboardManagementController extends Controller
 
 
                 $expert->all_booked_slots = Booking::
-                whereHas("user", function($query) {
-                   $query->where("users.business_id",auth()->user()->business_id);
-                })
-                 ->where("garage_id", auth()->user()->business_id)
+                 where("garage_id", auth()->user()->business_id)
                  ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
                  ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
 
