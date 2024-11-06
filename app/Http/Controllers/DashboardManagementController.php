@@ -2613,13 +2613,13 @@ $expert->last_month_revenue = $this->calculateExpertRevenue($expert, now()->subM
                  }
              }
 
-             $data["top_experts"] = $experts;
+              $experts;
 
 
 
 
 
-             return response()->json($data, 200);
+             return response()->json($experts, 200);
          } catch (Exception $e) {
              return $this->sendError($e, 500, $request);
          }
