@@ -2225,16 +2225,17 @@ class DashboardManagementController extends Controller
                 ->limit(5)
                 ->get();
 
-                $data["today_all_busy_slots"] = Booking::where("garage_id", auth()->user()->business->id)
 
+                $data["today_all_busy_slots"] = ExpertRota::
+                where("garage_id", auth()->user()->business_id)
                 ->whereDate("date", today())
                 ->sum(DB::raw('JSON_LENGTH(busy_slots)'));
 
-               $data["today_all_booked_slots"] = ExpertRota::
+               $data["today_all_booked_slots"] = Booking::
                whereHas("user", function($query) {
-                  $query->where("users.business_id",auth()->user()->business->id);
+                  $query->where("users.business_id",auth()->user()->business_id);
                })
-               ->where("garage_id", auth()->user()->business->id)
+                ->where("garage_id", auth()->user()->business_id)
                 ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
                 ->whereDate("job_start_date", today())
                 ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
@@ -2488,7 +2489,6 @@ class DashboardManagementController extends Controller
                  })
                  ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
                  ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id')
-
                  // Join job_payments on
                  ->when(request()->filled("expert_id"), function ($query) {
                      $query->where('users.id', request()->input("expert_id"));
@@ -2537,7 +2537,7 @@ class DashboardManagementController extends Controller
                  })
                      ->get();
 
-                 $data["top_services"] = SubService::withCount([
+                 $expert->top_services = SubService::withCount([
                      'bookingSubServices as all_sales_count' => function ($query) use ($expert) {
                          $query->whereHas('booking', function ($query) use ($expert) {
                              $query->where('bookings.status', 'converted_to_job')
@@ -2558,6 +2558,13 @@ class DashboardManagementController extends Controller
                      ->get();
 
 
+                $expert->all_booked_slots = Booking::
+                whereHas("user", function($query) {
+                   $query->where("users.business_id",auth()->user()->business_id);
+                })
+                 ->where("garage_id", auth()->user()->business_id)
+                 ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+                 ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
 
 
                  // Use object property syntax instead of array-like syntax
@@ -2568,8 +2575,6 @@ class DashboardManagementController extends Controller
                  $expert->next_month_bookings = $this->bookingsByStatus('next_month', $expert->id);
                  $expert->previous_week_bookings = $this->bookingsByStatus('previous_week', $expert->id);
                  $expert->previous_month_bookings = $this->bookingsByStatus('previous_month', $expert->id);
-
-
 
                  $expert->today_revenue = $this->revenue('today', $expert->id);
                  $expert->this_week_revenue = $this->revenue('this_week', $expert->id);
