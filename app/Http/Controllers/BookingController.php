@@ -2175,7 +2175,7 @@ class BookingController extends Controller
                     }
                 ])
                 ->with([
-                    "completedBookings",
+                    "completedBookings.expert",
                     "feedbacks" => function($query) {
                         $query->whereHas("booking", function($query) {
                               $query->where("bookings.garage_id",auth()->user()->business_id);

@@ -2367,7 +2367,17 @@ class DashboardManagementController extends Controller
                  ], 401);
              }
 
-             $experts = User::with([
+             $experts = User::
+             withCount([
+                'expert_bookings as completed_booking_count' => function ($query) {
+                    $query
+
+                        ->where('bookings.garage_id', auth()->user()->business_id)
+                        ->where('bookings.status', 'converted_to_job');  // Adjust 'status' according to your actual status field
+                },
+
+            ])
+             ->with([
                 "translation",
                 "feedbacks" => function($query) {
                   $query->whereHas("booking", function($query) {
