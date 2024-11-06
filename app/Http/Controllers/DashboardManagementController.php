@@ -2508,11 +2508,7 @@ class DashboardManagementController extends Controller
                  ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                      $query->where('users.id', auth()->user()->id);
                  })
-                 ->select(
-                     'users.*',
-                     DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as this_month_revenue'),
-                     DB::raw('SUM(CASE WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '" THEN job_payments.amount ELSE 0 END) as last_month_revenue')
-                 ) // Sum the amount field for both this month and last month
+
                  ->whereHas('roles', function ($query) {
                      $query->where('roles.name', 'business_experts');
                  })
@@ -2544,6 +2540,54 @@ class DashboardManagementController extends Controller
                  $expert->busy_slots = $blockedSlots;
                  $expert->appointment_trends = $appointment_trends;
 
+                 $expert->life_time_revenue = Booking::where([
+                    'garage_id' => auth()->user()->business_id,
+                    'expert_id' => $expert->id
+                ])
+                ->where('status', 'converted_to_job')
+                ->where('payment_status', 'complete')
+                ->selectRaw('SUM(
+                    CASE
+                        WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
+                        ELSE tip_amount
+                    END
+                ) as revenue')
+                ->value('revenue');
+
+                 $expert->this_month_revenue = Booking::where([
+                    'garage_id' => auth()->user()->business_id,
+                    'expert_id' => $expert->id
+                ])
+                ->where('status', 'converted_to_job')
+                ->where('payment_status', 'complete')
+                ->whereMonth('created_at', now()->month) // Filters by current month
+                ->selectRaw('SUM(
+                    CASE
+                        WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
+                        ELSE tip_amount
+                    END
+                ) as revenue')
+                ->value('revenue');
+
+
+
+
+            $expert->last_month_revenue = Booking::where([
+                    'garage_id' => auth()->user()->business_id,
+                    'expert_id' => $expert->id
+                ])
+                ->where('status', 'converted_to_job')
+                ->where('payment_status', 'complete')
+                ->whereMonth('created_at', now()->subMonth()->month) // Filters by last month
+                ->selectRaw('SUM(
+                    CASE
+                        WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
+                        ELSE tip_amount
+                    END
+                ) as revenue')
+                ->value('revenue');
+
+
 
 
                  $expert->top_services = SubService::withCount([
@@ -2563,6 +2607,7 @@ class DashboardManagementController extends Controller
                          });
                      }
                  ])
+                 ->where('bookings.expert_id', $expert->id)
                      ->orderBy('all_sales_count', 'desc')
                      ->get();
 
