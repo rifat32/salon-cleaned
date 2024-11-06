@@ -2243,6 +2243,28 @@ class DashboardManagementController extends Controller
             return $this->sendError($e, 500, $request);
         }
     }
+    function calculateExpertRevenue($expert, $month = null)
+{
+    $query = Booking::where([
+        'garage_id' => auth()->user()->business_id,
+        'expert_id' => $expert->id,
+    ])
+    ->where('status', 'converted_to_job')
+    ->where('payment_status', 'complete')
+    ->selectRaw('SUM(
+        CASE
+            WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
+            ELSE tip_amount
+        END
+    ) as revenue');
+
+    // Apply month filter if provided
+    if ($month) {
+        $query->whereMonth('created_at', $month);
+    }
+
+    return $query->value('revenue');
+}
  /**
      *
      * @OA\Get(
@@ -2540,84 +2562,22 @@ class DashboardManagementController extends Controller
                  $expert->busy_slots = $blockedSlots;
                  $expert->appointment_trends = $appointment_trends;
 
-                 $expert->life_time_revenue = Booking::where([
-                    'garage_id' => auth()->user()->business_id,
-                    'expert_id' => $expert->id
-                ])
-                ->where('status', 'converted_to_job')
-                ->where('payment_status', 'complete')
-                ->selectRaw('SUM(
-                    CASE
-                        WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
-                        ELSE tip_amount
-                    END
-                ) as revenue')
-                ->value('revenue');
+             // Usage for each revenue type:
+$expert->life_time_revenue = $this->calculateExpertRevenue($expert);
 
-                 $expert->this_month_revenue = Booking::where([
-                    'garage_id' => auth()->user()->business_id,
-                    'expert_id' => $expert->id
-                ])
-                ->where('status', 'converted_to_job')
-                ->where('payment_status', 'complete')
-                ->whereMonth('created_at', now()->month) // Filters by current month
-                ->selectRaw('SUM(
-                    CASE
-                        WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
-                        ELSE tip_amount
-                    END
-                ) as revenue')
-                ->value('revenue');
+$expert->this_month_revenue = $this->calculateExpertRevenue($expert, now()->month);
 
-
-
-
-            $expert->last_month_revenue = Booking::where([
-                    'garage_id' => auth()->user()->business_id,
-                    'expert_id' => $expert->id
-                ])
-                ->where('status', 'converted_to_job')
-                ->where('payment_status', 'complete')
-                ->whereMonth('created_at', now()->subMonth()->month) // Filters by last month
-                ->selectRaw('SUM(
-                    CASE
-                        WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
-                        ELSE tip_amount
-                    END
-                ) as revenue')
-                ->value('revenue');
-
-
-
-
-                 $expert->top_services = SubService::withCount([
-                     'bookingSubServices as all_sales_count' => function ($query) use ($expert) {
-                         $query->whereHas('booking', function ($query) use ($expert) {
-                             $query->where('bookings.status', 'converted_to_job')
-                                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                                     $query->where('bookings.expert_id', auth()->user()->id);
-                                 })
-                                 ->where('bookings.expert_id', $expert->id)
-                                 ->when(request()->filled("start_date"), function ($query) {
-                                     $query->whereDate("bookings.job_start_date", ">=", request()->input("start_date"));
-                                 })
-                                 ->when(request()->filled("end_date"), function ($query) {
-                                     $query->whereDate("bookings.job_start_date", "<=", request()->input("end_date"));
-                                 });
-                         });
-                     }
-                 ])
-                 ->whereHas('bookings',function($query) use($expert){
-                     $query->where("bookings.expert_id",$expert->id);
-                 } )
-                     ->orderBy('all_sales_count', 'desc')
-                     ->get();
-
+$expert->last_month_revenue = $this->calculateExpertRevenue($expert, now()->subMonth()->month);
 
                 $expert->all_booked_slots = Booking::
                  where("garage_id", auth()->user()->business_id)
                  ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
                  ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
+
+                 $expert->average_booked_slots = Booking::
+    where("garage_id", auth()->user()->business_id)
+    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+    ->avg(DB::raw('JSON_LENGTH(booked_slots)'));
 
 
                  // Use object property syntax instead of array-like syntax
