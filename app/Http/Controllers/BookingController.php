@@ -63,14 +63,12 @@ class BookingController extends Controller
 
 
         if (empty($stripeSetting)) {
-            throw new Exception("No stripe seting found",403);
-
+            throw new Exception("No stripe seting found", 403);
         }
 
         if (empty($stripeSetting->stripe_enabled)) {
-            throw new Exception("Stripe is not enabled",403);
-
-       }
+            throw new Exception("Stripe is not enabled", 403);
+        }
 
         // Set Stripe client
         $stripe = new \Stripe\StripeClient($stripeSetting->STRIPE_SECRET);
@@ -122,17 +120,17 @@ class BookingController extends Controller
             "payment_type" => "stripe"
         ]);
 
-            Booking::where([
-                "id" => $booking->id
-            ])
-                ->update([
-                    "payment_status" => "complete",
-                    "payment_method" => "stripe"
-                ]);
+        Booking::where([
+            "id" => $booking->id
+        ])
+            ->update([
+                "payment_status" => "complete",
+                "payment_method" => "stripe"
+            ]);
 
-         // Save the payment intent ID to the booking record
-    $booking->payment_intent_id = $paymentIntent->id; // Assuming there's a `payment_intent_id` column in the `bookings` table
-    $booking->save();
+        // Save the payment intent ID to the booking record
+        $booking->payment_intent_id = $paymentIntent->id; // Assuming there's a `payment_intent_id` column in the `bookings` table
+        $booking->save();
 
         return response()->json([
             'clientSecret' => $paymentIntent->client_secret
@@ -149,14 +147,12 @@ class BookingController extends Controller
 
 
         if (empty($stripeSetting)) {
-            throw new Exception("No stripe seting found",403);
-
+            throw new Exception("No stripe seting found", 403);
         }
 
         if (empty($stripeSetting->stripe_enabled)) {
-            throw new Exception("Stripe is not enabled",403);
-
-       }
+            throw new Exception("Stripe is not enabled", 403);
+        }
         // Set Stripe API key
         $stripe = new \Stripe\StripeClient($stripeSetting->STRIPE_SECRET);
 
@@ -182,7 +178,7 @@ class BookingController extends Controller
             JobPayment::where([
                 "booking_id" => $booking->id
             ])
-            ->delete();
+                ->delete();
             return response()->json([
                 "message" => "Refund successful",
                 "refund_id" => $refund->id
@@ -192,7 +188,6 @@ class BookingController extends Controller
                 "message" => "Refund failed: " . $e->getMessage()
             ], 500);
         }
-
     }
 
 
@@ -217,7 +212,7 @@ class BookingController extends Controller
             return response()->json([
                 "message" => "You booking price is zero. it's a software error."
             ], 409);
-        } else if ($booking->price < 0 || $booking->final_price < 0){
+        } else if ($booking->price < 0 || $booking->final_price < 0) {
             return response()->json([
                 "message" => "You booking price is zero. it's a software error."
             ], 409);
@@ -237,15 +232,13 @@ class BookingController extends Controller
             ->first();
 
 
-            if (empty($stripeSetting)) {
-                throw new Exception("No stripe seting found",403);
+        if (empty($stripeSetting)) {
+            throw new Exception("No stripe seting found", 403);
+        }
 
-            }
-
-            if (empty($stripeSetting->stripe_enabled)) {
-                throw new Exception("Stripe is not enabled",403);
-
-           }
+        if (empty($stripeSetting->stripe_enabled)) {
+            throw new Exception("Stripe is not enabled", 403);
+        }
 
         Stripe::setApiKey($stripeSetting->STRIPE_SECRET);
         Stripe::setClientId($stripeSetting->STRIPE_KEY);
@@ -439,20 +432,19 @@ class BookingController extends Controller
 
             $request_data = $request->validated();
 
-            $holidays = Holiday::
-            whereDate("start_date", "<=", $request_data["job_start_date"])
-            ->whereDate("end_date", ">=", $request_data["job_start_date"])
-            ->get();
+            $holidays = Holiday::whereDate("start_date", "<=", $request_data["job_start_date"])
+                ->whereDate("end_date", ">=", $request_data["job_start_date"])
+                ->get();
 
-            if($holidays->count()) {
+            if ($holidays->count()) {
                 return response()->json([
-                  "message" => "some off days are exists",
-                  "conflicted_holidays" => $holidays
+                    "message" => "some off days are exists",
+                    "conflicted_holidays" => $holidays
                 ], 409);
             }
             $request_data["booking_type"] = "admin_panel_booking";
 
-            if(empty($request_data["customer_id"])) {
+            if (empty($request_data["customer_id"])) {
                 $request_data["booking_type"] = "walk_in_customer_booking";
 
                 $walkInCustomer = new User(); // Assuming you are using the User model for walk-in customers
@@ -528,7 +520,7 @@ class BookingController extends Controller
                 ]);
             }
 
-            $slotValidation =  $this->validateBookingSlots($booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
+            $slotValidation =  $this->validateBookingSlots($booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
             if ($slotValidation['status'] === 'error') {
                 // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
@@ -630,35 +622,35 @@ class BookingController extends Controller
 
             $recipientIds = [$booking->customer->id];
 
-//  // Retrieve emails of users with the role 'business_receptionist'
-//  $receptionists = User::role('business_receptionist')
-//  ->where("business_id",$booking->garage_id)
-//  ->pluck('id')->toArray();
+            //  // Retrieve emails of users with the role 'business_receptionist'
+            //  $receptionists = User::role('business_receptionist')
+            //  ->where("business_id",$booking->garage_id)
+            //  ->pluck('id')->toArray();
 
-//  // Merge the two arrays
-//  $recipientIds = array_merge($recipientIds, $receptionists);
+            //  // Merge the two arrays
+            //  $recipientIds = array_merge($recipientIds, $receptionists);
 
-foreach ($recipientIds as $recipientId) {
-    Notification::create([
-        "sender_id" => $request->user()->id,
-        "receiver_id" => $recipientId,
-        "customer_id" => $booking->customer->id,
-        "business_id" => $booking->garage_id ,
-        "garage_id" => $booking->garage_id,
-        "booking_id" => $booking->id,
-        "entity_name" => "booking",
-        "entity_id" => $booking->id,
-        "entity_ids" => json_encode([]),
-        "notification_title" => 'Booking Created',
-        "notification_description" => "A new booking has been created for booking ID: {$booking->id}.",
-        "notification_link" => null,
-        "is_system_generated" => false,
-        "notification_template_id" => $notification_template->id,
-        "status" => "unread",
-        "start_date" => now(),
-        "end_date" => null,
-    ]);
- }
+            foreach ($recipientIds as $recipientId) {
+                Notification::create([
+                    "sender_id" => $request->user()->id,
+                    "receiver_id" => $recipientId,
+                    "customer_id" => $booking->customer->id,
+                    "business_id" => $booking->garage_id,
+                    "garage_id" => $booking->garage_id,
+                    "booking_id" => $booking->id,
+                    "entity_name" => "booking",
+                    "entity_id" => $booking->id,
+                    "entity_ids" => json_encode([]),
+                    "notification_title" => 'Booking Created',
+                    "notification_description" => "A new booking has been created for booking ID: {$booking->id}.",
+                    "notification_link" => null,
+                    "is_system_generated" => false,
+                    "notification_template_id" => $notification_template->id,
+                    "status" => "unread",
+                    "start_date" => now(),
+                    "end_date" => null,
+                ]);
+            }
 
 
             // if (env("SEND_EMAIL") == true) {
@@ -670,13 +662,12 @@ foreach ($recipientIds as $recipientId) {
             if (env("SEND_EMAIL") == true) {
                 $recipientEmails = $this->getNotificationRecipients($booking);
 
-if (!empty($recipientEmails)) {
-    Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
-}
+                if (!empty($recipientEmails)) {
+                    Mail::to($recipientEmails)->send(new BookingCreateMail($booking));
+                }
+            }
 
-}
-
-$booking = $booking->load(["payments"]);
+            $booking = $booking->load(["payments"]);
             DB::commit();
             return response($booking, 201);
         } catch (Exception $e) {
@@ -812,32 +803,30 @@ $booking = $booking->load(["payments"]);
                     return response()->json(["message" => "You cannot check out before check in."], 422);
                 }
                 if ($request_data["status"] == "check_in") {
-                    $check_in_booking = Booking::
-                    where([
-                        "expert_id" => $request_data["expert_id"],
-                        "status" => "check_in"
-                    ])
-                    ->whereNotIn("bookings.id",[$booking->id])
-                    ->first();
+                    $check_in_booking = Booking::where([
+                            "expert_id" => $request_data["expert_id"],
+                            "status" => "check_in"
+                        ])
+                        ->whereNotIn("bookings.id", [$booking->id])
+                        ->first();
 
                     if (!empty($check_in_booking)) {
                         // Return an error response indicating that the expert already has a check-in
                         return response()->json([
                             "message" => "Expert " . ($check_in_booking->expert->first_Name . " " . $check_in_booking->expert->last_Name) . " already has a booking checked in on " . $check_in_booking->job_start_date . " at " . $check_in_booking->booked_slots[0] . " (Booking ID: " . $check_in_booking->id . "). Please complete that booking to start a new one.",
                             "current_booking_id" => $check_in_booking->id,
-                        ], 422);
+                        ], 409);
                     }
                 }
 
-                $holidays = Holiday::
-                whereDate("start_date", "<=", $request_data["job_start_date"])
-                ->whereDate("end_date", ">=", $request_data["job_start_date"])
-                ->get();
+                $holidays = Holiday::whereDate("start_date", "<=", $request_data["job_start_date"])
+                    ->whereDate("end_date", ">=", $request_data["job_start_date"])
+                    ->get();
 
-                if($holidays->count()) {
+                if ($holidays->count()) {
                     return response()->json([
-                      "message" => "some off days are exists",
-                      "conflicted_holidays" => $holidays
+                        "message" => "some off days are exists",
+                        "conflicted_holidays" => $holidays
                     ], 409);
                 }
 
@@ -971,38 +960,38 @@ $booking = $booking->load(["payments"]);
                     "type" => "booking_updated_by_garage_owner"
                 ])
                     ->first();
-                                                 // Get the customer's email
- $recipientIds = [$booking->customer->id];
+                // Get the customer's email
+                $recipientIds = [$booking->customer->id];
 
-//  // Retrieve emails of users with the role 'business_receptionist'
-//  $receptionists = User::role('business_receptionist')
-//  ->where("business_id",$booking->garage_id)
-//  ->pluck('id')->toArray();
+                //  // Retrieve emails of users with the role 'business_receptionist'
+                //  $receptionists = User::role('business_receptionist')
+                //  ->where("business_id",$booking->garage_id)
+                //  ->pluck('id')->toArray();
 
-//  // Merge the two arrays
-//  $recipientIds = array_merge($recipientIds, $receptionists);
+                //  // Merge the two arrays
+                //  $recipientIds = array_merge($recipientIds, $receptionists);
 
- foreach ($recipientIds as $recipientId) {
-    Notification::create([
-        "sender_id" => $request->user()->id,
-        "receiver_id" => $recipientId,
-        "customer_id" => $booking->customer->id,
-        "business_id" => $booking->garage_id ,
-        "garage_id" => $booking->garage_id,
-        "booking_id" => $booking->id,
-        "entity_name" => "booking",
-        "entity_id" => $booking->id,
-        "entity_ids" => json_encode([]),
-       "notification_title" => 'Booking Updated',
-    "notification_description" => "The details of booking ID: {$booking->id} have been updated.",
-   "notification_link" => null,
-        "is_system_generated" => false,
-        "notification_template_id" => $notification_template->id,
-        "status" => "unread",
-        "start_date" => now(),
-        "end_date" => null,
-    ]);
- }
+                foreach ($recipientIds as $recipientId) {
+                    Notification::create([
+                        "sender_id" => $request->user()->id,
+                        "receiver_id" => $recipientId,
+                        "customer_id" => $booking->customer->id,
+                        "business_id" => $booking->garage_id,
+                        "garage_id" => $booking->garage_id,
+                        "booking_id" => $booking->id,
+                        "entity_name" => "booking",
+                        "entity_id" => $booking->id,
+                        "entity_ids" => json_encode([]),
+                        "notification_title" => 'Booking Updated',
+                        "notification_description" => "The details of booking ID: {$booking->id} have been updated.",
+                        "notification_link" => null,
+                        "is_system_generated" => false,
+                        "notification_template_id" => $notification_template->id,
+                        "status" => "unread",
+                        "start_date" => now(),
+                        "end_date" => null,
+                    ]);
+                }
 
                 // if (env("SEND_EMAIL") == true) {
                 //     Mail::to($booking->customer->email)->send(new DynamicMail(
@@ -1011,7 +1000,7 @@ $booking = $booking->load(["payments"]);
                 //     ));
                 // }
 
-                if(!empty($request_data["payments"])) {
+                if (!empty($request_data["payments"])) {
                     $total_payable = $booking->final_price;
 
 
@@ -1041,7 +1030,7 @@ $booking = $booking->load(["payments"]);
 
 
                     if ($total_payable <= $total_payment) {
-                         if($total_payable < $total_payment) {
+                        if ($total_payable < $total_payment) {
                             JobPayment::create([
                                 "booking_id" => $booking->id,
                                 "payment_type" => "change",
@@ -1061,10 +1050,9 @@ $booking = $booking->load(["payments"]);
 
                     $recipientEmails = $this->getNotificationRecipients($booking);
 
-if (!empty($recipientEmails)) {
-    Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
-}
-
+                    if (!empty($recipientEmails)) {
+                        Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
+                    }
                 }
 
                 $booking = $booking->load(["payments"]);
@@ -1178,16 +1166,16 @@ if (!empty($recipientEmails)) {
                         "expert_id" => $booking->expert_id,
                         "status" => "check_in"
                     ])
-                    ->whereNotIn("bookings.id",[$booking->id])
+                        ->whereNotIn("bookings.id", [$booking->id])
 
-                    ->first();
+                        ->first();
 
                     if (!empty($check_in_booking)) {
                         // Return an error response indicating that the expert already has a check-in
                         return response()->json([
                             "message" => "Expert " . ($check_in_booking->expert->first_Name . " " . $check_in_booking->expert->last_Name) . " already has a booking checked in on " . $check_in_booking->job_start_date . " at " . $check_in_booking->booked_slots[0] . " (Booking ID: " . $check_in_booking->id . "). Please complete that booking to start a new one.",
                             "current_booking_id" => $check_in_booking->id,
-                        ], 422);
+                        ], 409);
                     }
                 }
 
@@ -1226,93 +1214,92 @@ if (!empty($recipientEmails)) {
                         "type" => "booking_rejected_by_garage_owner"
                     ])
                         ->first();
-                                        // Get the customer's email
- $recipientIds = [$booking->customer->id];
+                    // Get the customer's email
+                    $recipientIds = [$booking->customer->id];
 
-//  // Retrieve emails of users with the role 'business_receptionist'
-//  $receptionists = User::role('business_receptionist')
-//  ->where("business_id",$booking->garage_id)
-//  ->pluck('id')->toArray();
+                    //  // Retrieve emails of users with the role 'business_receptionist'
+                    //  $receptionists = User::role('business_receptionist')
+                    //  ->where("business_id",$booking->garage_id)
+                    //  ->pluck('id')->toArray();
 
-//  // Merge the two arrays
-//  $recipientIds = array_merge($recipientIds, $receptionists);
+                    //  // Merge the two arrays
+                    //  $recipientIds = array_merge($recipientIds, $receptionists);
 
- foreach ($recipientIds as $recipientId) {
-    Notification::create([
-        "sender_id" => $request->user()->id,
-        "receiver_id" => $recipientId,
-        "customer_id" => $booking->customer->id,
-        "business_id" => $booking->garage_id ,
-        "garage_id" => $booking->garage_id,
-        "booking_id" => $booking->id,
-        "entity_name" => "booking",
-        "entity_id" => $booking->id,
-        "entity_ids" => json_encode([]),
-        "notification_title" => 'Booking Status Changed',
-       "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
-      "notification_link" => null,
-        "is_system_generated" => false,
-        "notification_template_id" => $notification_template->id,
-        "status" => "unread",
-        "start_date" => now(),
-        "end_date" => null,
-    ]);
- }
-
+                    foreach ($recipientIds as $recipientId) {
+                        Notification::create([
+                            "sender_id" => $request->user()->id,
+                            "receiver_id" => $recipientId,
+                            "customer_id" => $booking->customer->id,
+                            "business_id" => $booking->garage_id,
+                            "garage_id" => $booking->garage_id,
+                            "booking_id" => $booking->id,
+                            "entity_name" => "booking",
+                            "entity_id" => $booking->id,
+                            "entity_ids" => json_encode([]),
+                            "notification_title" => 'Booking Status Changed',
+                            "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
+                            "notification_link" => null,
+                            "is_system_generated" => false,
+                            "notification_template_id" => $notification_template->id,
+                            "status" => "unread",
+                            "start_date" => now(),
+                            "end_date" => null,
+                        ]);
+                    }
                 } else {
                     $notification_template = NotificationTemplate::where([
                         "type" => "booking_status_changed_by_garage_owner"
                     ])
                         ->first();
-                                                     // Get the customer's email
- $recipientIds = [$booking->customer->id];
+                    // Get the customer's email
+                    $recipientIds = [$booking->customer->id];
 
- //  // Retrieve emails of users with the role 'business_receptionist'
- //  $receptionists = User::role('business_receptionist')
- //  ->where("business_id",$booking->garage_id)
- //  ->pluck('id')->toArray();
+                    //  // Retrieve emails of users with the role 'business_receptionist'
+                    //  $receptionists = User::role('business_receptionist')
+                    //  ->where("business_id",$booking->garage_id)
+                    //  ->pluck('id')->toArray();
 
- //  // Merge the two arrays
- //  $recipientIds = array_merge($recipientIds, $receptionists);
+                    //  // Merge the two arrays
+                    //  $recipientIds = array_merge($recipientIds, $receptionists);
 
-  foreach ($recipientIds as $recipientId) {
-     Notification::create([
-         "sender_id" => $request->user()->id,
-         "receiver_id" => $recipientId,
-         "customer_id" => $booking->customer->id,
-         "business_id" => $booking->garage_id ,
-         "garage_id" => $booking->garage_id,
-         "booking_id" => $booking->id,
-         "entity_name" => "booking",
-         "entity_id" => $booking->id,
-         "entity_ids" => json_encode([]),
-         "notification_title" => 'Booking Status Changed',
-        "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
-       "notification_link" => null,
-         "is_system_generated" => false,
-         "notification_template_id" => $notification_template->id,
-         "status" => "unread",
-         "start_date" => now(),
-         "end_date" => null,
-     ]);
-  }
+                    foreach ($recipientIds as $recipientId) {
+                        Notification::create([
+                            "sender_id" => $request->user()->id,
+                            "receiver_id" => $recipientId,
+                            "customer_id" => $booking->customer->id,
+                            "business_id" => $booking->garage_id,
+                            "garage_id" => $booking->garage_id,
+                            "booking_id" => $booking->id,
+                            "entity_name" => "booking",
+                            "entity_id" => $booking->id,
+                            "entity_ids" => json_encode([]),
+                            "notification_title" => 'Booking Status Changed',
+                            "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
+                            "notification_link" => null,
+                            "is_system_generated" => false,
+                            "notification_template_id" => $notification_template->id,
+                            "status" => "unread",
+                            "start_date" => now(),
+                            "end_date" => null,
+                        ]);
+                    }
                 }
 
                 if (env("SEND_EMAIL") == true) {
-                                                        // Get the customer's email
+                    // Get the customer's email
 
-                                                        $recipientEmails = $this->getNotificationRecipients($booking);
-if (!empty($recipientEmails)) {
-    Mail::to($recipientEmails)->send(new BookingStatusUpdateMail($booking));
-}
+                    $recipientEmails = $this->getNotificationRecipients($booking);
+                    if (!empty($recipientEmails)) {
+                        Mail::to($recipientEmails)->send(new BookingStatusUpdateMail($booking));
+                    }
 
- //  // Retrieve emails of users with the role 'business_receptionist'
- //  $receptionists = User::role('business_receptionist')
- //  ->where("business_id",$booking->garage_id)
- //  ->pluck('email')->toArray();
+                    //  // Retrieve emails of users with the role 'business_receptionist'
+                    //  $receptionists = User::role('business_receptionist')
+                    //  ->where("business_id",$booking->garage_id)
+                    //  ->pluck('email')->toArray();
 
- //  // Merge the two arrays
- //  $recipientEmails = array_merge($recipientEmails, $receptionists);
+                    //  // Merge the two arrays
+                    //  $recipientEmails = array_merge($recipientEmails, $receptionists);
 
                 }
                 // if (env("SEND_EMAIL") == true) {
@@ -1331,134 +1318,134 @@ if (!empty($recipientEmails)) {
 
 
     /**
- * @OA\Put(
- *      path="/v1.0/bookings/change-statuses",
- *      operationId="changeMultipleBookingStatuses",
- *      tags={"booking_management"},
- *      security={{"bearerAuth": {}}},
- *      summary="This method is to change multiple booking statuses",
- *      description="This method is to change multiple booking statuses",
- *
- *      @OA\RequestBody(
- *          required=true,
- *          @OA\JsonContent(
- *              required={"ids", "garage_id", "status"},
- *              @OA\Property(
- *                  property="ids",
- *                  type="array",
- *                  @OA\Items(type="number", example="1")
- *              ),
- *              @OA\Property(property="garage_id", type="number", example="1"),
- *              @OA\Property(property="status", type="string", example="pending"),
- *              @OA\Property(property="reason", type="string", nullable=true, example="some reason")
- *          )
- *      ),
- *
- *      @OA\Response(response=200, description="Successful operation", @OA\JsonContent()),
- *      @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent()),
- *      @OA\Response(response=422, description="Unprocessable Content", @OA\JsonContent()),
- *      @OA\Response(response=403, description="Forbidden", @OA\JsonContent()),
- *      @OA\Response(response=400, description="Bad Request", @OA\JsonContent()),
- *      @OA\Response(response=404, description="Not Found", @OA\JsonContent())
- * )
- */
-public function changeMultipleBookingStatuses(Request $request)
-{
-    $this->validate($request, [
-        'ids' => 'required|array',
-        'ids.*' => 'required|numeric',
-        'garage_id' => 'required|numeric',
-        'status' => 'required|string|in:pending,rejected_by_garage_owner,check_in,arrived,converted_to_job',
-        'reason' => 'nullable|string',
-    ]);
+     * @OA\Put(
+     *      path="/v1.0/bookings/change-statuses",
+     *      operationId="changeMultipleBookingStatuses",
+     *      tags={"booking_management"},
+     *      security={{"bearerAuth": {}}},
+     *      summary="This method is to change multiple booking statuses",
+     *      description="This method is to change multiple booking statuses",
+     *
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(
+     *              required={"ids", "garage_id", "status"},
+     *              @OA\Property(
+     *                  property="ids",
+     *                  type="array",
+     *                  @OA\Items(type="number", example="1")
+     *              ),
+     *              @OA\Property(property="garage_id", type="number", example="1"),
+     *              @OA\Property(property="status", type="string", example="pending"),
+     *              @OA\Property(property="reason", type="string", nullable=true, example="some reason")
+     *          )
+     *      ),
+     *
+     *      @OA\Response(response=200, description="Successful operation", @OA\JsonContent()),
+     *      @OA\Response(response=401, description="Unauthenticated", @OA\JsonContent()),
+     *      @OA\Response(response=422, description="Unprocessable Content", @OA\JsonContent()),
+     *      @OA\Response(response=403, description="Forbidden", @OA\JsonContent()),
+     *      @OA\Response(response=400, description="Bad Request", @OA\JsonContent()),
+     *      @OA\Response(response=404, description="Not Found", @OA\JsonContent())
+     * )
+     */
+    public function changeMultipleBookingStatuses(Request $request)
+    {
+        $this->validate($request, [
+            'ids' => 'required|array',
+            'ids.*' => 'required|numeric',
+            'garage_id' => 'required|numeric',
+            'status' => 'required|string|in:pending,rejected_by_garage_owner,check_in,arrived,converted_to_job',
+            'reason' => 'nullable|string',
+        ]);
 
-    try {
-        $this->storeActivity($request, "");
+        try {
+            $this->storeActivity($request, "");
 
-        return DB::transaction(function () use ($request) {
-            $ids = $request->input('ids');
-            $garage_id = $request->input('garage_id');
-            $status = $request->input('status');
-            $reason = $request->input('reason');
+            return DB::transaction(function () use ($request) {
+                $ids = $request->input('ids');
+                $garage_id = $request->input('garage_id');
+                $status = $request->input('status');
+                $reason = $request->input('reason');
 
-            $updatedBookings = [];
+                $updatedBookings = [];
 
-            if (!$request->user()->hasPermissionTo('booking_update')) {
-                return response()->json(["message" => "You cannot perform this action"], 401);
-            }
-
-            if (!$this->garageOwnerCheck($garage_id)) {
-                return response()->json(["message" => "You are not the owner of the garage or the garage does not exist"], 401);
-            }
-
-
-            foreach ($ids as $id) {
-
-                $booking = Booking::where(['id' => $id, 'garage_id' => $garage_id])->first();
-
-                if (!$booking) {
-                    return response()->json(["message" => "Booking with ID {$id} not found"], 404);
+                if (!$request->user()->hasPermissionTo('booking_update')) {
+                    return response()->json(["message" => "You cannot perform this action"], 401);
                 }
 
-                if (in_array($booking->status, ["converted_to_job", "rejected_by_garage_owner", "rejected_by_client"])) {
-                    return response()->json(["message" => "Status cannot be updated for booking ID: {$id}"], 422);
+                if (!$this->garageOwnerCheck($garage_id)) {
+                    return response()->json(["message" => "You are not the owner of the garage or the garage does not exist"], 401);
                 }
 
-                $booking->update([
-                    'status' => $status,
-                    'reason' => $reason,
-                ]);
 
-                $updatedBookings[] = $booking;
+                foreach ($ids as $id) {
 
-                // Handle notifications
-                $notificationTemplateType = $status == "rejected_by_garage_owner"
-                    ? "booking_rejected_by_garage_owner"
-                    : "booking_status_changed_by_garage_owner";
+                    $booking = Booking::where(['id' => $id, 'garage_id' => $garage_id])->first();
 
-                $notification_template = NotificationTemplate::where('type', $notificationTemplateType)->first();
+                    if (!$booking) {
+                        return response()->json(["message" => "Booking with ID {$id} not found"], 404);
+                    }
 
-                                                  // Get the customer's email
- $recipientIds = [$booking->customer->id];
+                    if (in_array($booking->status, ["converted_to_job", "rejected_by_garage_owner", "rejected_by_client"])) {
+                        return response()->json(["message" => "Status cannot be updated for booking ID: {$id}"], 422);
+                    }
 
- //  // Retrieve emails of users with the role 'business_receptionist'
- //  $receptionists = User::role('business_receptionist')
- //  ->where("business_id",$booking->garage_id)
- //  ->pluck('id')->toArray();
+                    $booking->update([
+                        'status' => $status,
+                        'reason' => $reason,
+                    ]);
 
- //  // Merge the two arrays
- //  $recipientIds = array_merge($recipientIds, $receptionists);
+                    $updatedBookings[] = $booking;
 
-  foreach ($recipientIds as $recipientId) {
-     Notification::create([
-         "sender_id" => $request->user()->id,
-         "receiver_id" => $recipientId,
-         "customer_id" => $booking->customer->id,
-         "business_id" => $booking->garage_id ,
-         "garage_id" => $booking->garage_id,
-         "booking_id" => $booking->id,
-         "entity_name" => "booking",
-         "entity_id" => $booking->id,
-         "entity_ids" => json_encode([]),
-         "notification_title" => 'Booking Status Changed',
-        "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
-       "notification_link" => null,
-         "is_system_generated" => false,
-         "notification_template_id" => $notification_template->id,
-         "status" => "unread",
-         "start_date" => now(),
-         "end_date" => null,
-     ]);
-  }
-            }
+                    // Handle notifications
+                    $notificationTemplateType = $status == "rejected_by_garage_owner"
+                        ? "booking_rejected_by_garage_owner"
+                        : "booking_status_changed_by_garage_owner";
 
-            return response()->json($updatedBookings, 200);
-        });
-    } catch (Exception $e) {
-        error_log($e->getMessage());
-        return $this->sendError($e, 500, $request);
+                    $notification_template = NotificationTemplate::where('type', $notificationTemplateType)->first();
+
+                    // Get the customer's email
+                    $recipientIds = [$booking->customer->id];
+
+                    //  // Retrieve emails of users with the role 'business_receptionist'
+                    //  $receptionists = User::role('business_receptionist')
+                    //  ->where("business_id",$booking->garage_id)
+                    //  ->pluck('id')->toArray();
+
+                    //  // Merge the two arrays
+                    //  $recipientIds = array_merge($recipientIds, $receptionists);
+
+                    foreach ($recipientIds as $recipientId) {
+                        Notification::create([
+                            "sender_id" => $request->user()->id,
+                            "receiver_id" => $recipientId,
+                            "customer_id" => $booking->customer->id,
+                            "business_id" => $booking->garage_id,
+                            "garage_id" => $booking->garage_id,
+                            "booking_id" => $booking->id,
+                            "entity_name" => "booking",
+                            "entity_id" => $booking->id,
+                            "entity_ids" => json_encode([]),
+                            "notification_title" => 'Booking Status Changed',
+                            "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
+                            "notification_link" => null,
+                            "is_system_generated" => false,
+                            "notification_template_id" => $notification_template->id,
+                            "status" => "unread",
+                            "start_date" => now(),
+                            "end_date" => null,
+                        ]);
+                    }
+                }
+
+                return response()->json($updatedBookings, 200);
+            });
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return $this->sendError($e, 500, $request);
+        }
     }
-}
 
 
 
@@ -1594,38 +1581,38 @@ public function changeMultipleBookingStatuses(Request $request)
                     "type" => "booking_confirmed_by_garage_owner"
                 ])
                     ->first();
-                                                        // Get the customer's email
- $recipientIds = [$booking->customer->id];
+                // Get the customer's email
+                $recipientIds = [$booking->customer->id];
 
- //  // Retrieve emails of users with the role 'business_receptionist'
- //  $receptionists = User::role('business_receptionist')
- //  ->where("business_id",$booking->garage_id)
- //  ->pluck('id')->toArray();
+                //  // Retrieve emails of users with the role 'business_receptionist'
+                //  $receptionists = User::role('business_receptionist')
+                //  ->where("business_id",$booking->garage_id)
+                //  ->pluck('id')->toArray();
 
- //  // Merge the two arrays
- //  $recipientIds = array_merge($recipientIds, $receptionists);
+                //  // Merge the two arrays
+                //  $recipientIds = array_merge($recipientIds, $receptionists);
 
-  foreach ($recipientIds as $recipientId) {
-     Notification::create([
-         "sender_id" => $request->user()->id,
-         "receiver_id" => $recipientId,
-         "customer_id" => $booking->customer->id,
-         "business_id" => $booking->garage_id ,
-         "garage_id" => $booking->garage_id,
-         "booking_id" => $booking->id,
-         "entity_name" => "booking",
-         "entity_id" => $booking->id,
-         "entity_ids" => json_encode([]),
-         "notification_title" => 'Booking Status Changed',
-        "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
-       "notification_link" => null,
-         "is_system_generated" => false,
-         "notification_template_id" => $notification_template->id,
-         "status" => "unread",
-         "start_date" => now(),
-         "end_date" => null,
-     ]);
-  }
+                foreach ($recipientIds as $recipientId) {
+                    Notification::create([
+                        "sender_id" => $request->user()->id,
+                        "receiver_id" => $recipientId,
+                        "customer_id" => $booking->customer->id,
+                        "business_id" => $booking->garage_id,
+                        "garage_id" => $booking->garage_id,
+                        "booking_id" => $booking->id,
+                        "entity_name" => "booking",
+                        "entity_id" => $booking->id,
+                        "entity_ids" => json_encode([]),
+                        "notification_title" => 'Booking Status Changed',
+                        "notification_description" => "The status of booking ID: {$booking->id} has been updated.",
+                        "notification_link" => null,
+                        "is_system_generated" => false,
+                        "notification_template_id" => $notification_template->id,
+                        "status" => "unread",
+                        "start_date" => now(),
+                        "end_date" => null,
+                    ]);
+                }
                 // if (env("SEND_EMAIL") == true) {
                 //     Mail::to($booking->customer->email)->send(new DynamicMail(
                 //         $booking,
@@ -1854,10 +1841,10 @@ public function changeMultipleBookingStatuses(Request $request)
 
 
                 ->when(request()->filled("start_price"), function ($query) {
-                    $query->where("bookings.final_price",">=", request()->input("start_price"));
+                    $query->where("bookings.final_price", ">=", request()->input("start_price"));
                 })
                 ->when(request()->filled("end_price"), function ($query) {
-                    $query->where("bookings.final_price","<=", request()->input("end_price"));
+                    $query->where("bookings.final_price", "<=", request()->input("end_price"));
                 })
                 ->when(request()->filled("customer_id"), function ($query) {
                     $query->where([
@@ -1934,8 +1921,7 @@ public function changeMultipleBookingStatuses(Request $request)
             $bookings = $bookingQuery->orderByDesc("job_start_date")->paginate($perPage);
 
             return response()->json($bookings, 200);
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
 
             return $this->sendError($e, 500, $request);
         }
@@ -1943,7 +1929,7 @@ public function changeMultipleBookingStatuses(Request $request)
 
 
 
-      /**
+    /**
      *
      * @OA\Get(
      *      path="/v1.0/customers",
@@ -1953,153 +1939,153 @@ public function changeMultipleBookingStatuses(Request $request)
      *           {"bearerAuth": {}}
      *       },
 
-  *     @OA\Parameter(
- *         name="per_page",
- *         in="query",
- *         description="Number of results per page",
- *         required=true,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="start_date",
- *         in="query",
- *         description="Filter by user creation start date (YYYY-MM-DD)",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="end_date",
- *         in="query",
- *         description="Filter by user creation end date (YYYY-MM-DD)",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="search_key",
- *         in="query",
- *         description="Keyword for searching users by name, email, or phone",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="rating",
- *         in="query",
- *         description="Filter by review rating",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="frequency_visit",
- *         in="query",
- *         description="Visit frequency category (New, Regular, VIP)",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="review_start_date",
- *         in="query",
- *         description="Filter reviews by start date (YYYY-MM-DD)",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="review_end_date",
- *         in="query",
- *         description="Filter reviews by end date (YYYY-MM-DD)",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="review_keyword",
- *         in="query",
- *         description="Keyword to search within review comments",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="frequency_visit",
- *         in="query",
- *         description="Filter users based on visit frequency",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="status",
- *         in="query",
- *         description="Comma-separated list of booking statuses",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="payment_status",
- *         in="query",
- *         description="Comma-separated list of payment statuses",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="sub_service_ids",
- *         in="query",
- *         description="Comma-separated list of sub-service IDs",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="duration_in_minute",
- *         in="query",
- *         description="Filter by booking duration in minutes",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="booking_type",
- *         in="query",
- *         description="Comma-separated list of booking types",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="date_filter",
- *         in="query",
- *         description="Filter bookings by date (e.g., today, this_week, previous_week, this_month, etc.)",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="name",
- *         in="query",
- *         description="Filter users by name",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="email",
- *         in="query",
- *         description="Filter users by email",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="phone",
- *         in="query",
- *         description="Filter users by phone number",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="last_visited_date",
- *         in="query",
- *         description="Filter users by last visited date (YYYY-MM-DD)",
- *         required=false,
- *         example=""
- *     ),
- *     @OA\Parameter(
- *         name="order_by",
- *         in="query",
- *         description="Sort order for users (ASC or DESC)",
- *         required=false,
- *         example=""
- *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of results per page",
+     *         required=true,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="Filter by user creation start date (YYYY-MM-DD)",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="Filter by user creation end date (YYYY-MM-DD)",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="search_key",
+     *         in="query",
+     *         description="Keyword for searching users by name, email, or phone",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="rating",
+     *         in="query",
+     *         description="Filter by review rating",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="frequency_visit",
+     *         in="query",
+     *         description="Visit frequency category (New, Regular, VIP)",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="review_start_date",
+     *         in="query",
+     *         description="Filter reviews by start date (YYYY-MM-DD)",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="review_end_date",
+     *         in="query",
+     *         description="Filter reviews by end date (YYYY-MM-DD)",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="review_keyword",
+     *         in="query",
+     *         description="Keyword to search within review comments",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="frequency_visit",
+     *         in="query",
+     *         description="Filter users based on visit frequency",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Comma-separated list of booking statuses",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="payment_status",
+     *         in="query",
+     *         description="Comma-separated list of payment statuses",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="sub_service_ids",
+     *         in="query",
+     *         description="Comma-separated list of sub-service IDs",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="duration_in_minute",
+     *         in="query",
+     *         description="Filter by booking duration in minutes",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="booking_type",
+     *         in="query",
+     *         description="Comma-separated list of booking types",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="date_filter",
+     *         in="query",
+     *         description="Filter bookings by date (e.g., today, this_week, previous_week, this_month, etc.)",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="name",
+     *         in="query",
+     *         description="Filter users by name",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="email",
+     *         in="query",
+     *         description="Filter users by email",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="phone",
+     *         in="query",
+     *         description="Filter users by phone number",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="last_visited_date",
+     *         in="query",
+     *         description="Filter users by last visited date (YYYY-MM-DD)",
+     *         required=false,
+     *         example=""
+     *     ),
+     *     @OA\Parameter(
+     *         name="order_by",
+     *         in="query",
+     *         description="Sort order for users (ASC or DESC)",
+     *         required=false,
+     *         example=""
+     *     ),
      *      summary="This method is to get  bookings ",
      *      description="This method is to get bookings",
      *
@@ -2138,226 +2124,250 @@ public function changeMultipleBookingStatuses(Request $request)
      *     )
      */
 
-     public function getCustomers( Request $request)
-     {
-         try {
-             $this->storeActivity($request, "");
-             if (!$request->user()->hasPermissionTo('booking_view')) {
-                 return response()->json([
-                     "message" => "You can not perform this action"
-                 ], 401);
-             }
+    public function getCustomers(Request $request)
+    {
+        try {
+            $this->storeActivity($request, "");
+            if (!$request->user()->hasPermissionTo('booking_view')) {
+                return response()->json([
+                    "message" => "You can not perform this action"
+                ], 401);
+            }
 
-
-             $users = User::
-            withCount([
-                'bookings as completed_booking_count' => function ($query) {
-                    $query
-                    ->where('bookings.garage_id', auth()->user()->business_id)
-                    ->where('bookings.status', 'converted_to_job');  // Adjust 'status' according to your actual status field
-                },
-                'bookings as cancelled_booking_count' => function ($query) {
-                    $query
-                    ->where('bookings.garage_id', auth()->user()->business_id)
-                    ->whereIn('bookings.status', ['rejected_by_client','rejected_by_garage_owner']);
-                    // Adjust 'status' according to your actual status field
-                }
-            ])
+            $users = User::withCount([
+                    'bookings as completed_booking_count' => function ($query) {
+                        $query
+                            ->where('bookings.garage_id', auth()->user()->business_id)
+                            ->where('bookings.status', 'converted_to_job');  // Adjust 'status' according to your actual status field
+                    },
+                    'bookings as cancelled_booking_count' => function ($query) {
+                        $query
+                            ->where('bookings.garage_id', auth()->user()->business_id)
+                            ->whereIn('bookings.status', ['rejected_by_client', 'rejected_by_garage_owner']);
+                        // Adjust 'status' according to your actual status field
+                    }
+                ])
                 // Filter by rating if provided
-                ->when(request()->filled('rating'), function($q) {
-                    $q->whereHas('reviews', function($query) {
+                ->when(request()->filled('rating'), function ($q) {
+                    $q->whereHas('reviews', function ($query) {
                         $query->where('review_news.rate', request()->input('rating'));
                     });
                 })
-                ->when(request()->filled('review_start_date') && request()->filled('review_end_date'), function($q) {
-                    $q->whereHas('reviews', function($query) {
+                ->when(request()->filled('review_start_date') && request()->filled('review_end_date'), function ($q) {
+                    $q->whereHas('reviews', function ($query) {
                         $query->whereBetween('review_news.updated_at', [
                             request()->input('review_start_date'),
                             request()->input('review_end_date')
                         ]);
                     });
                 })
-                ->when(request()->filled('review_keyword'), function($q) {
-                    $q->whereHas('reviews', function($query) {
+                ->when(request()->filled('review_keyword'), function ($q) {
+                    $q->whereHas('reviews', function ($query) {
                         $query->where('review_news.comment', 'like', '%' . request('review_keyword') . '%');
                     });
                 })
+                ->when(request()->filled('frequency_visit'), function ($q) {
+                    $frequency = request()->input('frequency_visit');
+                    $query_param = '='; // Default value for the comparison operator.
+                    $min_count = 1;     // Minimum booking count.
+                    $max_count = 1;     // Maximum booking count (for regular customers).
 
-            ->when(request()->has('frequency_visit'), function ($q) {
-                $frequency = request()->input('frequency_visit');
-                 $q->whereHas("bookings.customer", function ($subQuery) use ($frequency) {
-                    $subQuery->select('bookings.customer_id', DB::raw('COUNT(bookings.id) as bookings_count'))
-                             ->groupBy('bookings.customer_id')
-                             ->having(function ($query) use ($frequency) {
-                                match($frequency) {
-                                    'New' => $query->having('bookings_count', '=', 1),
-                                    'Regular' => $query->having('bookings_count', '>', 1)
-                                                        ->having('bookings_count', '<=', 5), // Limit to 5
-                                    'VIP' => $query->having('bookings_count', '>', 5), // More than 5
-                                };
-                            }); // Use 1 as base value for comparison
-                });
-            })
-            ->whereHas("bookings", function($query) use($request) {
-                $query->where("bookings.garage_id", auth()->user()->business_id)
-
-                ->when(request()->filled("expert_id"), function ($query) {
-                    $query->where([
-                        "expert_id" => request()->input("expert_id")
-                    ]);
-                })
-                ->when(request()->filled("payment_type"), function($query) {
-                    $query
-                    ->whereHas("booking_payments", function($query) {
-                        $payment_typeArray = explode(',', request()->payment_type);
-                        $query->whereIn("job_payments.payment_type", $payment_typeArray);
-                    });
-
-                })
-                ->when(request()->filled("discount_applied"), function($query) {
-                    if(request()->boolean("discount_applied")){
-                        $query->where(function($query) {
-                             $query->where("discount_amount",">",0)
-                             ->orWhere("coupon_discount_amount",">",0);
-                        });
-                    }else {
-                        $query->where(function($query) {
-                            $query->where("discount_amount","<=",0)
-                            ->orWhere("coupon_discount_amount","<=",0);
-                       });
+                    if ($frequency == "New") {
+                        // For new customers, the count should be exactly 1.
+                        $query_param = '=';
+                        $min_count = 1;
+                        $max_count = 1;
+                    } elseif ($frequency == "Regular") {
+                        // For regular customers, the count should be between 2 and 5.
+                        $query_param = 'BETWEEN';
+                        $min_count = 2;
+                        $max_count = 5;
+                    } elseif ($frequency == "VIP") {
+                        // For VIP customers, the count should be 5 or more.
+                        $query_param = '>=';
+                        $min_count = 5;
+                        $max_count = null; // No upper limit for VIP.
+                    } else {
+                        // Default case or other logic can be applied here.
+                        $query_param = '=';
+                        $min_count = 1;
+                        $max_count = 1;
                     }
 
-                })
-                ->when(!empty($request->status), function($query) use ($request) {
-                    $statusArray = explode(',', $request->status);
-                    return $query->whereIn("status", $statusArray);
-                })
-                ->when(!empty($request->payment_status), function($query) use ($request) {
-                    $statusArray = explode(',', $request->payment_status);
-                    return $query->whereIn("payment_status", $statusArray);
-                })
-                ->when(!empty($request->expert_id), function ($query) use ($request) {
-                    return $query->whereHas('bookings', function($query){
-                     return $query->where('bookings.expert_id', request()->input("expert_id"));
-                    });
-                })
-
-                ->when(!empty(request()->sub_service_ids), function ($query) {
-                    $sub_service_ids = explode(',', request()->sub_service_ids);
-
-                    return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
-                        $query->whereIn('sub_services.id', $sub_service_ids)
-                            ->when(!empty(request()->service_ids), function ($query) {
-                                $service_ids = explode(',', request()->service_ids);
-
-                                return $query->whereHas('service', function ($query) use ($service_ids) {
-                                    return $query->whereIn('services.id', $service_ids);
+                    $q->whereHas("bookings", function ($query) use ($query_param, $min_count, $max_count) {
+                        // Separate subquery to count all bookings for each customer.
+                        $query->whereIn('bookings.customer_id', function ($subquery) use ($query_param, $min_count, $max_count) {
+                            $subquery->select('customer_id')
+                                ->from('bookings')
+                                ->groupBy('customer_id')
+                                ->when($query_param == 'BETWEEN', function ($subquery) use ($min_count, $max_count) {
+                                    // If the condition is BETWEEN, use BETWEEN operator.
+                                    $subquery->having(DB::raw('COUNT(id)'), 'BETWEEN', [$min_count, $max_count]);
+                                })
+                                ->when($query_param != 'BETWEEN', function ($subquery) use ($query_param, $min_count) {
+                                    // If the condition is '=', '>=', or other operators.
+                                    $subquery->having(DB::raw('COUNT(id)'), $query_param, $min_count);
                                 });
-                            });
+                        });
                     });
                 })
-                ->when(request()->filled("duration_in_minute"), function ($query) {
-                    $total_slots = request()->input("duration_in_minute") / 15;
-                    $query->having('total_booked_slots', '>', $total_slots);
+
+                ->whereHas("bookings", function ($query) use ($request) {
+                    $query->where("bookings.garage_id", auth()->user()->business_id)
+
+                        ->when(request()->filled("expert_id"), function ($query) {
+                            $query->where([
+                                "expert_id" => request()->input("expert_id")
+                            ]);
+                        })
+                        ->when(request()->filled("payment_type"), function ($query) {
+                            $query
+                                ->whereHas("booking_payments", function ($query) {
+                                    $payment_typeArray = explode(',', request()->payment_type);
+                                    $query->whereIn("job_payments.payment_type", $payment_typeArray);
+                                });
+                        })
+                        ->when(request()->filled("discount_applied"), function ($query) {
+                            if (request()->boolean("discount_applied")) {
+                                $query->where(function ($query) {
+                                    $query->where("discount_amount", ">", 0)
+                                        ->orWhere("coupon_discount_amount", ">", 0);
+                                });
+                            } else {
+                                $query->where(function ($query) {
+                                    $query->where("discount_amount", "<=", 0)
+                                        ->orWhere("coupon_discount_amount", "<=", 0);
+                                });
+                            }
+                        })
+                        ->when(!empty($request->status), function ($query) use ($request) {
+                            $statusArray = explode(',', $request->status);
+                            return $query->whereIn("status", $statusArray);
+                        })
+                        ->when(!empty($request->payment_status), function ($query) use ($request) {
+                            $statusArray = explode(',', $request->payment_status);
+                            return $query->whereIn("payment_status", $statusArray);
+                        })
+                        ->when(!empty($request->expert_id), function ($query) use ($request) {
+                            return
+                                $query->where('bookings.expert_id', request()->input("expert_id"));
+                        })
+
+                        ->when(!empty(request()->sub_service_ids), function ($query) {
+                            $sub_service_ids = explode(',', request()->sub_service_ids);
+
+                            return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                                $query->whereIn('sub_services.id', $sub_service_ids)
+                                    ->when(!empty(request()->service_ids), function ($query) {
+                                        $service_ids = explode(',', request()->service_ids);
+
+                                        return $query->whereHas('service', function ($query) use ($service_ids) {
+                                            return $query->whereIn('services.id', $service_ids);
+                                        });
+                                    });
+                            });
+                        })
+                        ->when(request()->filled("duration_in_minute"), function ($query) {
+                            $total_slots = request()->input("duration_in_minute") / 15;
+                            $query->having('total_booked_slots', '>', $total_slots);
+                        })
+                        ->when(!empty($request->booking_type), function ($query) use ($request) {
+                            $booking_typeArray = explode(',', $request->booking_type);
+                            $query->whereIn("booking_type", $booking_typeArray);
+                        })
+
+                        ->when($request->date_filter === 'today', function ($query) {
+                            return $query->whereDate('bookings.job_start_date', Carbon::today());
+                        })
+                        ->when($request->date_filter === 'this_week', function ($query) {
+                            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                        })
+                        ->when($request->date_filter === 'previous_week', function ($query) {
+                            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                        })
+                        ->when($request->date_filter === 'next_week', function ($query) {
+                            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                        })
+                        ->when($request->date_filter === 'this_month', function ($query) {
+                            return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                                ->whereYear('bookings.job_start_date', Carbon::now()->year);
+                        })
+                        ->when($request->date_filter === 'previous_month', function ($query) {
+                            return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                                ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+                        })
+                        ->when($request->date_filter === 'next_month', function ($query) {
+                            return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                                ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                        });
                 })
-              ->when(!empty($request->booking_type), function ($query) use ($request) {
-                    $booking_typeArray = explode(',', $request->booking_type);
-                    $query->whereIn("booking_type", $booking_typeArray);
+                ->when(!empty($request->name), function ($query) use ($request) {
+                    $name = $request->name;
+                    return $query->where(function ($subQuery) use ($name) {
+                        $subQuery->where("first_Name", "like", "%" . $name . "%")
+                            ->orWhere("last_Name", "like", "%" . $name . "%");
+                    });
+                })
+                ->when(!empty($request->email), function ($query) use ($request) {
+                    return $query->where('users.email', 'like', '%' . $request->email . '%');
+                })
+                ->when(!empty($request->phone), function ($query) use ($request) {
+                    return $query->where('users.phone', 'like', '%' . $request->phone . '%');
+                })
+                ->when(!empty($request->last_visited_date), function ($query) use ($request) {
+                    return $query->whereHas('lastBooking', function ($query) {
+                        return $query->where('bookings.job_start_date', request()->input("last_visited_date"));
+                    });
                 })
 
-                ->when($request->date_filter === 'today', function($query) {
-                    return $query->whereDate('bookings.job_start_date', Carbon::today());
+                ->when(!empty($request->search_key), function ($query) use ($request) {
+                    return $query->where(function ($query) use ($request) {
+                        $term = $request->search_key;
+                        $query;
+                    });
                 })
-                ->when($request->date_filter === 'this_week', function($query) {
-                    return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                ->when(!empty($request->start_date), function ($query) use ($request) {
+                    return $query->where('users.created_at', ">=", $request->start_date);
                 })
-                ->when($request->date_filter === 'previous_week', function($query) {
-                    return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                ->when(!empty($request->end_date), function ($query) use ($request) {
+                    return $query->where('users.created_at', "<=", ($request->end_date . ' 23:59:59'));
                 })
-                ->when($request->date_filter === 'next_week', function($query) {
-                    return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                ->when(!empty($request->order_by) && in_array(strtoupper($request->order_by), ['ASC', 'DESC']), function ($query) use ($request) {
+                    return $query->orderBy("users.first_Name", $request->order_by);
+                }, function ($query) {
+                    return $query->orderBy("users.first_Name", "DESC");
                 })
-                ->when($request->date_filter === 'this_month', function($query) {
-                    return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
-                                 ->whereYear('bookings.job_start_date', Carbon::now()->year);
-                })
-                ->when($request->date_filter === 'previous_month', function($query) {
-                    return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
-                                 ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
-                })
-                ->when($request->date_filter === 'next_month', function($query) {
-                    return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
-                 ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                ->when($request->filled("id"), function ($query) use ($request) {
+                    return $query
+                        ->where("users.id", $request->input("id"))
+                        ->first();
+                }, function ($query) {
+                    return $query->when(!empty(request()->per_page), function ($query) {
+                        return $query->paginate(request()->per_page);
+                    }, function ($query) {
+                        return $query->get();
+                    });
                 });
-            })
-            ->when(!empty($request->name), function($query) use ($request) {
-                $name = $request->name;
-                return $query->where(function($subQuery) use ($name) {
-                    $subQuery->where("first_Name", "like", "%" . $name . "%")
-                             ->orWhere("last_Name", "like", "%" . $name . "%");
-                });
-            })
-            ->when(!empty($request->email), function ($query) use ($request) {
-                return $query->where('users.email', 'like', '%' . $request->email . '%');
-            })
-            ->when(!empty($request->phone), function ($query) use ($request) {
-                return $query->where('users.phone', 'like', '%' . $request->phone . '%');
-            })
-            ->when(!empty($request->last_visited_date), function ($query) use ($request) {
-                return $query->whereHas('lastBooking', function($query){
-                 return $query->where('bookings.job_start_date', request()->input("last_visited_date"));
-                });
-            })
 
-             ->when(!empty($request->search_key), function ($query) use ($request) {
-                 return $query->where(function ($query) use ($request) {
-                     $term = $request->search_key;
-                     $query;
-                 });
-             })
-             ->when(!empty($request->start_date), function ($query) use ($request) {
-                 return $query->where('users.created_at', ">=", $request->start_date);
-             })
-             ->when(!empty($request->end_date), function ($query) use ($request) {
-                 return $query->where('users.created_at', "<=", ($request->end_date . ' 23:59:59'));
-             })
-             ->when(!empty($request->order_by) && in_array(strtoupper($request->order_by), ['ASC', 'DESC']), function ($query) use ($request) {
-                 return $query->orderBy("users.first_Name", $request->order_by);
-             }, function ($query) {
-                 return $query->orderBy("users.first_Name", "DESC");
-             })
-             ->when($request->filled("id"), function ($query) use ($request) {
-                 return $query
-                     ->where("users.id", $request->input("id"))
-                     ->first();
-             }, function ($query) {
-                 return $query->when(!empty(request()->per_page), function ($query) {
-                     return $query->paginate(request()->per_page);
-                 }, function ($query) {
-                     return $query->get();
-                 });
-             });
+            if ($request->filled("id") && empty($users)) {
+                throw new Exception("No data found", 404);
+            }
 
-         if ($request->filled("id") && empty($users)) {
-             throw new Exception("No data found", 404);
-         }
+            if ($request->filled("id")) {
+                $users =  $this->addCustomerData($users);
+            } else {
+                foreach ($users as $user) {
+                    $user = $this->addCustomerData($user);
+                }
+            }
 
-         if ($request->filled("id")) {
-        $users =  $this->addCustomerData($users);
-        } else {
-foreach($users as $user) {
-    $user = $this->addCustomerData($user);
-}
+
+            return response()->json($users, 200);
+        } catch (Exception $e) {
+
+            return $this->sendError($e, 500, $request);
         }
-
-
-         return response()->json($users, 200);
-
-         } catch (Exception $e) {
-
-             return $this->sendError($e, 500, $request);
-         }
-     }
+    }
 
 
 
@@ -2439,113 +2449,112 @@ foreach($users as $user) {
      *     )
      */
 
-     public function getCustomersV2( Request $request)
-     {
-         try {
-             $this->storeActivity($request, "");
+    public function getCustomersV2(Request $request)
+    {
+        try {
+            $this->storeActivity($request, "");
 
-             if (!$request->user()->hasPermissionTo('booking_view')) {
-                 return response()->json([
-                     "message" => "You can not perform this action"
-                 ], 401);
-             }
+            if (!$request->user()->hasPermissionTo('booking_view')) {
+                return response()->json([
+                    "message" => "You can not perform this action"
+                ], 401);
+            }
 
 
-             $users = User::with([
+            $users = User::with([
                 "lastBooking",
                 "services"
 
             ])
-            ->whereHas("bookings", function($query) use($request) {
-                $query->where("bookings.garage_id", auth()->user()->business_id)
-                ->when(request()->filled("expert_id"), function ($query) {
-                    $query->where([
-                        "expert_id" => request()->input("expert_id")
-                    ]);
+                ->whereHas("bookings", function ($query) use ($request) {
+                    $query->where("bookings.garage_id", auth()->user()->business_id)
+                        ->when(request()->filled("expert_id"), function ($query) {
+                            $query->where([
+                                "expert_id" => request()->input("expert_id")
+                            ]);
+                        })
+                        ->when(!empty($request->status), function ($query) use ($request) {
+                            $statusArray = explode(',', $request->status);
+                            return $query->whereIn("status", $statusArray);
+                        })
+                        ->when(!empty($request->payment_status), function ($query) use ($request) {
+                            $statusArray = explode(',', $request->payment_status);
+                            return $query->whereIn("payment_status", $statusArray);
+                        })
+                        ->when($request->date_filter === 'today', function ($query) {
+                            return $query->whereDate('bookings.job_start_date', Carbon::today());
+                        })
+                        ->when($request->date_filter === 'this_week', function ($query) {
+                            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                        })
+                        ->when($request->date_filter === 'previous_week', function ($query) {
+                            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                        })
+                        ->when($request->date_filter === 'next_week', function ($query) {
+                            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                        })
+                        ->when($request->date_filter === 'this_month', function ($query) {
+                            return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                                ->whereYear('bookings.job_start_date', Carbon::now()->year);
+                        })
+                        ->when($request->date_filter === 'previous_month', function ($query) {
+                            return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                                ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+                        })
+                        ->when($request->date_filter === 'next_month', function ($query) {
+                            return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                                ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                        });
                 })
-                ->when(!empty($request->status), function($query) use ($request) {
-                    $statusArray = explode(',', $request->status);
-                    return $query->whereIn("status", $statusArray);
+
+                ->when(!empty($request->start_date), function ($query) use ($request) {
+                    return $query->where('users.created_at', ">=", $request->start_date);
                 })
-                ->when(!empty($request->payment_status), function($query) use ($request) {
-                    $statusArray = explode(',', $request->payment_status);
-                    return $query->whereIn("payment_status", $statusArray);
+                ->when(!empty($request->end_date), function ($query) use ($request) {
+                    return $query->where('users.created_at', "<=", ($request->end_date . ' 23:59:59'));
                 })
-                ->when($request->date_filter === 'today', function($query) {
-                    return $query->whereDate('bookings.job_start_date', Carbon::today());
+
+                ->when(!empty($request->search_key), function ($query) use ($request) {
+                    return $query->where(function ($query) use ($request) {
+                        $term = $request->search_key;
+                        $query;
+                    });
                 })
-                ->when($request->date_filter === 'this_week', function($query) {
-                    return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+
+
+                ->when(!empty($request->start_date), function ($query) use ($request) {
+                    return $query->where('users.created_at', ">=", $request->start_date);
                 })
-                ->when($request->date_filter === 'previous_week', function($query) {
-                    return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                ->when(!empty($request->end_date), function ($query) use ($request) {
+                    return $query->where('users.created_at', "<=", ($request->end_date . ' 23:59:59'));
                 })
-                ->when($request->date_filter === 'next_week', function($query) {
-                    return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                ->when(!empty($request->order_by) && in_array(strtoupper($request->order_by), ['ASC', 'DESC']), function ($query) use ($request) {
+                    return $query->orderBy("users.id", $request->order_by);
+                }, function ($query) {
+                    return $query->orderBy("users.id", "DESC");
                 })
-                ->when($request->date_filter === 'this_month', function($query) {
-                    return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
-                                 ->whereYear('bookings.job_start_date', Carbon::now()->year);
-                })
-                ->when($request->date_filter === 'previous_month', function($query) {
-                    return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
-                                 ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
-                })
-                ->when($request->date_filter === 'next_month', function($query) {
-                    return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
-                                 ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                ->when($request->filled("id"), function ($query) use ($request) {
+                    return $query
+                        ->where("users.id", $request->input("id"))
+                        ->first();
+                }, function ($query) {
+                    return $query->when(!empty(request()->per_page), function ($query) {
+                        return $query->paginate(request()->per_page);
+                    }, function ($query) {
+                        return $query->get();
+                    });
                 });
-            })
 
-             ->when(!empty($request->start_date), function ($query) use ($request) {
-                 return $query->where('users.created_at', ">=", $request->start_date);
-             })
-             ->when(!empty($request->end_date), function ($query) use ($request) {
-                 return $query->where('users.created_at', "<=", ($request->end_date . ' 23:59:59'));
-             })
+            if ($request->filled("id") && empty($users)) {
+                throw new Exception("No data found", 404);
+            }
 
-             ->when(!empty($request->search_key), function ($query) use ($request) {
-                 return $query->where(function ($query) use ($request) {
-                     $term = $request->search_key;
-                     $query;
-                 });
-             })
+            return response()->json($users, 200);
+        } catch (Exception $e) {
 
-
-             ->when(!empty($request->start_date), function ($query) use ($request) {
-                 return $query->where('users.created_at', ">=", $request->start_date);
-             })
-             ->when(!empty($request->end_date), function ($query) use ($request) {
-                 return $query->where('users.created_at', "<=", ($request->end_date . ' 23:59:59'));
-             })
-             ->when(!empty($request->order_by) && in_array(strtoupper($request->order_by), ['ASC', 'DESC']), function ($query) use ($request) {
-                 return $query->orderBy("users.id", $request->order_by);
-             }, function ($query) {
-                 return $query->orderBy("users.id", "DESC");
-             })
-             ->when($request->filled("id"), function ($query) use ($request) {
-                 return $query
-                     ->where("users.id", $request->input("id"))
-                     ->first();
-             }, function ($query) {
-                 return $query->when(!empty(request()->per_page), function ($query) {
-                     return $query->paginate(request()->per_page);
-                 }, function ($query) {
-                     return $query->get();
-                 });
-             });
-
-         if ($request->filled("id") && empty($users)) {
-             throw new Exception("No data found", 404);
-         }
-
-         return response()->json($users, 200);
-
-         } catch (Exception $e) {
-
-             return $this->sendError($e, 500, $request);
-         }
-     }
+            return $this->sendError($e, 500, $request);
+        }
+    }
 
 
 
@@ -2648,7 +2657,7 @@ foreach($users as $user) {
             }
 
             $experts = User::with("translation")
-            ->where("users.is_active",1)
+                ->where("users.is_active", 1)
                 ->whereHas('roles', function ($query) {
                     $query->where('roles.name', 'business_experts');
                 })
@@ -2915,8 +2924,7 @@ foreach($users as $user) {
                     // Handle the refund logic here
                     $this->processRefund($booking);
                     $response_message = 'The payment has been refunded and the booking has been deleted.';
-
-                } else{
+                } else {
                     $response_message =  'The booking has been deleted without refund.';
                 }
             }
@@ -2953,37 +2961,37 @@ foreach($users as $user) {
             ])
                 ->first();
 
-                $recipientIds = [$booking->customer->id];
+            $recipientIds = [$booking->customer->id];
 
-                // Retrieve emails of users with the role 'business_receptionist'
-                $receptionists = User::role('business_receptionist')
-                ->where("business_id",$booking->garage_id)
+            // Retrieve emails of users with the role 'business_receptionist'
+            $receptionists = User::role('business_receptionist')
+                ->where("business_id", $booking->garage_id)
                 ->pluck('id')->toArray();
 
-                // Merge the two arrays
-                $recipientIds = array_merge($recipientIds, $receptionists);
+            // Merge the two arrays
+            $recipientIds = array_merge($recipientIds, $receptionists);
 
-                foreach ($recipientIds as $recipientId) {
-                   Notification::create([
-                       "sender_id" => $request->user()->id,
-                       "receiver_id" => $recipientId,
-                       "customer_id" => $booking->customer->id,
-                       "business_id" => $booking->garage_id ,
-                       "garage_id" => $booking->garage_id,
-                       "booking_id" => $booking->id,
-                       "entity_name" => "booking",
-                       "entity_id" => $booking->id,
-                       "entity_ids" => json_encode([]),
-                       "notification_title" => 'Booking Deleted',
-                       "notification_description" => "Booking ID: {$booking->id} has been deleted.",
-                      "notification_link" => null,
-                       "is_system_generated" => false,
-                       "notification_template_id" => $notification_template->id,
-                       "status" => "unread",
-                       "start_date" => now(),
-                       "end_date" => null,
-                   ]);
-                }
+            foreach ($recipientIds as $recipientId) {
+                Notification::create([
+                    "sender_id" => $request->user()->id,
+                    "receiver_id" => $recipientId,
+                    "customer_id" => $booking->customer->id,
+                    "business_id" => $booking->garage_id,
+                    "garage_id" => $booking->garage_id,
+                    "booking_id" => $booking->id,
+                    "entity_name" => "booking",
+                    "entity_id" => $booking->id,
+                    "entity_ids" => json_encode([]),
+                    "notification_title" => 'Booking Deleted',
+                    "notification_description" => "Booking ID: {$booking->id} has been deleted.",
+                    "notification_link" => null,
+                    "is_system_generated" => false,
+                    "notification_template_id" => $notification_template->id,
+                    "status" => "unread",
+                    "start_date" => now(),
+                    "end_date" => null,
+                ]);
+            }
             // if (env("SEND_EMAIL") == true) {
             //     Mail::to($booking->customer->email)->send(new DynamicMail(
             //         $booking,
@@ -2992,9 +3000,9 @@ foreach($users as $user) {
             // }
             $booking->delete();
             return response()->json([
-        "ok" => true,
-        "message" => $response_message
-        ], 200);
+                "ok" => true,
+                "message" => $response_message
+            ], 200);
         } catch (Exception $e) {
 
             return $this->sendError($e, 500, $request);

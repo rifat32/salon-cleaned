@@ -8,6 +8,7 @@ use App\Http\Utils\GarageUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Models\Affiliation;
 use App\Models\Booking;
+use App\Models\ExpertRota;
 use App\Models\FuelStation;
 use App\Models\Garage;
 use App\Models\GarageAffiliation;
@@ -1828,6 +1829,7 @@ class DashboardManagementController extends Controller
             ->whereHas("bookings.customer", function ($query) use ($is_walk_in_customer) {
                 $query->where("users.is_walk_in_customer", $is_walk_in_customer);
             })
+
             ->when(request()->filled('is_returning_customers'), function ($q) {
                 $isReturning = request()->boolean("is_returning_customers");
 
@@ -2223,6 +2225,21 @@ class DashboardManagementController extends Controller
                 ->limit(5)
                 ->get();
 
+                $data["today_all_busy_slots"] = Booking::where("garage_id", auth()->user()->business->id)
+
+                ->whereDate("date", today())
+                ->sum(DB::raw('JSON_LENGTH(busy_slots)'));
+
+               $data["today_all_booked_slots"] = ExpertRota::
+               whereHas("user", function($query) {
+                  $query->where("users.business_id",auth()->user()->business->id);
+               })
+               ->where("garage_id", auth()->user()->business->id)
+                ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+                ->whereDate("job_start_date", today())
+                ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
+
+
 
 
             return response()->json($data, 200);
@@ -2384,7 +2401,7 @@ class DashboardManagementController extends Controller
                              })
                              ->when(request()->filled('is_returning_customers'), function ($q) {
                                 $isReturning = request()->boolean("is_returning_customers");
-                                
+
                                 $q->whereIn('bookings.customer_id', function ($subquery) use ($isReturning) {
                                         $subquery->select('customer_id')
                                                  ->from('bookings')
