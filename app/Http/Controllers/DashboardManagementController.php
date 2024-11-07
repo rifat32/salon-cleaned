@@ -238,7 +238,7 @@ class DashboardManagementController extends Controller
                 ])
                 //  ->whereNotIn('job_bids.garage_id', [$garage->id])
                 ->where('pre_bookings.status', "pending")
-                ->whereDateBetween('pre_bookings.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+                ->whereBetween('pre_bookings.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
                 ->groupBy("pre_bookings.id")
                 ->count();
             $data["monthly_jobs"] = PreBooking::leftJoin('users', 'pre_bookings.customer_id', '=', 'users.id')
@@ -247,7 +247,7 @@ class DashboardManagementController extends Controller
                 ])
                 //  ->whereNotIn('job_bids.garage_id', [$garage->id])
                 ->where('pre_bookings.status', "pending")
-                ->whereDateBetween('pre_bookings.created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+                ->whereBetween('pre_bookings.created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
                 ->groupBy("pre_bookings.id")
                 ->count();
 
@@ -271,7 +271,7 @@ class DashboardManagementController extends Controller
                 ])
                 ->whereIn('job_bids.garage_id', [$garage->id])
                 ->where('pre_bookings.status', "pending")
-                ->whereDateBetween('pre_bookings.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+                ->whereBetween('pre_bookings.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
                 ->groupBy("pre_bookings.id")
 
                 ->count();
@@ -282,7 +282,7 @@ class DashboardManagementController extends Controller
                 ])
                 ->whereIn('job_bids.garage_id', [$garage->id])
                 ->where('pre_bookings.status', "pending")
-                ->whereDateBetween('pre_bookings.created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+                ->whereBetween('pre_bookings.created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
                 ->groupBy("pre_bookings.id")
 
                 ->count();
@@ -376,7 +376,7 @@ class DashboardManagementController extends Controller
                     "bookings.garage_id" => $garage->id
                 ])
                 ->where('pre_bookings.status', "booked")
-                ->whereDateBetween('pre_bookings.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+                ->whereBetween('pre_bookings.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
                 ->groupBy("pre_bookings.id")
                 ->count();
 
@@ -386,7 +386,7 @@ class DashboardManagementController extends Controller
                 ])
 
                 ->where('pre_bookings.status', "booked")
-                ->whereDateBetween('pre_bookings.created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+                ->whereBetween('pre_bookings.created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
                 ->groupBy("pre_bookings.id")
                 ->count();
 
@@ -479,14 +479,14 @@ class DashboardManagementController extends Controller
                 "bookings.garage_id" => $garage->id
 
             ])
-                ->whereDateBetween('bookings.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+                ->whereBetween('bookings.created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
                 ->count();
             $data["monthly"] = Booking::where([
                 "bookings.status" => "converted_to_job",
                 "bookings.garage_id" => $garage->id
 
             ])
-                ->whereDateBetween('bookings.created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
+                ->whereBetween('bookings.created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])
                 ->count();
 
 
@@ -585,7 +585,7 @@ class DashboardManagementController extends Controller
                 "jobs.garage_id" => $garage->id
 
             ])
-                ->whereDateBetween('jobs.job_start_date', [$startDate, $endDate])
+                ->whereBetween('jobs.job_start_date', [$startDate, $endDate])
 
 
 
@@ -728,7 +728,7 @@ class DashboardManagementController extends Controller
             ->whereIn('job_bids.garage_id', [$garage->id])
             ->where('pre_bookings.status', "pending")
 
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
             ->groupBy("pre_bookings.id")
             ->select("job_bids.id", "job_bids.created_at", "job_bids.updated_at")
             ->get();
@@ -741,7 +741,7 @@ class DashboardManagementController extends Controller
             ->whereIn('job_bids.garage_id', [$garage->id])
             ->where('pre_bookings.status', "pending")
 
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
             ->groupBy("pre_bookings.id")
             ->select("job_bids.id", "job_bids.created_at", "job_bids.updated_at")
             ->get();
@@ -755,7 +755,7 @@ class DashboardManagementController extends Controller
             ])
             ->whereIn('job_bids.garage_id', [$garage->id])
             ->where('pre_bookings.status', "pending")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
             ->groupBy("pre_bookings.id")
             ->select("job_bids.id", "job_bids.created_at", "job_bids.updated_at")
             ->get();
@@ -767,7 +767,7 @@ class DashboardManagementController extends Controller
             ])
             ->whereIn('job_bids.garage_id', [$garage->id])
             ->where('pre_bookings.status', "pending")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
             ->groupBy("pre_bookings.id")
             ->select("job_bids.id", "job_bids.created_at", "job_bids.updated_at")
             ->get();
@@ -809,7 +809,7 @@ class DashboardManagementController extends Controller
             ])
 
             ->where('pre_bookings.status', "pending")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
             ->select("pre_bookings.id", "pre_bookings.created_at", "pre_bookings.updated_at")
             ->get();
 
@@ -819,7 +819,7 @@ class DashboardManagementController extends Controller
             ])
 
             ->where('pre_bookings.status', "pending")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
             ->select("pre_bookings.id", "pre_bookings.created_at", "pre_bookings.updated_at")
             ->get();
 
@@ -831,7 +831,7 @@ class DashboardManagementController extends Controller
             ])
 
             ->where('pre_bookings.status', "pending")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
             ->select("pre_bookings.id", "pre_bookings.created_at", "pre_bookings.updated_at")
             ->get();
 
@@ -841,7 +841,7 @@ class DashboardManagementController extends Controller
             ])
 
             ->where('pre_bookings.status', "pending")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
             ->select("pre_bookings.id", "pre_bookings.created_at", "pre_bookings.updated_at")
             ->get();
 
@@ -885,7 +885,7 @@ class DashboardManagementController extends Controller
                 "bookings.garage_id" => $garage->id
             ])
             ->where('pre_bookings.status', "booked")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
             ->groupBy("pre_bookings.id")
             ->select("bookings.id", "bookings.created_at", "bookings.updated_at")
             ->get();
@@ -894,7 +894,7 @@ class DashboardManagementController extends Controller
                 "bookings.garage_id" => $garage->id
             ])
             ->where('pre_bookings.status', "booked")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
             ->groupBy("pre_bookings.id")
             ->select("bookings.id", "bookings.created_at", "bookings.updated_at")
             ->get();
@@ -906,7 +906,7 @@ class DashboardManagementController extends Controller
                 "bookings.garage_id" => $garage->id
             ])
             ->where('pre_bookings.status', "booked")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
             ->groupBy("pre_bookings.id")
             ->select("bookings.id", "bookings.created_at", "bookings.updated_at")
             ->get();
@@ -916,7 +916,7 @@ class DashboardManagementController extends Controller
                 "bookings.garage_id" => $garage->id
             ])
             ->where('pre_bookings.status', "booked")
-            ->whereDateBetween('pre_bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
+            ->whereBetween('pre_bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
             ->groupBy("pre_bookings.id")
             ->select("bookings.id", "bookings.created_at", "bookings.updated_at")
             ->get();
@@ -959,7 +959,7 @@ class DashboardManagementController extends Controller
             "bookings.garage_id" => $garage->id
 
         ])
-            ->whereDateBetween('bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
+            ->whereBetween('bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
             ->select("bookings.id", "bookings.created_at", "bookings.updated_at")
             ->get();
         $data["previous_week_data"] = Booking::where([
@@ -967,7 +967,7 @@ class DashboardManagementController extends Controller
             "bookings.garage_id" => $garage->id
 
         ])
-            ->whereDateBetween('bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
+            ->whereBetween('bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
             ->select("bookings.id", "bookings.created_at", "bookings.updated_at")
             ->get();
 
@@ -978,7 +978,7 @@ class DashboardManagementController extends Controller
             "bookings.garage_id" => $garage->id
 
         ])
-            ->whereDateBetween('bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
+            ->whereBetween('bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
             ->select("bookings.id", "bookings.created_at", "bookings.updated_at")
             ->get();
         $data["previous_month_data"] = Booking::where([
@@ -986,7 +986,7 @@ class DashboardManagementController extends Controller
             "bookings.garage_id" => $garage->id
 
         ])
-            ->whereDateBetween('bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
+            ->whereBetween('bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
             ->select("bookings.id", "bookings.created_at", "bookings.updated_at")
             ->get();
 
@@ -1037,14 +1037,14 @@ class DashboardManagementController extends Controller
             "jobs.status" => "pending",
             "jobs.garage_id" => $garage->id
 
-        ])->whereDateBetween('jobs.job_start_date', [$startDate, $endDateOfThisWeek])
+        ])->whereBetween('jobs.job_start_date', [$startDate, $endDateOfThisWeek])
             ->select("jobs.id", "jobs.created_at", "jobs.updated_at")
             ->get();
         $data["next_week_data"] = Job::where([
             "jobs.status" => "pending",
             "jobs.garage_id" => $garage->id
 
-        ])->whereDateBetween('jobs.job_start_date', [$startDateOfNextWeek, $endDateOfNextWeek])
+        ])->whereBetween('jobs.job_start_date', [$startDateOfNextWeek, $endDateOfNextWeek])
             ->select("jobs.id", "jobs.created_at", "jobs.updated_at")
             ->get();
 
@@ -1052,14 +1052,14 @@ class DashboardManagementController extends Controller
             "jobs.status" => "pending",
             "jobs.garage_id" => $garage->id
 
-        ])->whereDateBetween('jobs.job_start_date', [$startDate, $endDateOfThisMonth])
+        ])->whereBetween('jobs.job_start_date', [$startDate, $endDateOfThisMonth])
             ->select("jobs.id", "jobs.created_at", "jobs.updated_at")
             ->get();
         $data["next_month_data"] = Job::where([
             "jobs.status" => "pending",
             "jobs.garage_id" => $garage->id
 
-        ])->whereDateBetween('jobs.job_start_date', [$startDateOfNextMonth, $endDateOfNextMonth])
+        ])->whereBetween('jobs.job_start_date', [$startDateOfNextMonth, $endDateOfNextMonth])
             ->select("jobs.id", "jobs.created_at", "jobs.updated_at")
             ->get();
 
@@ -1095,14 +1095,14 @@ class DashboardManagementController extends Controller
         $data["this_week_data"] = GarageAffiliation::where([
             "garage_affiliations.garage_id" => $garage->id
         ])
-            ->whereDateBetween('garage_affiliations.end_date', [$startDate, $endDateOfThisWeek])
+            ->whereBetween('garage_affiliations.end_date', [$startDate, $endDateOfThisWeek])
 
             ->select("garage_affiliations.id", "garage_affiliations.created_at", "garage_affiliations.updated_at")
             ->get();
         $data["next_week_data"] = GarageAffiliation::where([
             "garage_affiliations.garage_id" => $garage->id
         ])
-            ->whereDateBetween('garage_affiliations.end_date', [$startDateOfNextWeek, $endDateOfNextWeek])
+            ->whereBetween('garage_affiliations.end_date', [$startDateOfNextWeek, $endDateOfNextWeek])
 
             ->select("garage_affiliations.id", "garage_affiliations.created_at", "garage_affiliations.updated_at")
             ->get();
@@ -1110,14 +1110,14 @@ class DashboardManagementController extends Controller
         $data["this_month_data"] = GarageAffiliation::where([
             "garage_affiliations.garage_id" => $garage->id
         ])
-            ->whereDateBetween('garage_affiliations.end_date', [$startDate, $endDateOfThisMonth])
+            ->whereBetween('garage_affiliations.end_date', [$startDate, $endDateOfThisMonth])
             ->select("garage_affiliations.id", "garage_affiliations.created_at", "garage_affiliations.updated_at")
             ->get();
 
         $data["next_month_data"] = GarageAffiliation::where([
             "garage_affiliations.garage_id" => $garage->id
         ])
-            ->whereDateBetween('garage_affiliations.end_date', [$startDateOfNextMonth, $endDateOfNextMonth])
+            ->whereBetween('garage_affiliations.end_date', [$startDateOfNextMonth, $endDateOfNextMonth])
             ->select("garage_affiliations.id", "garage_affiliations.created_at", "garage_affiliations.updated_at")
             ->get();
 
@@ -1264,7 +1264,7 @@ class DashboardManagementController extends Controller
 
 
 
-        $this_week_data_query = Garage::whereDateBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek]);
+        $this_week_data_query = Garage::whereBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek]);
 
         if ($created_by_filter) {
             $this_week_data_query =  $this_week_data_query->where([
@@ -1276,7 +1276,7 @@ class DashboardManagementController extends Controller
 
 
 
-        $previous_week_data_query = Garage::whereDateBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek]);
+        $previous_week_data_query = Garage::whereBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek]);
 
         if ($created_by_filter) {
             $previous_week_data_query =  $previous_week_data_query->where([
@@ -1289,7 +1289,7 @@ class DashboardManagementController extends Controller
 
 
 
-        $this_month_data_query = Garage::whereDateBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth]);
+        $this_month_data_query = Garage::whereBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth]);
 
         if ($created_by_filter) {
             $this_month_data_query =  $this_month_data_query->where([
@@ -1301,7 +1301,7 @@ class DashboardManagementController extends Controller
 
 
 
-        $previous_month_data_query = Garage::whereDateBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth]);
+        $previous_month_data_query = Garage::whereBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth]);
 
         if ($created_by_filter) {
             $previous_month_data_query =  $previous_month_data_query->where([
@@ -1340,7 +1340,7 @@ class DashboardManagementController extends Controller
         $data["total_data_count"] = $total_data_count_query->count();
 
 
-        $this_week_data_query = FuelStation::whereDateBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek]);
+        $this_week_data_query = FuelStation::whereBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek]);
         if ($created_by_filter) {
             $this_week_data_query =  $this_week_data_query->where([
                 "created_by" => auth()->user()->id
@@ -1350,7 +1350,7 @@ class DashboardManagementController extends Controller
             ->get();
 
 
-        $previous_week_data_query = FuelStation::whereDateBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek]);
+        $previous_week_data_query = FuelStation::whereBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek]);
         if ($created_by_filter) {
             $previous_week_data_query =  $previous_week_data_query->where([
                 "created_by" => auth()->user()->id
@@ -1360,7 +1360,7 @@ class DashboardManagementController extends Controller
             ->get();
 
 
-        $this_month_data_query =  FuelStation::whereDateBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth]);
+        $this_month_data_query =  FuelStation::whereBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth]);
         if ($created_by_filter) {
             $this_month_data_query =  $this_month_data_query->where([
                 "created_by" => auth()->user()->id
@@ -1369,7 +1369,7 @@ class DashboardManagementController extends Controller
         $data["this_month_data"] = $this_month_data_query->select("id", "created_at", "updated_at")
             ->get();
 
-        $previous_month_data_query =  FuelStation::whereDateBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth]);
+        $previous_month_data_query =  FuelStation::whereBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth]);
         if ($created_by_filter) {
             $previous_month_data_query =  $previous_month_data_query->where([
                 "created_by" => auth()->user()->id
@@ -1409,13 +1409,13 @@ class DashboardManagementController extends Controller
 
         $data["this_week_data"] = User::with("roles")->whereHas("roles", function ($q) {
             $q->whereIn("name", ["customer"]);
-        })->whereDateBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
+        })->whereBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
             ->select("id", "created_at", "updated_at")
             ->get();
 
         $data["previous_week_data"] = User::with("roles")->whereHas("roles", function ($q) {
             $q->whereIn("name", ["customer"]);
-        })->whereDateBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
+        })->whereBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
             ->select("id", "created_at", "updated_at")
             ->get();
 
@@ -1423,12 +1423,12 @@ class DashboardManagementController extends Controller
 
         $data["this_month_data"] = User::with("roles")->whereHas("roles", function ($q) {
             $q->whereIn("name", ["customer"]);
-        })->whereDateBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
+        })->whereBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
             ->select("id", "created_at", "updated_at")
             ->get();
         $data["previous_month_data"] = User::with("roles")->whereHas("roles", function ($q) {
             $q->whereIn("name", ["customer"]);
-        })->whereDateBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
+        })->whereBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
             ->select("id", "created_at", "updated_at")
             ->get();
 
@@ -1455,21 +1455,21 @@ class DashboardManagementController extends Controller
         $data["total_data_count"] = PreBooking::count();
 
 
-        $data["this_week_data"] = PreBooking::whereDateBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
+        $data["this_week_data"] = PreBooking::whereBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
             ->select("id", "created_at", "updated_at")
             ->get();
 
-        $data["previous_week_data"] = PreBooking::whereDateBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
+        $data["previous_week_data"] = PreBooking::whereBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
             ->select("id", "created_at", "updated_at")
             ->get();
 
 
 
-        $data["this_month_data"] = PreBooking::whereDateBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
+        $data["this_month_data"] = PreBooking::whereBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
             ->select("id", "created_at", "updated_at")
             ->get();
 
-        $data["previous_month_data"] = PreBooking::whereDateBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
+        $data["previous_month_data"] = PreBooking::whereBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
             ->select("id", "created_at", "updated_at")
             ->get();
 
@@ -1504,7 +1504,7 @@ class DashboardManagementController extends Controller
 
 
         $this_week_data_query =  Booking::leftJoin('garages', 'garages.id', '=', 'bookings.garage_id')
-            ->whereDateBetween('bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek]);
+            ->whereBetween('bookings.created_at', [$startDateOfThisWeek, $endDateOfThisWeek]);
         if ($created_by_filter) {
             $this_week_data_query =  $this_week_data_query->where([
                 "garages.created_by" => auth()->user()->id
@@ -1517,7 +1517,7 @@ class DashboardManagementController extends Controller
 
 
         $previous_week_data_query =  Booking::leftJoin('garages', 'garages.id', '=', 'bookings.garage_id')
-            ->whereDateBetween('bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek]);
+            ->whereBetween('bookings.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek]);
         if ($created_by_filter) {
             $previous_week_data_query =  $previous_week_data_query->where([
                 "garages.created_by" => auth()->user()->id
@@ -1532,7 +1532,7 @@ class DashboardManagementController extends Controller
 
 
         $this_month_data_query =  Booking::leftJoin('garages', 'garages.id', '=', 'bookings.garage_id')
-            ->whereDateBetween('bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth]);
+            ->whereBetween('bookings.created_at', [$startDateOfThisMonth, $endDateOfThisMonth]);
         if ($created_by_filter) {
             $this_month_data_query =  $this_month_data_query->where([
                 "garages.created_by" => auth()->user()->id
@@ -1543,7 +1543,7 @@ class DashboardManagementController extends Controller
 
 
         $previous_month_data_query =  Booking::leftJoin('garages', 'garages.id', '=', 'bookings.garage_id')
-            ->whereDateBetween('bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth]);
+            ->whereBetween('bookings.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth]);
         if ($created_by_filter) {
             $previous_month_data_query =  $previous_month_data_query->where([
                 "garages.created_by" => auth()->user()->id
@@ -1586,7 +1586,7 @@ class DashboardManagementController extends Controller
 
 
         $this_week_data_query =  Job::leftJoin('garages', 'garages.id', '=', 'jobs.garage_id')
-            ->whereDateBetween('jobs.created_at', [$startDateOfThisWeek, $endDateOfThisWeek]);
+            ->whereBetween('jobs.created_at', [$startDateOfThisWeek, $endDateOfThisWeek]);
         if ($created_by_filter) {
             $this_week_data_query =  $this_week_data_query->where([
                 "garages.created_by" => auth()->user()->id
@@ -1600,7 +1600,7 @@ class DashboardManagementController extends Controller
 
 
         $previous_week_data_query =  Job::leftJoin('garages', 'garages.id', '=', 'jobs.garage_id')
-            ->whereDateBetween('jobs.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek]);
+            ->whereBetween('jobs.created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek]);
         if ($created_by_filter) {
             $previous_week_data_query =  $previous_week_data_query->where([
                 "garages.created_by" => auth()->user()->id
@@ -1615,7 +1615,7 @@ class DashboardManagementController extends Controller
 
 
         $this_month_data_query =  Job::leftJoin('garages', 'garages.id', '=', 'jobs.garage_id')
-            ->whereDateBetween('jobs.created_at', [$startDateOfThisMonth, $endDateOfThisMonth]);
+            ->whereBetween('jobs.created_at', [$startDateOfThisMonth, $endDateOfThisMonth]);
         if ($created_by_filter) {
             $this_month_data_query =  $this_month_data_query->where([
                 "garages.created_by" => auth()->user()->id
@@ -1628,7 +1628,7 @@ class DashboardManagementController extends Controller
 
 
         $previous_month_data_query =  Job::leftJoin('garages', 'garages.id', '=', 'jobs.garage_id')
-            ->whereDateBetween('jobs.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth]);
+            ->whereBetween('jobs.created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth]);
         if ($created_by_filter) {
             $previous_month_data_query =  $previous_month_data_query->where([
                 "garages.created_by" => auth()->user()->id
@@ -1666,20 +1666,20 @@ class DashboardManagementController extends Controller
         $data["total_data_count"] = Service::count();
 
 
-        $data["this_week_data"] = Service::whereDateBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
+        $data["this_week_data"] = Service::whereBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek])
             ->select("id", "created_at", "updated_at")
             ->get();
 
-        $data["previous_week_data"] = Service::whereDateBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
+        $data["previous_week_data"] = Service::whereBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek])
             ->select("id", "created_at", "updated_at")
             ->get();
 
 
 
-        $data["this_month_data"] = Service::whereDateBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
+        $data["this_month_data"] = Service::whereBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth])
             ->select("id", "created_at", "updated_at")
             ->get();
-        $data["previous_month_data"] = Service::whereDateBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
+        $data["previous_month_data"] = Service::whereBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth])
             ->select("id", "created_at", "updated_at")
             ->get();
 
@@ -1719,10 +1719,10 @@ class DashboardManagementController extends Controller
 
 
             ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
-                $query ->whereDateBetween('bookings.job_start_date', [$start, $end]);
+                $query ->whereBetween('bookings.job_start_date', [$start, $end]);
               })
             ->when(request()->filled("start_date") && request()->filled("end_date"), function ($query) {
-                $query->whereDateBetween('job_start_date', [request()->start_date, request()->end_date]);
+                $query->whereBetween('job_start_date', [request()->start_date, request()->end_date]);
             })
         ;
     }
@@ -1868,25 +1868,25 @@ class DashboardManagementController extends Controller
                         $query->whereDate('bookings.job_start_date', Carbon::today());
                     })
                     ->when($range === 'this_week', function ($query) {
-                        $query->whereDateBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
                     })
                     ->when($range === 'this_month', function ($query) {
-                        $query->whereDateBetween('bookings.job_start_date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
+                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
                     })
                     ->when($range === 'next_week', function ($query) {
-                        $query->whereDateBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
                     })
                     ->when($range === 'next_month', function ($query) {
-                        $query->whereDateBetween('bookings.job_start_date', [Carbon::now()->addMonth()->startOfMonth(), Carbon::now()->endOfMonth()]);
+                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->addMonth()->startOfMonth(), Carbon::now()->endOfMonth()]);
                     })
                     ->when($range === 'previous_week', function ($query) {
-                        $query->whereDateBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
                     })
                     ->when($range === 'previous_month', function ($query) {
-                        $query->whereDateBetween('bookings.job_start_date', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->endOfMonth()]);
+                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->endOfMonth()]);
                     })
                     ->when($range === 'all' && request()->filled("start_date") && request()->filled("end_date"), function ($query) {
-                        $query->whereDateBetween('bookings.job_start_date', [request()->start_date, request()->end_date]);
+                        $query->whereBetween('bookings.job_start_date', [request()->start_date, request()->end_date]);
                     })  ->selectRaw('SUM(
                         CASE
                             WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
@@ -1918,7 +1918,7 @@ class DashboardManagementController extends Controller
                             $query->where('bookings.expert_id', auth()->user()->id);
                         })
                         ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
-                          $query ->whereDateBetween('bookings.job_start_date', [$start, $end]);
+                          $query ->whereBetween('bookings.job_start_date', [$start, $end]);
                         })
 
 
@@ -1946,7 +1946,7 @@ class DashboardManagementController extends Controller
           $query->where("users.business_id",auth()->user()->business_id);
        })
        ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
-        $query ->whereDateBetween('date', [$start, $end]);
+        $query ->whereBetween('date', [$start, $end]);
       })
       ->sum(DB::raw('JSON_LENGTH(busy_slots)'));
 
@@ -1961,7 +1961,7 @@ class DashboardManagementController extends Controller
       $data =  Booking::where("garage_id", auth()->user()->business_id)
       ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
       ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
-        $query ->whereDateBetween('bookings.job_start_date', [$start, $end]);
+        $query ->whereBetween('bookings.job_start_date', [$start, $end]);
       })
       ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
 
@@ -1977,7 +1977,7 @@ class DashboardManagementController extends Controller
 
         $app_customers = User::where("users.is_walk_in_customer", 0)
             ->whereHas('bookings', function ($query) use ($start, $end) {
-                $query->whereDateBetween('bookings.job_start_date', [$start, $end])
+                $query->whereBetween('bookings.job_start_date', [$start, $end])
                     ->where("garage_id", auth()->user()->business_id)
                     ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                         $query->where('bookings.expert_id', auth()->user()->id);
@@ -1988,7 +1988,7 @@ class DashboardManagementController extends Controller
 
         $walk_in_customers = User::where("users.is_walk_in_customer", 1) // Assuming is_walk_in_customer should be 1 for walk-in customers
             ->whereHas('bookings', function ($query) use ($start, $end) {
-                $query->whereDateBetween('bookings.job_start_date', [$start, $end])
+                $query->whereBetween('bookings.job_start_date', [$start, $end])
                     ->where("garage_id", auth()->user()->business_id)
                     ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                         $query->where('bookings.expert_id', auth()->user()->id);
@@ -2011,7 +2011,7 @@ class DashboardManagementController extends Controller
         $end = $dateRange['end'];
 
         return User::whereHas('bookings', function ($query) use ($start, $end) {
-            $query->whereDateBetween('bookings.job_start_date', [$start, $end])
+            $query->whereBetween('bookings.job_start_date', [$start, $end])
                 ->where("garage_id", auth()->user()->business_id)
                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                     $query->where('bookings.expert_id', auth()->user()->id);
@@ -2152,29 +2152,29 @@ class DashboardManagementController extends Controller
 
 
 
-          // Define validation rules for date filters
-$validator = Validator::make($request->all(), [
-    'customer_date_filter' => 'required|string',
-    'repeated_customer_date_filter' => 'required|string',
-    'booking_date_filter' => 'required|string',
-    'expert_booking_date_filter' => 'required|string',
-    'expert_revenue_date_filter' => 'required|string',
+//           // Define validation rules for date filters
+// $validator = Validator::make($request->all(), [
+//     'customer_date_filter' => 'required|string',
+//     'repeated_customer_date_filter' => 'required|string',
+//     'booking_date_filter' => 'required|string',
+//     'expert_booking_date_filter' => 'required|string',
+//     'expert_revenue_date_filter' => 'required|string',
 
-    'revenue_date_filter' => 'required|string',
-    'top_services_date_filter' => 'required|string',
-    'busy_slots_date' => 'required|string',
-    'blocked_slots_date' => 'required|string',
-], [
-    '*.required' => 'The :attribute field is required.',
-    '*.string' => 'The :attribute must be a valid string.'
-]);
+//     'revenue_date_filter' => 'required|string',
+//     'top_services_date_filter' => 'required|string',
+//     'busy_slots_date' => 'required|string',
+//     'blocked_slots_date' => 'required|string',
+// ], [
+//     '*.required' => 'The :attribute field is required.',
+//     '*.string' => 'The :attribute must be a valid string.'
+// ]);
 
 // Check if validation fails and return errors
-if ($validator->fails()) {
-    return response()->json([
-        'errors' => $validator->errors()
-    ], 422);
-}
+// if ($validator->fails()) {
+//     return response()->json([
+//         'errors' => $validator->errors()
+//     ], 422);
+// }
 
 $data["today_available_experts"] = [];
 $today_remaining_slots = request()->input("today_remaining_slots");
@@ -2631,13 +2631,13 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
                                  return $query->whereDate('bookings.job_start_date', Carbon::today());
                              })
                              ->when($request->date_filter === 'this_week', function ($query) {
-                                 return $query->whereDateBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                                 return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
                              })
                              ->when($request->date_filter === 'previous_week', function ($query) {
-                                 return $query->whereDateBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                                 return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
                              })
                              ->when($request->date_filter === 'next_week', function ($query) {
-                                 return $query->whereDateBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                                 return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
                              })
                              ->when($request->date_filter === 'this_month', function ($query) {
                                  return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
