@@ -21,6 +21,95 @@ use Illuminate\Support\Facades\Http;
 trait BasicUtil
 {
 
+
+      /**
+     * Get available experts based on the provided date, business ID, and slots.
+     *
+     * @param string $date
+     * @param int $businessId
+     * @param array $slots
+     * @return array
+     */
+    public function getAvailableExperts(string $date, int $businessId, array $slots,$remainingDayAllSlots=false)
+    {
+        $experts = User::with("translation")
+            ->where("users.is_active", 1)
+            ->whereHas('roles', function ($query) {
+                $query->where('roles.name', 'business_experts');
+            })
+            ->when(request()->filled("business_id"), function ($query) use ($businessId) {
+                $query->where("business_id", $businessId);
+            })
+            ->get();
+
+        $availableExperts = collect();
+
+        foreach ($experts as $expert) {
+            $allBusySlots = $this->getAllBusySlotsForExpert($expert, $businessId, $date);
+
+            // Find overlapping slots between the input slots and the combined allBusySlots
+            $overlappingSlots = array_intersect($slots, $allBusySlots);
+
+            // If there are overlaps, return them
+            if (!empty($overlappingSlots)) {
+                if(!empty($remainingDayAllSlots)) {
+                    if (count($overlappingSlots) != count($slots)) {
+                        $availableExperts->push($expert);
+                    }
+                }  else
+                 {
+                    return [
+                        'status' => 'error',
+                        'message' => 'Some slots are already booked.',
+                        'overlapping_slots' => $overlappingSlots
+                    ];
+                }
+
+            } else {
+                $availableExperts->push($expert);
+            }
+        }
+
+        return [
+            'status' => 'success',
+            'available_experts' => $availableExperts
+        ];
+    }
+
+    /**
+     * Get all busy slots for an expert for a given date and business ID.
+     *
+     * @param User $expert
+     * @param int $businessId
+     * @param string $date
+     * @return array
+     */
+    protected function getAllBusySlotsForExpert($expert, $businessId, $date)
+    {
+        // Get all bookings for the provided date except the rejected ones
+        $expertBookings = Booking::whereDate("job_start_date", $date)
+            ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+            ->where("business_id", $businessId)
+            ->get();
+
+        // Get all the booked slots as a flat array
+        $allBusySlots = $expertBookings->pluck('booked_slots')->flatten()->toArray();
+
+        // Get expert rota and merge its busy slots with the bookings
+        $expertRota = ExpertRota::where([
+            "expert_id" =>  $expert->id,
+            "date" => $date
+        ])->first();
+
+        if ($expertRota && !empty($expertRota->busy_slots)) {
+            $allBusySlots = array_merge($allBusySlots, $expertRota->busy_slots);
+        }
+
+        return $allBusySlots;
+    }
+
+
+
     public function processRefund($booking){
 
 

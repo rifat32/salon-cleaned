@@ -2028,14 +2028,15 @@ class DashboardManagementController extends Controller
                 ->where("garage_id", auth()->user()->business_id)
                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                     $query->where('bookings.expert_id', auth()->user()->id);
+                })
+                ->whereIn('bookings.customer_id', function ($subquery)  {
+                    $subquery->select('customer_id')
+                             ->from('bookings')
+                             ->groupBy('customer_id')
+                             ->having(DB::raw('COUNT(id)'), 1 ? '>' : '=', 1);
                 });
         })
-        ->whereIn('bookings.customer_id', function ($subquery)  {
-            $subquery->select('customer_id')
-                     ->from('bookings')
-                     ->groupBy('customer_id')
-                     ->having(DB::raw('COUNT(id)'), 1 ? '>' : '=', 1);
-        })
+
         ->distinct()
         ->get();
     }
@@ -2097,34 +2098,100 @@ class DashboardManagementController extends Controller
                     "message" => "You are not a business user"
                 ], 401);
             }
-  // Get the 'date_filter' input from the request
-  $dateFilter = request()->input('date_filter');
 
-  // Manually check if the 'date_filter' is empty
-  if (empty($dateFilter)) {
-      // Return a 422 Unprocessable Entity response with a custom error message
-      return response()->json([
-          'errors' => [
-              'date_filter' => ['The date filter field is required.']
-          ]
-      ], 422);
-  }
+            if (!request()->filled("today_remaining_slots")) {
+                return response()->json([
+                    "message" => "today remaining slots field is required"
+                ], 401);
+            }
 
-  // Validate if the 'date_filter' is a valid date format
-  if (!strtotime($dateFilter)) {
-      return response()->json([
-          'errors' => [
-              'date_filter' => ['The date filter must be a valid date.']
-          ]
-      ], 422);
-  }
+            $dateFilters = [
+
+                'customer_date_filter' => request()->input('customer_date_filter'),
+
+                'repeated_customer_date_filter' => request()->input('repeated_customer_date_filter'),
+
+                'booking_date_filter' => request()->input('booking_date_filter'),
+
+                'expert_booking_date_filter' => request()->input('expert_booking_date_filter'),
+
+
+                'revenue_date_filter' => request()->input('revenue_date_filter'),
+
+
+            ];
+
+
+              // Get available experts
+$data["today_available_experts"] = $this->getAvailableExperts(request()->input("date"), request()->input("business_id"), request()->input("today_remaining_slots"),true);
+
+
+            // Validate date filters
+            foreach ($dateFilters as $key => $filter) {
+                if (empty($filter)) {
+                    return response()->json([
+                        'errors' => [$key => ['The date filter must be  required.']]
+                    ], 422);
+                }
+            }
 
             // Call the method with different time periods
-            $data["customers"] = $this->getCustomersByPeriod(request()->input("date_filter"));
+            $data["customers"] = $this->getCustomersByPeriod(request()->input("customer_date_filter"));
 
-            $data["repeated_customers"] = $this->getRepeatedCustomers(request()->input("date_filter"));
+            $data["repeated_customers"] = $this->getRepeatedCustomers(request()->input("repeated_customer_date_filter"));
 
-            $data["bookings"] = $this->bookingsByStatusCount(request()->input("date_filter"));
+            $data["bookings"] = $this->bookingsByStatusCount(request()->input("booking_date_filter"));
+
+            $data["revenue"] = $this->revenue(request()->input("revenue_date_filter"));
+
+
+            $data["top_services"] = SubService::withCount([
+                'bookingSubServices as all_sales_count' => function ($query) {
+                    $query->whereHas('booking', function ($query) {
+                        $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                                $query->where('bookings.expert_id', auth()->user()->id);
+                            }); // Sales this month
+                    });
+                },
+                'bookingSubServices as this_month_sales' => function ($query) {
+                    $query->whereHas('booking', function ($query) {
+                        $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                                $query->where('bookings.expert_id', auth()->user()->id);
+                            })
+                            ->whereBetween('bookings.job_start_date', [now()->startOfMonth(), now()->endOfMonth()]); // Sales this month
+                    });
+                },
+                'bookingSubServices as last_month_sales' => function ($query) {
+                    $query->whereHas('booking', function ($query) {
+                        $query->where('bookings.status', 'converted_to_job') // Filter for converted
+                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                                $query->where('bookings.expert_id', auth()->user()->id);
+                            })
+                            ->whereBetween('bookings.job_start_date', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()]); // Sales last month
+                    });
+                }
+            ])
+                ->orderBy('this_month_sales', 'desc') // Sort by this month's sales
+                ->limit(5)
+                ->get();
+
+
+                $data["today_all_busy_slots"] = ExpertRota::
+                whereHas("user", function($query) {
+                    $query->where("users.business_id",auth()->user()->business_id);
+                 })
+                ->whereDate("date", today())
+                ->sum(DB::raw('JSON_LENGTH(busy_slots)'));
+
+               $data["today_all_booked_slots"] = Booking::where("garage_id", auth()->user()->business_id)
+                ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+                ->whereDate("job_start_date", today())
+                ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
+
+
+
 
 
 
@@ -2235,7 +2302,7 @@ class DashboardManagementController extends Controller
                 $expert->average_rating = $this->calculateAverageRating($expert->id);
 
 
-                $expert->bookings = $this->bookingsByStatusCount(request()->input("date_filter"), $expert->id);
+                $expert->bookings = $this->bookingsByStatusCount(request()->input("expert_booking_date_filter"), $expert->id);
 
 
                 $expert->busy_slots = $this->blockedSlots(today(), $expert->id);
@@ -2321,62 +2388,6 @@ class DashboardManagementController extends Controller
 
 
             $data["top_experts"] = $experts;
-
-            $data["today_revenue"] = $this->revenue('today');
-            $data["this_week_revenue"] = $this->revenue('this_week');
-            $data["this_month_revenue"] = $this->revenue('this_month');
-            $data["next_week_revenue"] = $this->revenue('next_week');
-            $data["next_month_revenue"] = $this->revenue('next_month');
-            $data["previous_week_revenue"] = $this->revenue('previous_week');
-            $data["previous_month_revenue"] = $this->revenue('previous_month');
-
-
-
-            $data["top_services"] = SubService::withCount([
-                'bookingSubServices as all_sales_count' => function ($query) {
-                    $query->whereHas('booking', function ($query) {
-                        $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
-                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                                $query->where('bookings.expert_id', auth()->user()->id);
-                            }); // Sales this month
-                    });
-                },
-                'bookingSubServices as this_month_sales' => function ($query) {
-                    $query->whereHas('booking', function ($query) {
-                        $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
-                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                                $query->where('bookings.expert_id', auth()->user()->id);
-                            })
-                            ->whereBetween('bookings.job_start_date', [now()->startOfMonth(), now()->endOfMonth()]); // Sales this month
-                    });
-                },
-                'bookingSubServices as last_month_sales' => function ($query) {
-                    $query->whereHas('booking', function ($query) {
-                        $query->where('bookings.status', 'converted_to_job') // Filter for converted
-                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                                $query->where('bookings.expert_id', auth()->user()->id);
-                            })
-                            ->whereBetween('bookings.job_start_date', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()]); // Sales last month
-                    });
-                }
-            ])
-                ->orderBy('this_month_sales', 'desc') // Sort by this month's sales
-                ->limit(5)
-                ->get();
-
-
-                $data["today_all_busy_slots"] = ExpertRota::
-                whereHas("user", function($query) {
-                    $query->where("users.business_id",auth()->user()->business_id);
-                 })
-                ->whereDate("date", today())
-                ->sum(DB::raw('JSON_LENGTH(busy_slots)'));
-
-               $data["today_all_booked_slots"] = Booking::where("garage_id", auth()->user()->business_id)
-                ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-                ->whereDate("job_start_date", today())
-                ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
-
 
 
 

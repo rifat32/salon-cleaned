@@ -1201,64 +1201,15 @@ class ClientBookingController extends Controller
             }
 
 
-            $experts = User::with("translation")
-            ->where("users.is_active",1)
-                ->whereHas('roles', function ($query) {
-                    $query->where('roles.name', 'business_experts');
-                })
-                ->when(request()->filled("business_id"), function ($query) {
-                    $query->where("business_id", request()->input("business_id"));
-                })
-                ->get();
+          // Get available experts
+$response = $this->getAvailableExperts(request()->input("date"), request()->input("business_id"), request()->input("slots"));
 
-            $availableExperts = collect();
-
-            foreach ($experts as $expert) {
-                // Get all bookings for the provided date except the rejected ones
-                $expert_bookings = Booking::whereDate("job_start_date", request()->input("date"))
-                    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-                    ->where([
-                        "business_id" => request()->input("business_id")
-                    ])
-                    ->get();
+if ($response['status'] === 'error') {
+    return response()->json($response, 422);
+}
 
 
-                // Get all the booked slots as a flat array
-                $allBusySlots = $expert_bookings->pluck('booked_slots')->flatten()->toArray();
-
-
-                $expertRota = ExpertRota::where([
-                    "expert_id" =>  $expert->id
-                ])
-                    ->whereDate("date", request()->input("date"))
-                    ->first();
-
-                if (!empty($expertRota)) {
-                    $expertRota->busy_slots;
-                }
-
-                // If expertRota exists, merge its busy_slots with the booked slots
-                if (!empty($expertRota) && !empty($expertRota->busy_slots)) {
-                    $allBusySlots = array_merge($allBusySlots, $expertRota->busy_slots);
-                }
-
-                $slots = explode(',', request()->input("slots"));
-                // Find overlapping slots between the input slots and the combined allBusySlots
-                $overlappingSlots = array_intersect($slots, $allBusySlots);
-
-                // If there are overlaps, return them or throw an error
-                if (!empty($overlappingSlots)) {
-                    return [
-                        'status' => 'error',
-                        'message' => 'Some slots are already booked.',
-                        'overlapping_slots' => $overlappingSlots
-                    ];
-                } else {
-                    $availableExperts->push($expert);
-                }
-            }
-
-            return response()->json($availableExperts->toArray(), 200);
+return response()->json($response,200);
         } catch (Exception $e) {
 
             return $this->sendError($e, 500, $request);
