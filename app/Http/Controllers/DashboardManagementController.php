@@ -2747,13 +2747,15 @@ $expert->last_month_revenue = $this->calculateExpertRevenue($expert->id, now()->
                     "message" => "You are not a business user"
                 ], 401);
             }
-
             $vats = Booking::where([
                 "garage_id" => auth()->user()->business_id
-            ])->when(auth()->user()->hasRole("business_experts"), function ($query) {
+            ])
+            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                 $query->where('bookings.expert_id', auth()->user()->id);
             })
-            ->select("bookings.id","bookings.vat_percentage","bookings.vat_amount")
+            ->whereNotNull('bookings.vat_amount') // vat_amount should not be null
+            ->whereNotNull('bookings.vat_percentage') // vat_percentage should not be null
+       
             ->when($request->filled("id"), function ($query) use ($request) {
                 return $query
                     ->where("bookings.id", $request->input("id")) // Change to customers.id
