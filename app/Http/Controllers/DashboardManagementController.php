@@ -1696,6 +1696,9 @@ class DashboardManagementController extends Controller
 
     public function bookings($range = 'today')
     {
+        $dateRange = $this->getDateRange($range);
+        $start = $dateRange['start'];
+        $end = $dateRange['end'];
         return Booking::with([
                 "sub_services" => function ($query) {
                     $query->select(
@@ -1714,28 +1717,10 @@ class DashboardManagementController extends Controller
             ])
 
 
-            ->when($range === 'today', function ($query) {
-                $query->whereDate('job_start_date', Carbon::today());
-            })
-            ->when($range === 'this_week', function ($query) {
-                $query->whereBetween('job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-            })
-            ->when($range === 'this_month', function ($query) {
-                $query->whereBetween('job_start_date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
-            })
-            ->when($range === 'next_week', function ($query) {
-                $query->whereBetween('job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
-            })
-            ->when($range === 'next_month', function ($query) {
-                $query->whereBetween('job_start_date', [Carbon::now()->addMonth()->startOfMonth(), Carbon::now()->addMonth()->endOfMonth()]);
-            })
-            ->when($range === 'previous_week', function ($query) {
-                $query->whereBetween('job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-            })
-            ->when($range === 'previous_month', function ($query) {
-                $query->whereBetween('job_start_date', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()]);
-            })
-            ->when($range === 'all' && request()->filled("start_date") && request()->filled("end_date"), function ($query) {
+            ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
+                $query ->whereBetween('bookings.job_start_date', [$start, $end]);
+              })
+            ->when(request()->filled("start_date") && request()->filled("end_date"), function ($query) {
                 $query->whereBetween('job_start_date', [request()->start_date, request()->end_date]);
             })
         ;
@@ -1919,43 +1904,42 @@ class DashboardManagementController extends Controller
             "walk_in_customer_revenue" => $this->calculateRevenue($garage_id, $range, $expert_id, 1),
         ];
     }
+    public function getTopServices($range){
+        $dateRange = $this->getDateRange($range);
+        $start = $dateRange['start'];
+        $end = $dateRange['end'];
+
+      $top_services =  SubService::withCount([
+            'bookingSubServices as all_sales_count' => function ($query) use($start,$end) {
+                $query->whereHas('booking', function ($query) use($start,$end) {
+                    $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+                        ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                            $query->where('bookings.expert_id', auth()->user()->id);
+                        })
+                        ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
+                          $query ->whereBetween('bookings.job_start_date', [$start, $end]);
+                        })
+
+
+                        ; // Sales this month
+                });
+            },
+
+
+        ])
+            ->orderBy('this_month_sales', 'desc') // Sort by this month's sales
+            ->limit(5)
+            ->get();
+
+            return $top_services;
+
+    }
     public function getCustomersByPeriod($period)
     {
-        // Determine date range based on the period
-        switch ($period) {
-            case 'today':
-                $start = Carbon::today();
-                $end = Carbon::today();
-                break;
-            case 'this_week':
-                $start = Carbon::now()->startOfWeek();
-                $end = Carbon::now()->endOfWeek();
-                break;
-            case 'this_month':
-                $start = Carbon::now()->startOfMonth();
-                $end = Carbon::now()->endOfMonth();
-                break;
-            case 'next_week':
-                $start = Carbon::now()->addWeek()->startOfWeek();
-                $end = Carbon::now()->addWeek()->endOfWeek();
-                break;
-            case 'next_month':
-                $start = Carbon::now()->addMonth()->startOfMonth();
-                $end = Carbon::now()->addMonth()->endOfMonth();
-                break;
-            case 'previous_week':
-                $start = Carbon::now()->subWeek()->startOfWeek();
-                $end = Carbon::now()->subWeek()->endOfWeek();
-                break;
-            case 'previous_month':
-                $start = Carbon::now()->subMonth()->startOfMonth();
-                $end = Carbon::now()->subMonth()->endOfMonth();
-                break;
-            default:
-                $start = Carbon::now()->subMonth()->startOfMonth();
-                $end = Carbon::now()->subMonth()->endOfMonth();
-        }
 
+        $dateRange = $this->getDateRange($period);
+        $start = $dateRange['start'];
+        $end = $dateRange['end'];
 
         $app_customers = User::where("users.is_walk_in_customer", 0)
             ->whereHas('bookings', function ($query) use ($start, $end) {
@@ -1988,40 +1972,9 @@ class DashboardManagementController extends Controller
 
     public function getRepeatedCustomers($period)
     {
-         // Determine date range based on the period
-         switch ($period) {
-            case 'today':
-                $start = Carbon::today();
-                $end = Carbon::today();
-                break;
-            case 'this_week':
-                $start = Carbon::now()->startOfWeek();
-                $end = Carbon::now()->endOfWeek();
-                break;
-            case 'this_month':
-                $start = Carbon::now()->startOfMonth();
-                $end = Carbon::now()->endOfMonth();
-                break;
-            case 'next_week':
-                $start = Carbon::now()->addWeek()->startOfWeek();
-                $end = Carbon::now()->addWeek()->endOfWeek();
-                break;
-            case 'next_month':
-                $start = Carbon::now()->addMonth()->startOfMonth();
-                $end = Carbon::now()->addMonth()->endOfMonth();
-                break;
-            case 'previous_week':
-                $start = Carbon::now()->subWeek()->startOfWeek();
-                $end = Carbon::now()->subWeek()->endOfWeek();
-                break;
-            case 'previous_month':
-                $start = Carbon::now()->subMonth()->startOfMonth();
-                $end = Carbon::now()->subMonth()->endOfMonth();
-                break;
-            default:
-                $start = Carbon::now()->subMonth()->startOfMonth();
-                $end = Carbon::now()->subMonth()->endOfMonth();
-        }
+        $dateRange = $this->getDateRange($period);
+        $start = $dateRange['start'];
+        $end = $dateRange['end'];
 
         return User::whereHas('bookings', function ($query) use ($start, $end) {
             $query->whereBetween('bookings.job_start_date', [$start, $end])
@@ -2118,12 +2071,16 @@ class DashboardManagementController extends Controller
 
                 'revenue_date_filter' => request()->input('revenue_date_filter'),
 
+                'top_services_date_filter' => request()->input('top_services_date_filter'),
+
+
+
 
             ];
-
+            $today_remaining_slots = explode(',', request()->input("today_remaining_slots"));
 
               // Get available experts
-$data["today_available_experts"] = $this->getAvailableExperts(request()->input("date"), request()->input("business_id"), request()->input("today_remaining_slots"),true);
+$data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->user()->business_id, $today_remaining_slots,true);
 
 
             // Validate date filters
@@ -2145,38 +2102,7 @@ $data["today_available_experts"] = $this->getAvailableExperts(request()->input("
             $data["revenue"] = $this->revenue(request()->input("revenue_date_filter"));
 
 
-            $data["top_services"] = SubService::withCount([
-                'bookingSubServices as all_sales_count' => function ($query) {
-                    $query->whereHas('booking', function ($query) {
-                        $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
-                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                                $query->where('bookings.expert_id', auth()->user()->id);
-                            }); // Sales this month
-                    });
-                },
-                'bookingSubServices as this_month_sales' => function ($query) {
-                    $query->whereHas('booking', function ($query) {
-                        $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
-                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                                $query->where('bookings.expert_id', auth()->user()->id);
-                            })
-                            ->whereBetween('bookings.job_start_date', [now()->startOfMonth(), now()->endOfMonth()]); // Sales this month
-                    });
-                },
-                'bookingSubServices as last_month_sales' => function ($query) {
-                    $query->whereHas('booking', function ($query) {
-                        $query->where('bookings.status', 'converted_to_job') // Filter for converted
-                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                                $query->where('bookings.expert_id', auth()->user()->id);
-                            })
-                            ->whereBetween('bookings.job_start_date', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()]); // Sales last month
-                    });
-                }
-            ])
-                ->orderBy('this_month_sales', 'desc') // Sort by this month's sales
-                ->limit(5)
-                ->get();
-
+            $data["top_services"] = $this->getTopServices(request()->input("top_services_date_filter"));
 
                 $data["today_all_busy_slots"] = ExpertRota::
                 whereHas("user", function($query) {
@@ -2387,7 +2313,7 @@ $data["today_available_experts"] = $this->getAvailableExperts(request()->input("
             }
 
 
-            $data["top_experts"] = $experts;
+            $data["experts"] = $experts;
 
 
 

@@ -22,6 +22,8 @@ class CreateUsersTable extends Migration
             $table->boolean('is_walk_in_customer')->default(0);
             $table->integer('weekly_minimum_days')->default(0);
             $table->integer('weekly_minimum_hours')->default(0);
+            $table->date('joining_date')->default(0);
+
 
             $table->string("address_line_1")->nullable();
             $table->string("address_line_2")->nullable();

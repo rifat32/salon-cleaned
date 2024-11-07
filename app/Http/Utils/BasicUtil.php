@@ -21,6 +21,48 @@ use Illuminate\Support\Facades\Http;
 trait BasicUtil
 {
 
+    function getDateRange($period)
+{
+    switch ($period) {
+        case 'today':
+            $start = Carbon::today();
+            $end = Carbon::today();
+            break;
+        case 'this_week':
+            $start = Carbon::now()->startOfWeek();
+            $end = Carbon::now()->endOfWeek();
+            break;
+        case 'this_month':
+            $start = Carbon::now()->startOfMonth();
+            $end = Carbon::now()->endOfMonth();
+            break;
+        case 'next_week':
+            $start = Carbon::now()->addWeek()->startOfWeek();
+            $end = Carbon::now()->addWeek()->endOfWeek();
+            break;
+        case 'next_month':
+            $start = Carbon::now()->addMonth()->startOfMonth();
+            $end = Carbon::now()->addMonth()->endOfMonth();
+            break;
+        case 'previous_week':
+            $start = Carbon::now()->subWeek()->startOfWeek();
+            $end = Carbon::now()->subWeek()->endOfWeek();
+            break;
+        case 'previous_month':
+            $start = Carbon::now()->subMonth()->startOfMonth();
+            $end = Carbon::now()->subMonth()->endOfMonth();
+            break;
+        default:
+            $start = "";
+            $end = "";
+    }
+
+    return [
+        'start' => $start,
+        'end' => $end,
+    ];
+}
+
 
       /**
      * Get available experts based on the provided date, business ID, and slots.
@@ -32,12 +74,13 @@ trait BasicUtil
      */
     public function getAvailableExperts(string $date, int $businessId, array $slots,$remainingDayAllSlots=false)
     {
+
         $experts = User::with("translation")
             ->where("users.is_active", 1)
             ->whereHas('roles', function ($query) {
                 $query->where('roles.name', 'business_experts');
             })
-            ->when(request()->filled("business_id"), function ($query) use ($businessId) {
+            ->when($businessId, function ($query) use ($businessId) {
                 $query->where("business_id", $businessId);
             })
             ->get();
@@ -89,7 +132,7 @@ trait BasicUtil
         // Get all bookings for the provided date except the rejected ones
         $expertBookings = Booking::whereDate("job_start_date", $date)
             ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-            ->where("business_id", $businessId)
+            ->where("garage_id", $businessId)
             ->get();
 
         // Get all the booked slots as a flat array

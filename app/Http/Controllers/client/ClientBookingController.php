@@ -1200,9 +1200,9 @@ class ClientBookingController extends Controller
                 ], 401);
             }
 
-
+            $slots = explode(',', request()->input("slots"));
           // Get available experts
-$response = $this->getAvailableExperts(request()->input("date"), request()->input("business_id"), request()->input("slots"));
+$response = $this->getAvailableExperts(request()->input("date"), request()->input("business_id"), $slots);
 
 if ($response['status'] === 'error') {
     return response()->json($response, 422);

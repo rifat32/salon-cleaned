@@ -868,6 +868,7 @@ class UserManagementController extends Controller
                 "image",
                 'weekly_minimum_days',
                 'weekly_minimum_hours',
+                'joining_date'
 
             ])->toArray()
             )
