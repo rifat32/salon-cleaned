@@ -13,6 +13,7 @@ use App\Models\FuelStation;
 use App\Models\Garage;
 use App\Models\GarageAffiliation;
 use App\Models\Job;
+use Illuminate\Support\Facades\Validator;
 use App\Models\JobPayment;
 use App\Models\PreBooking;
 use App\Models\ReviewNew;
@@ -2100,44 +2101,37 @@ class DashboardManagementController extends Controller
                 ], 401);
             }
 
-            if (!request()->filled("today_remaining_slots")) {
-                return response()->json([
-                    "message" => "today remaining slots field is required"
-                ], 401);
-            }
-
-            $dateFilters = [
-
-                'customer_date_filter' => request()->input('customer_date_filter'),
-
-                'repeated_customer_date_filter' => request()->input('repeated_customer_date_filter'),
-
-                'booking_date_filter' => request()->input('booking_date_filter'),
-
-                'expert_booking_date_filter' => request()->input('expert_booking_date_filter'),
 
 
-                'revenue_date_filter' => request()->input('revenue_date_filter'),
+          // Define validation rules for date filters
+$validator = Validator::make($request->all(), [
+    'customer_date_filter' => 'required|date',
+    'repeated_customer_date_filter' => 'required|date',
+    'booking_date_filter' => 'required|date',
+    'expert_booking_date_filter' => 'required|date',
+    'revenue_date_filter' => 'required|date',
+    'top_services_date_filter' => 'required|date',
+], [
+    '*.required' => 'The :attribute field is required.',
+    '*.date' => 'The :attribute must be a valid date.'
+]);
 
-                'top_services_date_filter' => request()->input('top_services_date_filter'),
-
-
-            ];
-
-  // Validate date filters
-  foreach ($dateFilters as $key => $filter) {
-    if (empty($filter)) {
-        return response()->json([
-            'errors' => [$key => ['The date filter must be  required.']]
-        ], 422);
-    }
+// Check if validation fails and return errors
+if ($validator->fails()) {
+    return response()->json([
+        'errors' => $validator->errors()
+    ], 422);
 }
 
+$data["today_available_experts"] = [];
+$today_remaining_slots = request()->input("today_remaining_slots");
+if(!empty($today_remaining_slots)) {
+    $today_remaining_slots = explode(',', request()->input("today_remaining_slots"));
 
-            $today_remaining_slots = explode(',', request()->input("today_remaining_slots"));
-
-              // Get available experts
+    // Get available experts
 $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->user()->business_id, $today_remaining_slots,true);
+}
+
 
 
 

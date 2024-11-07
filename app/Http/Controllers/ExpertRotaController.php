@@ -10,6 +10,7 @@ use App\Http\Requests\ExpertRotaCreateRequest;
 use App\Http\Requests\ExpertRotaUpdateRequest;
 use App\Http\Requests\GetIdRequest;
 use App\Http\Utils\BusinessUtil;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Models\Booking;
@@ -557,12 +558,7 @@ class ExpertRotaController extends Controller
                  })
 
 
-                 ->when(!empty($request->start_date), function ($query) use ($request) {
-                     return $query->where('expert_rotas.created_at', ">=", $request->start_date);
-                 })
-                 ->when(!empty($request->end_date), function ($query) use ($request) {
-                     return $query->where('expert_rotas.created_at', "<=", ($request->end_date . ' 23:59:59'));
-                 })
+
                  ->when(!empty($request->order_by) && in_array(strtoupper($request->order_by), ['ASC', 'DESC']), function ($query) use ($request) {
                      return $query->orderBy("expert_rotas.id", $request->order_by);
                  }, function ($query) {
@@ -886,19 +882,19 @@ class ExpertRotaController extends Controller
      *         name="start_date",
      *         in="query",
      *         description="start_date",
-     *         required=true,
+     *         required=false,
      *      ),
      *         @OA\Parameter(
      *         name="end_date",
      *         in="query",
      *         description="end_date",
-     *         required=true,
+     *         required=false,
      *      ),
      * *  @OA\Parameter(
      * name="expert_id",
      * in="query",
      * description="expert_id",
-     * required=true,
+     * required=false,
      * example="ASC",
      * ),
 
@@ -949,26 +945,51 @@ class ExpertRotaController extends Controller
                      "message" => "You can not perform this action"
                  ], 401);
              }
+
               // Validate required fields
-    $validated = $request->validate([
-        'start_date' => 'required|date',
-        'end_date' => 'required|date',
-        'expert_id' => 'required|integer'
-    ], [
-        'start_date.required' => 'The start date is required.',
-        'end_date.required' => 'The end date is required.',
-        'expert_id.required' => 'The expert ID is required.'
-    ]);
 
 
-    $expert_rotas = ExpertRota::where('expert_rotas.business_id', auth()->user()->business_id)
-    ->whereDate('expert_rotas.date', '>=', $validated['start_date'])
-    ->whereDate('expert_rotas.date', '<=', $validated['end_date'] )
-    ->where('expert_rotas.expert_id', $validated['expert_id'])
-    ->get();
+
+            $validator = Validator::make($request->all(), [
+                'start_date' => 'required|date',
+                'end_date' => 'required|date',
+                'expert_id' => 'required|integer'
+            ], [
+                'start_date.required' => 'The start date is required.',
+                'end_date.required' => 'The end date is required.',
+                'expert_id.required' => 'The expert ID is required.'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Retrieve validated data
+            $validated = $validator->validated();
+
 
     $startDate = Carbon::parse($validated['start_date']);
     $endDate = Carbon::parse($validated['end_date']);
+
+
+    $expert_rotas = ExpertRota::where('expert_rotas.business_id', auth()->user()->business_id)
+    ->whereDate('expert_rotas.date', ">=", $request->start_date)
+    ->whereDate('expert_rotas.date', "<=", $request->end_date)
+    ->where('expert_rotas.expert_id', $request->expert_id)
+
+
+    ->orderBy("expert_rotas.id", "DESC")
+    ->get();
+
+    $bookings =   Booking::where("garage_id", auth()->user()->business_id)
+    ->whereDate('bookings.job_start_date', ">=", $request->start_date)
+    ->whereDate('bookings.job_start_date', "<=", $request->end_date)
+    ->where('bookings.expert_id', $request->expert_id)
+                        ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+                        ->get();
+
 
     $date_range = $startDate->isSameDay($endDate) ? [$startDate] : $startDate->daysUntil($endDate->addDay());
 
@@ -982,14 +1003,26 @@ class ExpertRotaController extends Controller
                             return $rota_date->isSameDay($date);
                         });
 
+                        $this_dates_bookings = $bookings->filter(function ($booking) use ($date) {
+                            $job_start_date = Carbon::parse($booking->job_start_date);
+                            return $job_start_date->isSameDay($date);
+                        });
+
+
+                        $total_booked_slots = $this_dates_bookings->sum(function ($booking) {
+                            return count($booking->booked_slots); // Adjust this if "count" is a property inside "booked_slots"
+                        });
+
                         if(!empty($expert_rota)) {
                             $attendances->push([
                               "worked_hours" => (53 - count($expert_rota->busy_slots)) * 15,
+                              "served_hours" => $total_booked_slots * 15,
                               "date" => $date->toDateString()
                             ]);
                         } else {
                             $attendances->push([
                             "worked_hours" => 53 * 15,
+                            "served_hours" => $total_booked_slots * 15,
                             "date" => $date->toDateString()
                             ]);
                         }
@@ -1000,6 +1033,7 @@ class ExpertRotaController extends Controller
 
 
              return response()->json($attendances->toArray(), 200);
+
          } catch (Exception $e) {
 
              return $this->sendError($e, 500, $request);
