@@ -88,6 +88,10 @@ trait BasicUtil
         $availableExperts = collect();
 
         foreach ($experts as $expert) {
+
+
+
+
             $allBusySlots = $this->getAllBusySlotsForExpert($expert, $businessId, $date);
 
             // Find overlapping slots between the input slots and the combined allBusySlots
@@ -97,6 +101,8 @@ trait BasicUtil
             if (!empty($overlappingSlots)) {
                 if(!empty($remainingDayAllSlots)) {
                     if (count($overlappingSlots) != count($slots)) {
+                        $expert->average_rating = $this->calculateAverageRating($expert->id);
+
                         $availableExperts->push($expert);
                     }
                 }  else
@@ -109,6 +115,8 @@ trait BasicUtil
                 }
 
             } else {
+               $expert->average_rating = $this->calculateAverageRating($expert->id);
+
                 $availableExperts->push($expert);
             }
         }

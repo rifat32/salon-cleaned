@@ -1927,7 +1927,7 @@ class DashboardManagementController extends Controller
 
 
         ])
-            ->orderBy('this_month_sales', 'desc') // Sort by this month's sales
+            ->orderBy('all_sales_count', 'desc') // Sort by this month's sales
             ->limit(5)
             ->get();
 
@@ -2002,7 +2002,55 @@ class DashboardManagementController extends Controller
      *       security={
      *           {"bearerAuth": {}}
      *       },
-
+ * @OA\Parameter(
+ *     name="today_remaining_slots",
+ *     in="query",
+ *     description="Today remaining slots",
+ *     required=true,
+ *     example=""
+ * ),
+ * @OA\Parameter(
+ *     name="customer_date_filter",
+ *     in="query",
+ *     description="Customer date filter",
+ *     required=true,
+ *     example=""
+ * ),
+ * @OA\Parameter(
+ *     name="repeated_customer_date_filter",
+ *     in="query",
+ *     description="Repeated customer date filter",
+ *     required=true,
+ *     example=""
+ * ),
+ * @OA\Parameter(
+ *     name="booking_date_filter",
+ *     in="query",
+ *     description="Booking date filter",
+ *     required=true,
+ *     example=""
+ * ),
+ * @OA\Parameter(
+ *     name="expert_booking_date_filter",
+ *     in="query",
+ *     description="Expert booking date filter",
+ *     required=true,
+ *     example=""
+ * ),
+ * @OA\Parameter(
+ *     name="revenue_date_filter",
+ *     in="query",
+ *     description="Revenue date filter",
+ *     required=true,
+ *     example=""
+ * ),
+ * @OA\Parameter(
+ *     name="top_services_date_filter",
+ *     in="query",
+ *     description="Top services date filter",
+ *     required=true,
+ *     example=""
+ * ),
      *      summary="get all dashboard data combined",
      *      description="get all dashboard data combined",
      *
@@ -2074,23 +2122,25 @@ class DashboardManagementController extends Controller
                 'top_services_date_filter' => request()->input('top_services_date_filter'),
 
 
-
-
             ];
+
+  // Validate date filters
+  foreach ($dateFilters as $key => $filter) {
+    if (empty($filter)) {
+        return response()->json([
+            'errors' => [$key => ['The date filter must be  required.']]
+        ], 422);
+    }
+}
+
+
             $today_remaining_slots = explode(',', request()->input("today_remaining_slots"));
 
               // Get available experts
 $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->user()->business_id, $today_remaining_slots,true);
 
 
-            // Validate date filters
-            foreach ($dateFilters as $key => $filter) {
-                if (empty($filter)) {
-                    return response()->json([
-                        'errors' => [$key => ['The date filter must be  required.']]
-                    ], 422);
-                }
-            }
+
 
             // Call the method with different time periods
             $data["customers"] = $this->getCustomersByPeriod(request()->input("customer_date_filter"));
