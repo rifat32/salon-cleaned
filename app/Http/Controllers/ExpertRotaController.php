@@ -983,7 +983,7 @@ class ExpertRotaController extends Controller
     ->orderBy("expert_rotas.id", "DESC")
     ->get();
 
-    $bookings =   Booking::where("garage_id", auth()->user()->business_id)
+    $bookings =  Booking::where("garage_id", auth()->user()->business_id)
     ->whereDate('bookings.job_start_date', ">=", $request->start_date)
     ->whereDate('bookings.job_start_date', "<=", $request->end_date)
     ->where('bookings.expert_id', $request->expert_id)

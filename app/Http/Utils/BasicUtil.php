@@ -211,6 +211,35 @@ trait BasicUtil
             throw new Exception("Error processing refund: " . $e->getMessage(), 500);
         }
     }
+
+    function calculateExpertRevenueV2($expert_id, $period )
+    {
+
+        $dateRange = $this->getDateRange($period);
+        $start = $dateRange['start'];
+        $end = $dateRange['end'];
+        $query = Booking::where([
+            'garage_id' => auth()->user()->business_id,
+            'expert_id' => $expert_id,
+        ])
+        ->where('status', 'converted_to_job')
+        ->where('payment_status', 'complete')
+        ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
+            $query ->whereDateBetween('bookings.job_start_date', [$start, $end]);
+          })
+
+        ->selectRaw('SUM(
+            CASE
+                WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
+                ELSE tip_amount
+            END
+        ) as revenue');
+
+
+
+        return $query->value('revenue');
+    }
+
     function calculateExpertRevenue($expert_id, $month = null,$date=NULL)
     {
         $query = Booking::where([
