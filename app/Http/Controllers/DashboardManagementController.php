@@ -2691,6 +2691,7 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
 
                     }
 
+                 $expert->average_rating = $this->calculateAverageRating($expert->id);
                  $expert->busy_slots = $blockedSlots;
                  $expert->appointment_trends = $appointment_trends;
 

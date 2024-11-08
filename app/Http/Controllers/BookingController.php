@@ -1899,6 +1899,12 @@ class BookingController extends Controller
                     });
                 });
 
+                if (request()->boolean("includes_vat")) {
+                    $bookingQuery->whereNotNull('bookings.vat_amount') // vat_amount should not be null
+                    ->whereNotNull('bookings.vat_percentage'); // vat_percentage should not be null;
+                }
+
+
             // Apply the existing status filter if provided in the request
             if (!empty($request->status)) {
                 $statusArray = explode(',', request()->status);
@@ -2822,7 +2828,7 @@ class BookingController extends Controller
                 ], 401);
             }
 
-            
+
             $booking = Booking::with(
                 "sub_services.service",
                 "booking_packages.garage_package",

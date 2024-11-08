@@ -981,6 +981,7 @@ class ExpertRotaController extends Controller
     ->when(request()->filled("expert_id"), function($query) {
         $query->where("users.expert_id", request()->input("expert_id"));
     })
+    ->get()
    ;
    foreach($experts as $expert) {
     $expert_rotas = ExpertRota::where('expert_rotas.business_id', auth()->user()->business_id)

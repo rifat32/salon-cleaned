@@ -480,8 +480,10 @@ public function get_appointment_trend_data($date, $expert_id){
             $data["busy_slots"] = $expertRota->busy_slots;
         }
 
-        $currentHeldSlots = SlotHold::where('expert_id', $expert_id)
+        $currentHeldSlots = SlotHold::
+              where('expert_id', $expert_id)
             ->where('held_until', '>', Carbon::now())
+            ->whereNotIn("customer_id",auth()->user()->id)
             ->get();
 
         $held_slots  = $currentHeldSlots->pluck('held_slots')->flatten()->toArray();
@@ -583,6 +585,7 @@ public function get_appointment_trend_data($date, $expert_id){
 
         $currentHeldSlots = SlotHold::where('expert_id', $expert_id)
             ->where('held_until', '>', Carbon::now())
+            ->whereNotIn("customer_id",auth()->user()->id)
             ->get();
 
         $held_slots  = $currentHeldSlots->pluck('held_slots')->flatten()->toArray();
