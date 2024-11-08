@@ -1997,10 +1997,29 @@ class DashboardManagementController extends Controller
             ->distinct()
             ->get();
 
+           $repeated_customers =  User::whereHas('bookings', function ($query) use ($start, $end) {
+                $query->whereBetween('bookings.job_start_date', [$start, $end])
+                    ->where("garage_id", auth()->user()->business_id)
+                    ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                        $query->where('bookings.expert_id', auth()->user()->id);
+                    })
+                    ->whereIn('bookings.customer_id', function ($subquery)  {
+                        $subquery->select('customer_id')
+                                 ->from('bookings')
+                                 ->groupBy('customer_id')
+                                 ->having(DB::raw('COUNT(id)'), 1 ? '>' : '=', 1);
+                    });
+            })
+
+            ->distinct()
+            ->get();
+
         // Return the results
         return [
             'app_customers' => $app_customers,
             'walk_in_customers' => $walk_in_customers,
+            'repeated_customers' => $repeated_customers,
+
         ];
     }
 
@@ -2155,7 +2174,7 @@ class DashboardManagementController extends Controller
 //           // Define validation rules for date filters
 // $validator = Validator::make($request->all(), [
 //     'customer_date_filter' => 'required|string',
-//     'repeated_customer_date_filter' => 'required|string',
+//   //  'repeated_customer_date_filter' => 'required|string',
 //     'booking_date_filter' => 'required|string',
 //     'expert_booking_date_filter' => 'required|string',
 //     'expert_revenue_date_filter' => 'required|string',
@@ -2192,7 +2211,7 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
             // Call the method with different time periods
             $data["customers"] = $this->getCustomersByPeriod(request()->input("customer_date_filter"));
 
-            $data["repeated_customers"] = $this->getRepeatedCustomers(request()->input("repeated_customer_date_filter"));
+            // $data["repeated_customers"] = $this->getRepeatedCustomers(request()->input("repeated_customer_date_filter"));
 
             $data["bookings"] = $this->bookingsByStatusCount(request()->input("booking_date_filter"));
 
@@ -2527,7 +2546,9 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
                     $query
 
                         ->where('bookings.garage_id', auth()->user()->business_id)
-                        ->where('bookings.status', 'converted_to_job');  // Adjust 'status' according to your actual status field
+                        ->where('bookings.status', 'converted_to_job')
+                        ->where('bookings.payment_status', 'complete')
+                        ;  // Adjust 'status' according to your actual status field
                 },
 
             ])
