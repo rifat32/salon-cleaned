@@ -1890,7 +1890,7 @@ class DashboardManagementController extends Controller
                     })  ->selectRaw('SUM(
                         CASE
                             WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
-                            ELSE tip_amount
+                            ELSE final_price
                         END
                     ) as revenue')
                     ->value('revenue');

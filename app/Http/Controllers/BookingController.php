@@ -606,11 +606,13 @@ class BookingController extends Controller
 
             $vat_information = $this->calculate_vat(
                 $booking->final_price,
-                $booking->business_id,
+                $booking->garage_id,
 
             );
-            $booking->vat_percentage += $vat_information["vat_percentage"];
-            $booking->vat_amount += $vat_information["vat_amount"];
+
+            $booking->vat_percentage = $vat_information["vat_percentage"];
+            $booking->vat_amount = $vat_information["vat_amount"];
+
             $booking->final_price += $vat_information["vat_amount"];
 
             $booking->final_price += $this->canculate_discount_amount(
@@ -970,10 +972,10 @@ class BookingController extends Controller
                 $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
                 $vat_information = $this->calculate_vat(
                     $booking->final_price,
-                    $booking->business_id,
+                    $booking->garage_id,
                 );
-                $booking->vat_percentage += $vat_information["vat_percentage"];
-                $booking->vat_amount += $vat_information["vat_amount"];
+                $booking->vat_percentage = $vat_information["vat_percentage"];
+                $booking->vat_amount = $vat_information["vat_amount"];
                 $booking->final_price += $vat_information["vat_amount"];
                 $booking->final_price += $this->canculate_discount_amount(
                     $booking->price,

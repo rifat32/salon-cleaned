@@ -231,7 +231,7 @@ trait BasicUtil
         ->selectRaw('SUM(
             CASE
                 WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
-                ELSE tip_amount
+                ELSE final_price
             END
         ) as revenue');
 
@@ -242,7 +242,7 @@ trait BasicUtil
 
     function calculateExpertRevenue($expert_id, $month = null,$date=NULL)
     {
-        $query = Booking::where([
+        $bookings = Booking::where([
             'garage_id' => auth()->user()->business_id,
             'expert_id' => $expert_id,
         ])
@@ -251,20 +251,27 @@ trait BasicUtil
         ->when(!empty($date), function($query) use($date) {
            $query->whereDate("job_start_date",$date);
         })
-
+        ->when(!empty($month), function($query) use($month) {
+            $query->whereMonth('created_at', $month);
+         })
         ->selectRaw('SUM(
             CASE
                 WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
-                ELSE tip_amount
+                ELSE final_price
             END
-        ) as revenue');
+        ) as revenue')
+        ->value('revenue');
 
-        // Apply month filter if provided
-        if ($month) {
-            $query->whereMonth('created_at', $month);
-        }
 
-        return $query->value('revenue');
+        return $bookings;
+
+
+        // // Apply month filter if provided
+        // if ($month) {
+        //     $query->whereMonth('created_at', $month);
+        // }
+
+        // return $query->value('revenue');
     }
 
 
