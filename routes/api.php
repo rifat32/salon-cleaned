@@ -1280,7 +1280,7 @@ Route::get('/v1.0/client/blocked-slots/{expert_id}', [ClientBookingController::c
 
 Route::get('/v1.0/client/blocked-dates', [ClientBookingController::class, "getBlockedDatesClient"]);
 Route::post('/v1.0/hold-slot', [ClientBookingController::class, 'holdSlot']);
-
+Route::put('/v1.0/release-slot', [ClientBookingController::class, 'releaseSlot']);
 
 
 Route::get('/v1.0/client/available-experts', [ClientBookingController::class, "getAvailableExpertsClient"]);

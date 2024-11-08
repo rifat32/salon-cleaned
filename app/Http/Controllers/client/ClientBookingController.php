@@ -1036,7 +1036,9 @@ class ClientBookingController extends Controller
     {
         try {
             $this->storeActivity($request, "");
-            $bookingQuery = Booking::with(
+            $bookingQuery = Booking::
+            with(
+                "feedbacks",
                 "sub_services.translation",
                 "sub_services.service",
                 "sub_services.service.translation",
@@ -1407,8 +1409,7 @@ return response()->json($response,200);
         }
     }
 
-
-    /**
+   /**
      *
      * @OA\Post(
      *     path="/v1.0/hold-slot",
@@ -1491,6 +1492,86 @@ return response()->json($response,200);
       $heldUntil =  SlotHold::create($request_data);
 
         return response()->json(['message' => 'Slots held successfully', 'held_until' => $heldUntil]);
+    }
+
+    /**
+     *
+     * @OA\Post(
+     *     path="/v1.0/release-slot",
+     *     operationId="releaseSlot",
+     *     tags={"slot.management"},
+     *     security={
+     *         {"bearerAuth": {}}
+     *     },
+     *     summary="Hold slots for a customer",
+     *     description="This method allows a customer to hold slots for 90 seconds.",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"held_slots", "customer_id", "expert_id"},
+     *             @OA\Property(property="held_slots", type="array", @OA\Items(type="integer"), description="Array of slot IDs"),
+     *             @OA\Property(property="customer_id", type="integer", description="ID of the customer"),
+     *             @OA\Property(property="expert_id", type="integer", description="ID of the expert")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Slots held successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Slots held successfully"),
+     *             @OA\Property(property="held_until", type="string", format="date-time", example="2024-10-30T12:00:00Z")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict, user already has slots held",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="You already have slots held")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad request, validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Unprocessable Entity",
+     *         @OA\JsonContent()
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not Found",
+     *         @OA\JsonContent()
+     *     )
+     * )
+     */
+    public function releaseSlot(HoldSlotRequest $request)
+    {
+        $request_data = $request->validated();
+
+        $request_data["customer_id"] = auth()->user()->id;
+        $request_data["held_until"] = Carbon::now()->addSeconds(90);
+
+     // Delete all slots for the customer, including expired ones
+     SlotHold::where('customer_id', $request_data["customer_id"])
+     ->orWhere('held_until', '<=', Carbon::now())
+     ->delete();
+
+
+        return response()->json(['message' => 'Slots released successfully']);
     }
 
 
@@ -1677,7 +1758,8 @@ return response()->json($response,200);
                 "customer",
                 "garage",
                 "expert",
-                "payments"
+                "payments",
+                "feedbacks"
             )
                 ->where([
                     "id" => $id,

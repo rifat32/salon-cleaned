@@ -1932,7 +1932,7 @@ class BookingController extends Controller
                 $bookingQuery = $bookingQuery->where('job_start_date', '<=', $request->end_date);
             }
 
-          
+
 
 
             $bookings = $bookingQuery->orderByDesc("job_start_date")->paginate($perPage);
@@ -2171,7 +2171,8 @@ class BookingController extends Controller
                               $query->where("bookings.garage_id",auth()->user()->business_id);
                         });
                     },
-                    "feedbacks.booking.sub_services"
+                    "feedbacks.booking.sub_services",
+                    "feedbacks"
                     ])
                 // Filter by rating if provided
                 ->when(request()->filled('rating'), function ($q) {
@@ -2821,14 +2822,15 @@ class BookingController extends Controller
                 ], 401);
             }
 
-
+            
             $booking = Booking::with(
                 "sub_services.service",
                 "booking_packages.garage_package",
                 "customer",
                 "garage",
                 "expert",
-                "payments"
+                "payments",
+                "feedbacks"
             )
                 ->where([
                     "garage_id" => $garage_id,

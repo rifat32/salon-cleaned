@@ -953,11 +953,10 @@ class ExpertRotaController extends Controller
             $validator = Validator::make($request->all(), [
                 'start_date' => 'required|date',
                 'end_date' => 'required|date',
-                'expert_id' => 'required|integer'
+
             ], [
                 'start_date.required' => 'The start date is required.',
-                'end_date.required' => 'The end date is required.',
-                'expert_id.required' => 'The expert ID is required.'
+                'end_date.required' => 'The end date is required.'
             ]);
 
             if ($validator->fails()) {
@@ -973,7 +972,17 @@ class ExpertRotaController extends Controller
     $startDate = Carbon::parse($validated['start_date']);
     $endDate = Carbon::parse($validated['end_date']);
 
-
+    $experts =  User::with("translation")
+    ->
+    whereHas('roles', function($query) {
+        $query->where('roles.name', 'business_experts');
+    })
+    ->where('users.business_id', auth()->user()->business_id)
+    ->when(request()->filled("expert_id"), function($query) {
+        $query->where("users.expert_id", request()->input("expert_id"));
+    })
+   ;
+   foreach($experts as $expert) {
     $expert_rotas = ExpertRota::where('expert_rotas.business_id', auth()->user()->business_id)
     ->whereDate('expert_rotas.date', ">=", $request->start_date)
     ->whereDate('expert_rotas.date', "<=", $request->end_date)
@@ -1029,10 +1038,19 @@ class ExpertRotaController extends Controller
 
                      }
 
+                     $expert->attendances = $attendances->toArray();
+
+   }
 
 
 
-             return response()->json($attendances->toArray(), 200);
+
+
+
+
+
+
+             return response()->json($experts, 200);
 
          } catch (Exception $e) {
 
