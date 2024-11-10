@@ -100,47 +100,35 @@ class SettingController extends Controller
 
            if(!empty($request_data['stripe_enabled'])){
  // Verify the Stripe credentials before updating
-$stripeValid = false;
+ $stripeValid = false;
 
-try {
-    // Set Stripe client with the provided secret
-    $stripe = new \Stripe\StripeClient($request_data['STRIPE_SECRET']);
+ try {
+     // Set Stripe client with the provided secret
+     $stripe = new \Stripe\StripeClient($request_data['STRIPE_SECRET']);
 
-    // Make a test API call (for example, retrieve account details)
-    $account = $stripe->accounts->retrieve('me');
+     // Make a test API call to check balance instead of account details
+     $balance = $stripe->balance->retrieve();
 
-    // Validate the provided STRIPE_KEY by checking if it matches the account's public key
-    if ($account->keys->secret === $request_data['STRIPE_KEY']) {
-        // If the request is successful and the keys match, mark the Stripe credentials as valid
-        $stripeValid = true;
-    } else {
-        return response()->json([
-            "message" => "Invalid Stripe keys: The provided STRIPE_KEY does not match the associated account."
-        ], 401);
-    }
-} catch (\Stripe\Exception\AuthenticationException $e) {
-    // Handle invalid API key or secret
-    return response()->json([
-        "message" => "Invalid Stripe credentials: " . $e->getMessage()
-    ], 401);
-} catch (\Stripe\Exception\ApiConnectionException $e) {
-    // Handle issues with connecting to Stripe's API
-    return response()->json([
-        "message" => "Network error while connecting to Stripe: " . $e->getMessage()
-    ], 502);
-} catch (\Stripe\Exception\InvalidRequestException $e) {
-    // Handle invalid requests sent to Stripe
-    return response()->json([
-        "message" => "Invalid request to Stripe: " . $e->getMessage()
-    ], 400);
-} catch (\Exception $e) {
-    // Handle other exceptions related to Stripe
-    return response()->json([
-        "message" => "An error occurred while verifying Stripe credentials: " . $e->getMessage()
-    ], 500);
+     // If the request is successful, mark the Stripe credentials as valid
+     $stripeValid = true;
+ } catch (\Stripe\Exception\AuthenticationException $e) {
+     return response()->json([
+         "message" => "Invalid Stripe credentials: " . $e->getMessage()
+     ], 401);
+ } catch (\Stripe\Exception\ApiConnectionException $e) {
+     return response()->json([
+         "message" => "Network error while connecting to Stripe: " . $e->getMessage()
+     ], 502);
+ } catch (\Stripe\Exception\InvalidRequestException $e) {
+     return response()->json([
+         "message" => "Invalid request to Stripe: " . $e->getMessage()
+     ], 400);
+ } catch (\Exception $e) {
+     return response()->json([
+         "message" => "An error occurred while verifying Stripe credentials: " . $e->getMessage()
+     ], 500);
+ }
 }
-           }
-
 
 $busunessSetting = BusinessSetting::
 where([
