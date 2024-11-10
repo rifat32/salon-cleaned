@@ -22,49 +22,49 @@ trait BasicUtil
 {
 
     function getDateRange($period)
-{
-    switch ($period) {
-        case 'today':
-            $start = Carbon::today();
-            $end = Carbon::today();
-            break;
-        case 'this_week':
-            $start = Carbon::now()->startOfWeek();
-            $end = Carbon::now()->endOfWeek();
-            break;
-        case 'this_month':
-            $start = Carbon::now()->startOfMonth();
-            $end = Carbon::now()->endOfMonth();
-            break;
-        case 'next_week':
-            $start = Carbon::now()->addWeek()->startOfWeek();
-            $end = Carbon::now()->addWeek()->endOfWeek();
-            break;
-        case 'next_month':
-            $start = Carbon::now()->addMonth()->startOfMonth();
-            $end = Carbon::now()->addMonth()->endOfMonth();
-            break;
-        case 'previous_week':
-            $start = Carbon::now()->subWeek()->startOfWeek();
-            $end = Carbon::now()->subWeek()->endOfWeek();
-            break;
-        case 'previous_month':
-            $start = Carbon::now()->subMonth()->startOfMonth();
-            $end = Carbon::now()->subMonth()->endOfMonth();
-            break;
-        default:
-            $start = "";
-            $end = "";
+    {
+        switch ($period) {
+            case 'today':
+                $start = Carbon::today();
+                $end = Carbon::today();
+                break;
+            case 'this_week':
+                $start = Carbon::now()->startOfWeek();
+                $end = Carbon::now()->endOfWeek();
+                break;
+            case 'this_month':
+                $start = Carbon::now()->startOfMonth();
+                $end = Carbon::now()->endOfMonth();
+                break;
+            case 'next_week':
+                $start = Carbon::now()->addWeek()->startOfWeek();
+                $end = Carbon::now()->addWeek()->endOfWeek();
+                break;
+            case 'next_month':
+                $start = Carbon::now()->addMonth()->startOfMonth();
+                $end = Carbon::now()->addMonth()->endOfMonth();
+                break;
+            case 'previous_week':
+                $start = Carbon::now()->subWeek()->startOfWeek();
+                $end = Carbon::now()->subWeek()->endOfWeek();
+                break;
+            case 'previous_month':
+                $start = Carbon::now()->subMonth()->startOfMonth();
+                $end = Carbon::now()->subMonth()->endOfMonth();
+                break;
+            default:
+                $start = "";
+                $end = "";
+        }
+
+        return [
+            'start' => $start,
+            'end' => $end,
+        ];
     }
 
-    return [
-        'start' => $start,
-        'end' => $end,
-    ];
-}
 
-
-      /**
+    /**
      * Get available experts based on the provided date, business ID, and slots.
      *
      * @param string $date
@@ -72,7 +72,7 @@ trait BasicUtil
      * @param array $slots
      * @return array
      */
-    public function getAvailableExperts(string $date, int $businessId, array $slots,$remainingDayAllSlots=false)
+    public function getAvailableExperts(string $date, int $businessId, array $slots, $remainingDayAllSlots = false)
     {
 
         $experts = User::with("translation")
@@ -99,23 +99,21 @@ trait BasicUtil
 
             // If there are overlaps, return them
             if (!empty($overlappingSlots)) {
-                if(!empty($remainingDayAllSlots)) {
+                if (!empty($remainingDayAllSlots)) {
                     if (count($overlappingSlots) != count($slots)) {
                         $expert->average_rating = $this->calculateAverageRating($expert->id);
 
                         $availableExperts->push($expert);
                     }
-                }  else
-                 {
+                } else {
                     return [
                         'status' => 'error',
                         'message' => 'Some slots are already booked.',
                         'overlapping_slots' => $overlappingSlots
                     ];
                 }
-
             } else {
-               $expert->average_rating = $this->calculateAverageRating($expert->id);
+                $expert->average_rating = $this->calculateAverageRating($expert->id);
 
                 $availableExperts->push($expert);
             }
@@ -159,25 +157,24 @@ trait BasicUtil
         return $allBusySlots;
     }
 
+    public function get_business_setting($business_id)
+    {
+        $business_setting =  BusinessSetting::where('business_id', $business_id)->first();
+        return  $business_setting;
+    }
 
+    public function processRefund($booking)
+    {
 
-    public function processRefund($booking){
-
-
-
-        // Get the Stripe settings
-        $stripeSetting = BusinessSetting::where('business_id', $booking->garage_id)->first();
-
+        $stripeSetting = $this->get_business_setting($booking->garage_id);
 
         if (empty($stripeSetting)) {
-            throw new Exception("No stripe seting found",403);
-
+            throw new Exception("No stripe seting found", 403);
         }
 
         if (empty($stripeSetting->stripe_enabled)) {
-            throw new Exception("Stripe is not enabled",403);
-
-       }
+            throw new Exception("Stripe is not enabled", 403);
+        }
         // Set Stripe API key
         $stripe = new \Stripe\StripeClient($stripeSetting->STRIPE_SECRET);
 
@@ -202,7 +199,7 @@ trait BasicUtil
             JobPayment::where([
                 "booking_id" => $booking->id,
             ])
-            ->delete();
+                ->delete();
             return response()->json([
                 "message" => "Refund successful",
                 "refund_id" => $refund->id
@@ -212,7 +209,7 @@ trait BasicUtil
         }
     }
 
-    function calculateExpertRevenueV2($expert_id, $period )
+    function calculateExpertRevenueV2($expert_id, $period)
     {
 
         $dateRange = $this->getDateRange($period);
@@ -222,13 +219,13 @@ trait BasicUtil
             'garage_id' => auth()->user()->business_id,
             'expert_id' => $expert_id,
         ])
-        ->where('status', 'converted_to_job')
-        ->where('payment_status', 'complete')
-        ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
-            $query ->whereDateBetween('bookings.job_start_date', [$start, $end]);
-          })
+            ->where('status', 'converted_to_job')
+            ->where('payment_status', 'complete')
+            ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                $query->whereDateBetween('bookings.job_start_date', [$start, $end]);
+            })
 
-        ->selectRaw('SUM(
+            ->selectRaw('SUM(
             CASE
                 WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
                 ELSE final_price
@@ -240,27 +237,27 @@ trait BasicUtil
         return $query->value('revenue');
     }
 
-    function calculateExpertRevenue($expert_id, $month = null,$date=NULL)
+    function calculateExpertRevenue($expert_id, $month = null, $date = NULL)
     {
         $bookings = Booking::where([
             'garage_id' => auth()->user()->business_id,
             'expert_id' => $expert_id,
         ])
-        ->where('status', 'converted_to_job')
-        ->where('payment_status', 'complete')
-        ->when(!empty($date), function($query) use($date) {
-           $query->whereDate("job_start_date",$date);
-        })
-        ->when(!empty($month), function($query) use($month) {
-            $query->whereMonth('created_at', $month);
-         })
-        ->selectRaw('SUM(
+            ->where('status', 'converted_to_job')
+            ->where('payment_status', 'complete')
+            ->when(!empty($date), function ($query) use ($date) {
+                $query->whereDate("job_start_date", $date);
+            })
+            ->when(!empty($month), function ($query) use ($month) {
+                $query->whereMonth('created_at', $month);
+            })
+            ->selectRaw('SUM(
             CASE
                 WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
                 ELSE final_price
             END
         ) as revenue')
-        ->value('revenue');
+            ->value('revenue');
 
 
         return $bookings;
@@ -275,145 +272,148 @@ trait BasicUtil
     }
 
 
-public function get_appointment_trend_data($date, $expert_id){
+    public function get_appointment_trend_data($date, $expert_id)
+    {
 
-    $data["revenue"] = $this->calculateExpertRevenue($expert_id,NULL,$date);
+        $data["revenue"] = $this->calculateExpertRevenue($expert_id, NULL, $date);
 
-    $data["bookings"] = Booking::where("bookings.expert_id",$expert_id)
-    ->whereDate("bookings.job_start_date",$date)
-    ->where("bookings.status","converted_to_job")
-    ->count();
-}
-
-
-
-    public function addCustomerData($user){
+        $data["bookings"] = Booking::where("bookings.expert_id", $expert_id)
+            ->whereDate("bookings.job_start_date", $date)
+            ->where("bookings.status", "converted_to_job")
+            ->count();
+    }
 
 
 
+    public function addCustomerData($user)
+    {
 
-          $user->previous_bookings = Booking::with(
+
+
+
+        $user->previous_bookings = Booking::with(
             "sub_services.service",
             "booking_packages.garage_package",
             "expert",
             "payments"
-          )
-          ->where("customer_id",$user->id)
-          ->whereDate("job_start_date","<=",now())
-          ->get();
+        )
+            ->where("customer_id", $user->id)
+            ->whereDate("job_start_date", "<=", now())
+            ->get();
 
-          $user->upcoming_bookings = Booking::with(
+        $user->upcoming_bookings = Booking::with(
             "sub_services.service",
             "booking_packages.garage_package",
             "expert",
             "payments"
-          )
-          ->where("customer_id",$user->id)
-          ->whereDate("job_start_date",">",now())
-          ->get();
+        )
+            ->where("customer_id", $user->id)
+            ->whereDate("job_start_date", ">", now())
+            ->get();
 
-          $user->reminder_bookings = Booking::with(
+        $user->reminder_bookings = Booking::with(
             "sub_services.service",
             "booking_packages.garage_package",
             "expert",
             "payments"
-          )
-          ->where("customer_id",$user->id)
-          ->whereDate("next_visit_date",">=",now())
-          ->get();
+        )
+            ->where("customer_id", $user->id)
+            ->whereDate("next_visit_date", ">=", now())
+            ->get();
 
 
-          $user->top_sub_services = SubService::
-          withCount([
-            'bookingSubServices as all_sales_count' => function ($query) use($user) {
-                 $query->whereHas('booking', function ($query) use($user) {
-                     $query
-                     ->where("bookings.customer_id",$user->id)
-                     ->where('bookings.status', 'converted_to_job') // Filter for converted bookings
-                     ->when(auth()->user()->hasRole("business_experts"), function($query)  {
-                         $query->where('bookings.expert_id', auth()->user()->id);
-                    }); // Sales this month
-                 });
-             }
-         ])
-         ->with(['booking' => function ($query) {
-            $query->with(['expert' => function ($query) {
-                $query->select('users.id', 'users.first_Name', 'users.last_Name'); // Select expert details
-            }]);
-        }])
-          ->whereHas("booking", function ($query) use($user) {
-                $query->where("bookings.customer_id",$user->id);
-          })
-          ->orderBy('all_sales_count', 'desc')
-          ->get();
+        $user->top_sub_services = SubService::withCount([
+                'bookingSubServices as all_sales_count' => function ($query) use ($user) {
+                    $query->whereHas('booking', function ($query) use ($user) {
+                        $query
+                            ->where("bookings.customer_id", $user->id)
+                            ->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                                $query->where('bookings.expert_id', auth()->user()->id);
+                            }); // Sales this month
+                    });
+                }
+            ])
+            ->with(['booking' => function ($query) {
+                $query->with(['expert' => function ($query) {
+                    $query->select('users.id', 'users.first_Name', 'users.last_Name'); // Select expert details
+                }]);
+            }])
+            ->whereHas("booking", function ($query) use ($user) {
+                $query->where("bookings.customer_id", $user->id);
+            })
+            ->orderBy('all_sales_count', 'desc')
+            ->get();
 
         $user->top_experts = User::withCount([
             'expert_bookings as all_booking_count' => function ($query) use ($user) {
-                    $query
-                    ->where("bookings.customer_id",$user->id)
+                $query
+                    ->where("bookings.customer_id", $user->id)
                     ->where('bookings.status', 'converted_to_job') // Only count converted bookings
-                          ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                              $query->where('bookings.expert_id', auth()->user()->id);
-                          });
-
+                    ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                        $query->where('bookings.expert_id', auth()->user()->id);
+                    });
             }
         ])
-        ->whereHas('expert_bookings', function ($query) use($user) {
-            $query->where("bookings.customer_id",$user->id);
-        })
-        ->orderBy('all_booking_count', 'desc') // Order by the count of converted bookings
-        ->get();
+            ->whereHas('expert_bookings', function ($query) use ($user) {
+                $query->where("bookings.customer_id", $user->id);
+            })
+            ->orderBy('all_booking_count', 'desc') // Order by the count of converted bookings
+            ->get();
 
 
 
 
 
 
-          return $user;
-
+        return $user;
     }
 
     public static function getNotificationRecipients($booking)
-{
-    $recipientEmails = [];
+    {
+        $recipientEmails = [];
 
-    // Retrieve the notification setting
-    $notification_setting = NotificationSetting::where([
-        "business_id" => $booking->id
-    ])->first();
+        // Retrieve the notification setting
+        $notification_setting = NotificationSetting::where([
+            "business_id" => $booking->id
+        ])->first();
 
-    if (!$notification_setting) {
-        return $recipientEmails; // Return empty if no settings found
+        if (!$notification_setting) {
+            return $recipientEmails; // Return empty if no settings found
+        }
+
+        // Notify customer
+        if (
+            !empty($notification_setting->notify_customer) &&
+            $booking->customer &&
+            !empty($booking->customer->email)
+        ) {
+
+            $recipientEmails[] = $booking->customer->email;
+        }
+
+        // Notify receptionist(s)
+        if (!empty($notification_setting->notify_receptionist)) {
+            $receptionists = User::role('business_receptionist')
+                ->where("business_id", $booking->garage_id)
+                ->pluck('email')
+                ->toArray();
+
+            $recipientEmails = array_merge($recipientEmails, $receptionists);
+        }
+
+        // Notify business owner
+        if (
+            !empty($notification_setting->notify_business_owner) &&
+            $booking->garage &&
+            !empty($booking->garage->owner->email)
+        ) {
+
+            $recipientEmails[] = $booking->garage->owner->email;
+        }
+
+        return $recipientEmails;
     }
-
-    // Notify customer
-    if (!empty($notification_setting->notify_customer) &&
-        $booking->customer &&
-        !empty($booking->customer->email)) {
-
-        $recipientEmails[] = $booking->customer->email;
-    }
-
-    // Notify receptionist(s)
-    if (!empty($notification_setting->notify_receptionist)) {
-        $receptionists = User::role('business_receptionist')
-            ->where("business_id", $booking->garage_id)
-            ->pluck('email')
-            ->toArray();
-
-        $recipientEmails = array_merge($recipientEmails, $receptionists);
-    }
-
-    // Notify business owner
-    if (!empty($notification_setting->notify_business_owner) &&
-        $booking->garage &&
-        !empty($booking->garage->owner->email)) {
-
-        $recipientEmails[] = $booking->garage->owner->email;
-    }
-
-    return $recipientEmails;
-}
 
 
 
@@ -487,10 +487,9 @@ public function get_appointment_trend_data($date, $expert_id){
             $data["busy_slots"] = $expertRota->busy_slots;
         }
 
-        $currentHeldSlots = SlotHold::
-              where('expert_id', $expert_id)
+        $currentHeldSlots = SlotHold::where('expert_id', $expert_id)
             ->where('held_until', '>', Carbon::now())
-            ->whereNotIn("customer_id",[auth()->user()->id])
+            ->whereNotIn("customer_id", [auth()->user()->id])
             ->get();
 
         $held_slots  = $currentHeldSlots->pluck('held_slots')->flatten()->toArray();
@@ -544,8 +543,10 @@ public function get_appointment_trend_data($date, $expert_id){
         return $timeFormat;
     }
 
-    public function validateBookingSlots($id, $customer_id, $slots, $date, $expert_id, $total_time)
+    public function validateBookingSlots($businessSetting,$id, $customer_id, $slots, $date, $expert_id, $total_time)
     {
+
+
         // Get all bookings for the provided date except the rejected ones
         $bookings = Booking::when(!empty($id), function ($query) use ($id) {
             $query->whereNotIn("id", [$id]);
@@ -592,7 +593,7 @@ public function get_appointment_trend_data($date, $expert_id){
 
         $currentHeldSlots = SlotHold::where('expert_id', $expert_id)
             ->where('held_until', '>', Carbon::now())
-            ->whereNotIn("customer_id",[auth()->user()->id])
+            ->whereNotIn("customer_id", [auth()->user()->id])
             ->get();
 
         $held_slots  = $currentHeldSlots->pluck('held_slots')->flatten()->toArray();
@@ -612,7 +613,7 @@ public function get_appointment_trend_data($date, $expert_id){
             ];
         }
 
-        $slot_numbers = ceil($total_time / 15);
+        $slot_numbers = ceil($total_time /  $businessSetting->slot_duration);
         if (count($slots) != $slot_numbers) {
             return [
                 'status' => 'error',
@@ -629,22 +630,81 @@ public function get_appointment_trend_data($date, $expert_id){
         ];
     }
 
-    public function calculate_vat($total_price,$business_id){
+
+    public function processSlots($businessSetting, $slots)
+{
+    // Step 1: Sort slots by time
+    usort($slots, function ($a, $b) {
+        return strtotime($a) - strtotime($b);
+    });
+
+    $groups = [];
+    $currentGroup = [];
+
+    foreach ($slots as $slot) {
+        if (empty($currentGroup)) {
+            // Start a new group with the first slot
+            $currentGroup[] = $slot;
+        } else {
+            // Calculate the difference in minutes from the last slot in the current group
+            $lastSlotTime = strtotime(end($currentGroup));
+            $currentSlotTime = strtotime($slot);
+            $diffInMinutes = ($currentSlotTime - $lastSlotTime) / 60;
+
+            if ($diffInMinutes == 15) {
+                // If the difference is exactly 15 minutes, add to the current group
+                $currentGroup[] = $slot;
+            } else {
+                // If the difference is not 15 minutes, throw an error
+                throw new Exception("Slots must be continuous in 15-minute intervals. Invalid interval between '$lastSlotTime' and '$currentSlotTime'.");
+            }
+        }
+    }
+
+    // Add the last group's start and end times if it's not empty
+    if (!empty($currentGroup)) {
+        // Get the next 15-minute increment after the last slot for the end time
+        $lastSlotTime = strtotime(end($currentGroup));
+        $endTime = $this->getNext15MinuteInterval($lastSlotTime);
+
+        $groups[] = [
+            'start' => $currentGroup[0],
+            'end' => $endTime
+        ];
+    }
+
+    return $groups;
+}
+
+private function getNext15MinuteInterval($time)
+{
+    // Round up the given time to the next 15-minute increment
+    $minutes = (int)date('i', $time);
+    $roundedMinutes = ceil($minutes / 15) * 15;
+
+    // Set the next 15-minute mark
+    $nextTime = strtotime(date('Y-m-d H:', $time) . str_pad($roundedMinutes, 2, '0', STR_PAD_LEFT));
+
+    return date('g:i A', $nextTime); // Format to a readable time format like "10:30 AM"
+}
+
+    public function calculate_vat($total_price, $business_id)
+    {
         $business_setting = BusinessSetting::where([
             "business_id" => $business_id
         ])
-        ->first();
-        if(empty($business_setting) || empty($business_setting->vat_enabled)) {
-           return [
-            "vat_percentage" => 0,
-            "vat_amount" => 0
-           ];
+            ->first();
+        if (empty($business_setting) || empty($business_setting->vat_enabled)) {
+            return [
+                "vat_percentage" => 0,
+                "vat_amount" => 0
+            ];
         }
         return [
             "vat_percentage" => $business_setting->vat_percentage,
             "vat_amount" => ($total_price / 100) * $business_setting->vat_percentage
-           ];
-        return ;
+        ];
+        return;
     }
 
 
@@ -755,6 +815,11 @@ public function get_appointment_trend_data($date, $expert_id){
             }
         }
     }
+
+
+
+
+
 
 
 

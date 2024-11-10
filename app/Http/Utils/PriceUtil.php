@@ -29,6 +29,7 @@ trait PriceUtil
         $businessSetting = BusinessSetting::where([
             "business_id" => $user->business_id
         ])->first();
+        
 
         if(empty($businessSetting)) {
             return number_format($price, 2); // Format as
@@ -45,7 +46,7 @@ trait PriceUtil
             "expert_id" => $expert_id
         ])
         ->first();
-        
+
         if(!empty($sub_service_price)) {
             $price = $sub_service_price->price;
         }

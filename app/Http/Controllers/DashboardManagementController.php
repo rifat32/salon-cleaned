@@ -1701,26 +1701,26 @@ class DashboardManagementController extends Controller
         $start = $dateRange['start'];
         $end = $dateRange['end'];
         return Booking::with([
-                "sub_services" => function ($query) {
-                    $query->select(
-                        "sub_services.id",
-                        "sub_services.name"
-                    );
-                },
+            "sub_services" => function ($query) {
+                $query->select(
+                    "sub_services.id",
+                    "sub_services.name"
+                );
+            },
 
-                "customer" => function ($query) {
-                    $query->select(
-                        "id",
-                        "first_Name",
-                        "last_Name"
-                    );
-                },
-            ])
+            "customer" => function ($query) {
+                $query->select(
+                    "id",
+                    "first_Name",
+                    "last_Name"
+                );
+            },
+        ])
 
 
-            ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
-                $query ->whereBetween('bookings.job_start_date', [$start, $end]);
-              })
+            ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                $query->whereBetween('bookings.job_start_date', [$start, $end]);
+            })
             ->when(request()->filled("start_date") && request()->filled("end_date"), function ($query) {
                 $query->whereBetween('job_start_date', [request()->start_date, request()->end_date]);
             })
@@ -1801,13 +1801,15 @@ class DashboardManagementController extends Controller
         return $data;
     }
 
-    protected function calculateRevenue($garage_id, $range, $expert_id, $is_walk_in_customer)
+    protected function calculateRevenue($businessSetting, $range, $expert_id, $is_walk_in_customer)
     {
-        return Booking::
-        selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
-        ->where("status","converted_to_job")
-        ->where("payment_status","complete")
-        ->when(request()->filled("payment_type"), function ($query) {
+        $dateRange = $this->getDateRange($range);
+        $start = $dateRange['start'];
+        $end = $dateRange['end'];
+        return Booking::selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
+            ->where("status", "converted_to_job")
+            ->where("payment_status", "complete")
+            ->when(request()->filled("payment_type"), function ($query) {
                 $payment_typeArray = explode(',', request()->payment_type);
                 $query->whereIn("bookings.payment_method", $payment_typeArray);
             })
@@ -1818,111 +1820,96 @@ class DashboardManagementController extends Controller
             ->when(request()->filled('is_returning_customers'), function ($query) {
                 $isReturning = request()->boolean("is_returning_customers");
 
-                    // Separate subquery to count all bookings for each customer.
-                    $query->whereIn('bookings.customer_id', function ($subquery) use ($isReturning) {
-                        $subquery->select('customer_id')
-                                 ->from('bookings')
-                                 ->groupBy('customer_id')
-                                 ->having(DB::raw('COUNT(id)'), $isReturning ? '>' : '=', 1);
-                    });
-
+                // Separate subquery to count all bookings for each customer.
+                $query->whereIn('bookings.customer_id', function ($subquery) use ($isReturning) {
+                    $subquery->select('customer_id')
+                        ->from('bookings')
+                        ->groupBy('customer_id')
+                        ->having(DB::raw('COUNT(id)'), $isReturning ? '>' : '=', 1);
+                });
             })
 
-                    ->where('bookings.garage_id', $garage_id)
+            ->where('bookings.garage_id', $businessSetting->business_id)
 
-                    ->when(!empty($expert_id), function ($query) use ($expert_id) {
-                        $query->where('bookings.expert_id', $expert_id);
-                    })
-                    ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                        $query->where('bookings.expert_id', auth()->user()->id);
-                    })
-                    ->when(request()->filled("duration_in_minute"), function ($query) {
-                        $total_slots = request()->input("duration_in_minute") / 15;
-                        $query->having('total_booked_slots', '>', $total_slots);
-                    })
+            ->when(!empty($expert_id), function ($query) use ($expert_id) {
+                $query->where('bookings.expert_id', $expert_id);
+            })
+            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                $query->where('bookings.expert_id', auth()->user()->id);
+            })
+            ->when(request()->filled("duration_in_minute"), function ($query) use ($businessSetting) {
+                $total_slots = request()->input("duration_in_minute") / $businessSetting->slot_duration;
+                $query->having('total_booked_slots', '>', $total_slots);
+            })
 
-                    ->when(request()->filled("slots"), function ($query) {
-                        $slotsArray = explode(',', request()->input("slots"));
-                        $query->where(function ($subQuery) use ($slotsArray) {
-                            foreach ($slotsArray as $slot) {
-                                $subQuery->orWhereRaw("JSON_CONTAINS(bookings.busy_slots, '\"$slot\"')");
-                            }
+            ->when(request()->filled("slots"), function ($query) {
+                $slotsArray = explode(',', request()->input("slots"));
+                $query->where(function ($subQuery) use ($slotsArray) {
+                    foreach ($slotsArray as $slot) {
+                        $subQuery->orWhereRaw("JSON_CONTAINS(bookings.busy_slots, '\"$slot\"')");
+                    }
+                });
+            })
+
+            ->when(!empty(request()->sub_service_ids), function ($query) {
+                $sub_service_ids = explode(',', request()->sub_service_ids);
+
+                return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                    $query->whereIn('sub_services.id', $sub_service_ids)
+                        ->when(!empty(request()->service_ids), function ($query) {
+                            $service_ids = explode(',', request()->service_ids);
+
+                            return $query->whereHas('service', function ($query) use ($service_ids) {
+                                return $query->whereIn('services.id', $service_ids);
+                            });
                         });
-                    })
-
-                    ->when(!empty(request()->sub_service_ids), function ($query) {
-                        $sub_service_ids = explode(',', request()->sub_service_ids);
-
-                        return $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
-                            $query->whereIn('sub_services.id', $sub_service_ids)
-                                ->when(!empty(request()->service_ids), function ($query) {
-                                    $service_ids = explode(',', request()->service_ids);
-
-                                    return $query->whereHas('service', function ($query) use ($service_ids) {
-                                        return $query->whereIn('services.id', $service_ids);
-                                    });
-                                });
-                        });
-                    })
-                    ->when($range === 'today', function ($query) {
-                        $query->whereDate('bookings.job_start_date', Carbon::today());
-                    })
-                    ->when($range === 'this_week', function ($query) {
-                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-                    })
-                    ->when($range === 'this_month', function ($query) {
-                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
-                    })
-                    ->when($range === 'next_week', function ($query) {
-                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
-                    })
-                    ->when($range === 'next_month', function ($query) {
-                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->addMonth()->startOfMonth(), Carbon::now()->endOfMonth()]);
-                    })
-                    ->when($range === 'previous_week', function ($query) {
-                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-                    })
-                    ->when($range === 'previous_month', function ($query) {
-                        $query->whereBetween('bookings.job_start_date', [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->endOfMonth()]);
-                    })
-                    ->when($range === 'all' && request()->filled("start_date") && request()->filled("end_date"), function ($query) {
-                        $query->whereBetween('bookings.job_start_date', [request()->start_date, request()->end_date]);
-                    })  ->selectRaw('SUM(
+                });
+            })
+            ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                $query->whereBetween('bookings.job_start_date', [$start, $end]);
+            })
+            ->when((empty($start) && empty($end) && request()->filled("start_date") && request()->filled("end_date")), function ($query) {
+                $query->whereBetween('bookings.job_start_date', [request()->start_date, request()->end_date]);
+            })
+            ->selectRaw('SUM(
                         CASE
                             WHEN tip_type = "percentage" THEN final_price * (tip_amount / 100)
                             ELSE final_price
                         END
                     ) as revenue')
-                    ->value('revenue');
+            ->value('revenue');
     }
     public function revenue($range = 'today', $expert_id = NULL)
     {
-        $garage_id = auth()->user()->business_id; // Get the garage ID
+
+
+        $businessSetting = $this->get_business_setting(auth()->user()->business_id);
 
         // Fetch payments and sum the amount
         return [
-            "app_customer_revenue" => $this->calculateRevenue($garage_id, $range, $expert_id, 0),
-            "walk_in_customer_revenue" => $this->calculateRevenue($garage_id, $range, $expert_id, 1),
+            "app_customer_revenue" => $this->calculateRevenue($businessSetting, $range, $expert_id, 0),
+            "walk_in_customer_revenue" => $this->calculateRevenue($businessSetting, $range, $expert_id, 1),
         ];
     }
-    public function getTopServices($range){
+    public function getTopServices($range)
+    {
         $dateRange = $this->getDateRange($range);
         $start = $dateRange['start'];
         $end = $dateRange['end'];
 
         $top_services =  SubService::withCount([
-            'bookingSubServices as all_sales_count' => function ($query) use($start,$end) {
-                $query->whereHas('booking', function ($query) use($start,$end) {
+            'bookingSubServices as all_sales_count' => function ($query) use ($start, $end) {
+                $query->whereHas('booking', function ($query) use ($start, $end) {
                     $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
                         ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                             $query->where('bookings.expert_id', auth()->user()->id);
                         })
-                        ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
-                          $query ->whereBetween('bookings.job_start_date', [$start, $end]);
+                        ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                            $query->whereBetween('bookings.job_start_date', [$start, $end]);
                         })
 
 
-                        ; // Sales this month
+                    ; // Sales this month
                 });
             },
 
@@ -1932,41 +1919,39 @@ class DashboardManagementController extends Controller
             ->limit(5)
             ->get();
 
-            return $top_services;
-
+        return $top_services;
     }
 
-    public function getBusySlots($range){
+    public function getBusySlots($range)
+    {
         $dateRange = $this->getDateRange($range);
         $start = $dateRange['start'];
         $end = $dateRange['end'];
 
-      $data =  ExpertRota::
-      whereHas("user", function($query) {
-          $query->where("users.business_id",auth()->user()->business_id);
-       })
-       ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
-        $query ->whereBetween('date', [$start, $end]);
-      })
-      ->sum(DB::raw('JSON_LENGTH(busy_slots)'));
+        $data =  ExpertRota::whereHas("user", function ($query) {
+                $query->where("users.business_id", auth()->user()->business_id);
+            })
+            ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                $query->whereBetween('date', [$start, $end]);
+            })
+            ->sum(DB::raw('JSON_LENGTH(busy_slots)'));
 
-            return $data;
-
+        return $data;
     }
-    public function getBookedSlots($range){
+    public function getBookedSlots($range)
+    {
         $dateRange = $this->getDateRange($range);
         $start = $dateRange['start'];
         $end = $dateRange['end'];
 
-      $data =  Booking::where("garage_id", auth()->user()->business_id)
-      ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-      ->when((!empty($start) && !empty($end)), function($query) use($start,$end) {
-        $query ->whereBetween('bookings.job_start_date', [$start, $end]);
-      })
-      ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
+        $data =  Booking::where("garage_id", auth()->user()->business_id)
+            ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+            ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                $query->whereBetween('bookings.job_start_date', [$start, $end]);
+            })
+            ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
 
-            return $data;
-
+        return $data;
     }
     public function getCustomersByPeriod($period)
     {
@@ -1997,19 +1982,19 @@ class DashboardManagementController extends Controller
             ->distinct()
             ->get();
 
-           $repeated_customers =  User::whereHas('bookings', function ($query) use ($start, $end) {
-                $query->whereBetween('bookings.job_start_date', [$start, $end])
-                    ->where("garage_id", auth()->user()->business_id)
-                    ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                        $query->where('bookings.expert_id', auth()->user()->id);
-                    })
-                    ->whereIn('bookings.customer_id', function ($subquery)  {
-                        $subquery->select('customer_id')
-                                 ->from('bookings')
-                                 ->groupBy('customer_id')
-                                 ->having(DB::raw('COUNT(id)'), 1 ? '>' : '=', 1);
-                    });
-            })
+        $repeated_customers =  User::whereHas('bookings', function ($query) use ($start, $end) {
+            $query->whereBetween('bookings.job_start_date', [$start, $end])
+                ->where("garage_id", auth()->user()->business_id)
+                ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                    $query->where('bookings.expert_id', auth()->user()->id);
+                })
+                ->whereIn('bookings.customer_id', function ($subquery) {
+                    $subquery->select('customer_id')
+                        ->from('bookings')
+                        ->groupBy('customer_id')
+                        ->having(DB::raw('COUNT(id)'), 1 ? '>' : '=', 1);
+                });
+        })
 
             ->distinct()
             ->get();
@@ -2035,16 +2020,16 @@ class DashboardManagementController extends Controller
                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                     $query->where('bookings.expert_id', auth()->user()->id);
                 })
-                ->whereIn('bookings.customer_id', function ($subquery)  {
+                ->whereIn('bookings.customer_id', function ($subquery) {
                     $subquery->select('customer_id')
-                             ->from('bookings')
-                             ->groupBy('customer_id')
-                             ->having(DB::raw('COUNT(id)'), 1 ? '>' : '=', 1);
+                        ->from('bookings')
+                        ->groupBy('customer_id')
+                        ->having(DB::raw('COUNT(id)'), 1 ? '>' : '=', 1);
                 });
         })
 
-        ->distinct()
-        ->get();
+            ->distinct()
+            ->get();
     }
     /**
      *
@@ -2055,71 +2040,71 @@ class DashboardManagementController extends Controller
      *       security={
      *           {"bearerAuth": {}}
      *       },
- * @OA\Parameter(
- *     name="today_remaining_slots",
- *     in="query",
- *     description="Today remaining slots",
- *     required=true,
- *     example=""
- * ),
- * @OA\Parameter(
- *     name="customer_date_filter",
- *     in="query",
- *     description="Customer date filter",
- *     required=true,
- *     example=""
- * ),
- * @OA\Parameter(
- *     name="repeated_customer_date_filter",
- *     in="query",
- *     description="Repeated customer date filter",
- *     required=true,
- *     example=""
- * ),
- * @OA\Parameter(
- *     name="booking_date_filter",
- *     in="query",
- *     description="Booking date filter",
- *     required=true,
- *     example=""
- * ),
- * @OA\Parameter(
- *     name="expert_booking_date_filter",
- *     in="query",
- *     description="Expert booking date filter",
- *     required=true,
- *     example=""
- * ),
- *  * @OA\Parameter(
- *     name="expert_revenue_date_filter",
- *     in="query",
- *     description="Expert booking date filter",
- *     required=true,
- *     example=""
- * ),
- *
- * @OA\Parameter(
- *     name="revenue_date_filter",
- *     in="query",
- *     description="Revenue date filter",
- *     required=true,
- *     example=""
- * ),
- * @OA\Parameter(
- *     name="top_services_date_filter",
- *     in="query",
- *     description="Top services date filter",
- *     required=true,
- *     example=""
- * ),
- *  * @OA\Parameter(
- *     name="busy_slots_date",
- *     in="query",
- *     description="Top services date filter",
- *     required=true,
- *     example=""
- * ),
- *
+     * @OA\Parameter(
+     *     name="today_remaining_slots",
+     *     in="query",
+     *     description="Today remaining slots",
+     *     required=true,
+     *     example=""
+     * ),
+     * @OA\Parameter(
+     *     name="customer_date_filter",
+     *     in="query",
+     *     description="Customer date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     * @OA\Parameter(
+     *     name="repeated_customer_date_filter",
+     *     in="query",
+     *     description="Repeated customer date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     * @OA\Parameter(
+     *     name="booking_date_filter",
+     *     in="query",
+     *     description="Booking date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     * @OA\Parameter(
+     *     name="expert_booking_date_filter",
+     *     in="query",
+     *     description="Expert booking date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     *  * @OA\Parameter(
+     *     name="expert_revenue_date_filter",
+     *     in="query",
+     *     description="Expert booking date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     *
+     * @OA\Parameter(
+     *     name="revenue_date_filter",
+     *     in="query",
+     *     description="Revenue date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     * @OA\Parameter(
+     *     name="top_services_date_filter",
+     *     in="query",
+     *     description="Top services date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     *  * @OA\Parameter(
+     *     name="busy_slots_date",
+     *     in="query",
+     *     description="Top services date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     *
      *      summary="get all dashboard data combined",
      *      description="get all dashboard data combined",
      *
@@ -2168,41 +2153,41 @@ class DashboardManagementController extends Controller
                     "message" => "You are not a business user"
                 ], 401);
             }
+            $businessSetting = $this->get_business_setting(auth()->user()->business_id);
 
 
+            //           // Define validation rules for date filters
+            // $validator = Validator::make($request->all(), [
+            //     'customer_date_filter' => 'required|string',
+            //   //  'repeated_customer_date_filter' => 'required|string',
+            //     'booking_date_filter' => 'required|string',
+            //     'expert_booking_date_filter' => 'required|string',
+            //     'expert_revenue_date_filter' => 'required|string',
 
-//           // Define validation rules for date filters
-// $validator = Validator::make($request->all(), [
-//     'customer_date_filter' => 'required|string',
-//   //  'repeated_customer_date_filter' => 'required|string',
-//     'booking_date_filter' => 'required|string',
-//     'expert_booking_date_filter' => 'required|string',
-//     'expert_revenue_date_filter' => 'required|string',
+            //     'revenue_date_filter' => 'required|string',
+            //     'top_services_date_filter' => 'required|string',
+            //     'busy_slots_date' => 'required|string',
+            //     'blocked_slots_date' => 'required|string',
+            // ], [
+            //     '*.required' => 'The :attribute field is required.',
+            //     '*.string' => 'The :attribute must be a valid string.'
+            // ]);
 
-//     'revenue_date_filter' => 'required|string',
-//     'top_services_date_filter' => 'required|string',
-//     'busy_slots_date' => 'required|string',
-//     'blocked_slots_date' => 'required|string',
-// ], [
-//     '*.required' => 'The :attribute field is required.',
-//     '*.string' => 'The :attribute must be a valid string.'
-// ]);
+            // Check if validation fails and return errors
+            // if ($validator->fails()) {
+            //     return response()->json([
+            //         'errors' => $validator->errors()
+            //     ], 422);
+            // }
 
-// Check if validation fails and return errors
-// if ($validator->fails()) {
-//     return response()->json([
-//         'errors' => $validator->errors()
-//     ], 422);
-// }
+            $data["today_available_experts"] = [];
+            $today_remaining_slots = request()->input("today_remaining_slots");
+            if (!empty($today_remaining_slots)) {
+                $today_remaining_slots = explode(',', request()->input("today_remaining_slots"));
 
-$data["today_available_experts"] = [];
-$today_remaining_slots = request()->input("today_remaining_slots");
-if(!empty($today_remaining_slots)) {
-    $today_remaining_slots = explode(',', request()->input("today_remaining_slots"));
-
-    // Get available experts
-$data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->user()->business_id, $today_remaining_slots,true);
-}
+                // Get available experts
+                $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->user()->business_id, $today_remaining_slots, true);
+            }
 
 
 
@@ -2226,6 +2211,9 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
             $data["booked_slots"] = $this->getBookedSlots(request()->input("blocked_slots_date"));
 
 
+            $expert_booking_date_filter = $this->getDateRange(request()->input("expert_booking_date_filter"));
+            $start_expert_booking_date = $expert_booking_date_filter['start'];
+            $end_expert_booking_date = $expert_booking_date_filter['end'];
 
 
 
@@ -2245,41 +2233,53 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
             //  ->get();
 
             $experts = User::with("translation")
-            ->where("users.is_active",1)
+                ->where("users.is_active", 1)
                 ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
-                ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id') // Join job_payments on
+                ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id')
                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                     $query->where('users.id', auth()->user()->id);
+                })
+                ->whereHas('roles', function ($query) {
+                    $query->where('roles.name', 'business_experts');
                 })
                 ->select(
                     'users.*',
                     DB::raw('SUM(
-                        CASE
-                            WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '"
-                            THEN
-                                CASE
-                                    WHEN bookings.tip_type = "percentage" THEN bookings.final_price * (bookings.tip_amount / 100)
-                                    ELSE bookings.tip_amount
-                                END
-                            ELSE 0
-                        END
-                    ) as this_month_revenue'),
+                    CASE
+                        WHEN bookings.job_start_date BETWEEN "' . now()->startOfMonth() . '" AND "' . now()->endOfMonth() . '"
+                        THEN
+                            CASE
+                                WHEN bookings.tip_type = "percentage" THEN bookings.final_price * (bookings.tip_amount / 100)
+                                ELSE bookings.tip_amount
+                            END
+                        ELSE 0
+                    END
+                ) as this_month_revenue'),
 
                     DB::raw('SUM(
-                        CASE
-                            WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '"
-                            THEN
-                                CASE
-                                    WHEN bookings.tip_type = "percentage" THEN bookings.final_price * (bookings.tip_amount / 100)
-                                    ELSE bookings.tip_amount
-                                END
-                            ELSE 0
-                        END
-                    ) as last_month_revenue')
+                    CASE
+                        WHEN bookings.job_start_date BETWEEN "' . now()->subMonth()->startOfMonth() . '" AND "' . now()->subMonth()->endOfMonth() . '"
+                        THEN
+                            CASE
+                                WHEN bookings.tip_type = "percentage" THEN bookings.final_price * (bookings.tip_amount / 100)
+                                ELSE bookings.tip_amount
+                            END
+                        ELSE 0
+                    END
+                ) as last_month_revenue'),
+
+                    DB::raw('SUM(
+                    CASE
+                        WHEN bookings.job_start_date BETWEEN "' . $start_expert_booking_date . '" AND "' . $end_expert_booking_date . '"
+                        THEN 1
+                        ELSE 0
+                    END
+                ) as total_bookings')  // Total count of bookings for each expert
                 )
                 ->where("business_id", auth()->user()->business_id)
-                ->groupBy('users.id') // Group by user ID (expert)
-                ->orderBy('this_month_revenue', 'desc') // Order by this month's revenue
+                ->groupBy('users.id')
+                ->orderBy('total_bookings', 'desc') // Order by total bookings
+                // ->orderBy('this_month_revenue', 'desc') // Secondary order by this month's revenue
                 ->get();
 
             foreach ($experts as $expert) {
@@ -2341,7 +2341,7 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
 
 
 
-                $expert->revenue = $this->calculateExpertRevenueV2($expert->id,request()->input("expert_revenue_date_filter"));
+                $expert->revenue = $this->calculateExpertRevenueV2($expert->id, request()->input("expert_revenue_date_filter"));
 
 
                 $expert->busy_slots = $this->blockedSlots(today(), $expert->id);
@@ -2351,58 +2351,51 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
 
                 // more data
 
-                         // Initialize an array for blocked slots
-                         $blockedSlots = []; // Separate variable for blocked slots
-                         $appointment_trends = [];
+                // Initialize an array for blocked slots
+                $blockedSlots = []; // Separate variable for blocked slots
+                $appointment_trends = [];
 
-                         if (request()->filled("start_date") && request()->filled("end_date")) {
-                             $startDate = Carbon::parse(request()->input("start_date"));
-                             $endDate = Carbon::parse(request()->input("end_date"));
+                if (request()->filled("start_date") && request()->filled("end_date")) {
+                    $startDate = Carbon::parse(request()->input("start_date"));
+                    $endDate = Carbon::parse(request()->input("end_date"));
 
-                             $date_range = $startDate->isSameDay($endDate) ? [$startDate] : $startDate->daysUntil($endDate->addDay());
+                    $date_range = $startDate->isSameDay($endDate) ? [$startDate] : $startDate->daysUntil($endDate->addDay());
 
-                             foreach ($date_range as $date) {
-                                 $formattedDate = $date->toDateString(); // Format the date to a string for array key
-                                 // Populate blocked slots for each date
-                                 $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
-                                 // Populate appointment trends for each date
-                                 $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
-                             }
+                    foreach ($date_range as $date) {
+                        $formattedDate = $date->toDateString(); // Format the date to a string for array key
+                        // Populate blocked slots for each date
+                        $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
+                        // Populate appointment trends for each date
+                        $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
+                    }
+                }
 
-                            }
+                $expert->busy_slots = $blockedSlots;
+                $expert->appointment_trends = $appointment_trends;
 
-                         $expert->busy_slots = $blockedSlots;
-                         $expert->appointment_trends = $appointment_trends;
-
-                     // Usage for each revenue type:
-
-
-
-
-                        $expert->all_booked_slots = Booking::
-                         where("garage_id", auth()->user()->business_id)
-                         ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-                         ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
-
-                         $expert->average_booked_slots_time = Booking::
-            where("garage_id", auth()->user()->business_id)
-            ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-            ->avg(DB::raw('JSON_LENGTH(booked_slots)')) * 15;
-
-            $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
-
-            $expert->booking_distribution = collect($bookingTypes)->mapWithKeys(function ($bookingType) {
-                return [
-                    $bookingType => Booking::where('booking_type', $bookingType)
-                        ->where('garage_id', auth()->user()->business_id)
-                        ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
-                        ->count()
-                ];
-            })->toArray();
+                // Usage for each revenue type:
 
 
 
 
+                $expert->all_booked_slots = Booking::where("garage_id", auth()->user()->business_id)
+                    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+                    ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
+
+                $expert->average_booked_slots_time = Booking::where("garage_id", auth()->user()->business_id)
+                    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+                    ->avg(DB::raw('JSON_LENGTH(booked_slots)')) * $businessSetting->slot_duration;
+
+                $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
+
+                $expert->booking_distribution = collect($bookingTypes)->mapWithKeys(function ($bookingType) {
+                    return [
+                        $bookingType => Booking::where('booking_type', $bookingType)
+                            ->where('garage_id', auth()->user()->business_id)
+                            ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+                            ->count()
+                    ];
+                })->toArray();
             }
 
 
@@ -2416,7 +2409,7 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
         }
     }
 
- /**
+    /**
      *
      * @OA\Get(
      *      path="/v1.0/expert-report",
@@ -2529,255 +2522,251 @@ $data["today_available_experts"] = $this->getAvailableExperts(today(), auth()->u
      *     )
      */
 
-     public function getExpertReport(Request $request)
-     {
-         try {
-             $this->storeActivity($request, "");
+    public function getExpertReport(Request $request)
+    {
+        try {
+            $this->storeActivity($request, "");
 
-             if (empty(auth()->user()->business_id)) {
-                 return response()->json([
-                     "message" => "You are not a business user"
-                 ], 401);
-             }
+            if (empty(auth()->user()->business_id)) {
+                return response()->json([
+                    "message" => "You are not a business user"
+                ], 401);
+            }
 
-             $experts = User::
-             withCount([
-                'expert_bookings as completed_booking_count' => function ($query) {
-                    $query
+            $businessSetting = $this->get_business_setting(auth()->user()->business_id);
+            $experts = User::withCount([
+                    'expert_bookings as completed_booking_count' => function ($query) {
+                        $query
 
-                        ->where('bookings.garage_id', auth()->user()->business_id)
-                        ->where('bookings.status', 'converted_to_job')
-                        ->where('bookings.payment_status', 'complete')
+                            ->where('bookings.garage_id', auth()->user()->business_id)
+                            ->where('bookings.status', 'converted_to_job')
+                            ->where('bookings.payment_status', 'complete')
                         ;  // Adjust 'status' according to your actual status field
-                },
+                    },
 
-            ])
-             ->with([
-                "translation",
-                "feedbacks" => function($query) {
-                  $query->whereHas("booking", function($query) {
-                    $query->where("bookings.garage_id",auth()->user()->business_id);
-                  });
-                }
                 ])
-             ->where("users.is_active",1)
-                 ->when($request->hasAny([
-                     'expert_id',
-                     'slots',
-                     'is_returning_customers',
-                     'payment_type',
-                     'discount_applied',
-                     'status',
-                     'payment_status',
-                     'sub_service_ids',
-                     'duration_in_minute',
-                     'booking_type',
-                     'date_filter'
-                 ]), function ($query) use ($request) {
-                     $query->whereHas("expert_bookings", function ($query) use ($request) {
-                         $query->where("bookings.garage_id", auth()->user()->business_id)
-                             ->when($request->input("expert_id"), function ($query) {
-                                 $query->where("expert_id", request()->input("expert_id"));
-                             })
-                             ->when($request->filled("slots"), function ($query) {
-                                 $slotsArray = explode(',', request()->input("slots"));
-                                 $query->where(function ($subQuery) use ($slotsArray) {
-                                     foreach ($slotsArray as $slot) {
-                                         $subQuery->orWhereRaw("JSON_CONTAINS(bookings.busy_slots, '\"$slot\"')");
-                                     }
-                                 });
-                             })
-                             ->when(request()->filled('is_returning_customers'), function ($q) {
+                ->with([
+                    "translation",
+                    "feedbacks" => function ($query) {
+                        $query->whereHas("booking", function ($query) {
+                            $query->where("bookings.garage_id", auth()->user()->business_id);
+                        });
+                    }
+                ])
+                ->where("users.is_active", 1)
+                ->when($request->hasAny([
+                    'expert_id',
+                    'slots',
+                    'is_returning_customers',
+                    'payment_type',
+                    'discount_applied',
+                    'status',
+                    'payment_status',
+                    'sub_service_ids',
+                    'duration_in_minute',
+                    'booking_type',
+                    'date_filter'
+                ]), function ($query) use ($request, $businessSetting) {
+                    $query->whereHas("expert_bookings", function ($query) use ($request, $businessSetting) {
+                        $query->where("bookings.garage_id", auth()->user()->business_id)
+                            ->when($request->input("expert_id"), function ($query) {
+                                $query->where("expert_id", request()->input("expert_id"));
+                            })
+                            ->when($request->filled("slots"), function ($query) {
+                                $slotsArray = explode(',', request()->input("slots"));
+                                $query->where(function ($subQuery) use ($slotsArray) {
+                                    foreach ($slotsArray as $slot) {
+                                        $subQuery->orWhereRaw("JSON_CONTAINS(bookings.busy_slots, '\"$slot\"')");
+                                    }
+                                });
+                            })
+                            ->when(request()->filled('is_returning_customers'), function ($q) {
                                 $isReturning = request()->boolean("is_returning_customers");
 
                                 $q->whereIn('bookings.customer_id', function ($subquery) use ($isReturning) {
-                                        $subquery->select('customer_id')
-                                                 ->from('bookings')
-                                                 ->groupBy('customer_id')
-                                                 ->having(DB::raw('COUNT(id)'), $isReturning ? '>' : '=', 1);
-                                    });
-
+                                    $subquery->select('customer_id')
+                                        ->from('bookings')
+                                        ->groupBy('customer_id')
+                                        ->having(DB::raw('COUNT(id)'), $isReturning ? '>' : '=', 1);
+                                });
                             })
-                             ->when($request->filled("payment_type"), function ($query) {
-                                 $payment_typeArray = explode(',', request()->payment_type);
-                                 $query->whereHas("booking_payments", function ($query) use ($payment_typeArray) {
-                                     $query->whereIn("job_payments.payment_type", $payment_typeArray);
-                                 });
-                             })
-                             ->when($request->filled("discount_applied"), function ($query) {
-                                 if (request()->boolean("discount_applied")) {
-                                     $query->where(function ($query) {
-                                         $query->where("discount_amount", ">", 0)
-                                             ->orWhere("coupon_discount_amount", ">", 0);
-                                     });
-                                 } else {
-                                     $query->where(function ($query) {
-                                         $query->where("discount_amount", "<=", 0)
-                                             ->orWhere("coupon_discount_amount", "<=", 0);
-                                     });
-                                 }
-                             })
-                             ->when((request()->filled("status") && request()->input("status") !== "all"), function ($query) use ($request) {
-                                 $statusArray = explode(',', $request->status);
-                                 $query->whereIn("status", $statusArray);
-                             })
-                             ->when(!empty($request->payment_status), function ($query) use ($request) {
-                                 $statusArray = explode(',', $request->payment_status);
-                                 $query->whereIn("payment_status", $statusArray);
-                             })
-                             ->when(!empty($request->expert_id), function ($query) use ($request) {
-                                 $query->where('bookings.expert_id', request()->input("expert_id"));
-                             })
-                             ->when(!empty($request->sub_service_ids), function ($query) {
-                                 $sub_service_ids = explode(',', request()->sub_service_ids);
-                                 $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
-                                     $query->whereIn('sub_services.id', $sub_service_ids)
-                                         ->when(!empty(request()->service_ids), function ($query) {
-                                             $service_ids = explode(',', request()->service_ids);
-                                             $query->whereHas('service', function ($query) use ($service_ids) {
-                                                 $query->whereIn('services.id', $service_ids);
-                                             });
-                                         });
-                                 });
-                             })
-                             ->when($request->filled("duration_in_minute"), function ($query) {
-                                 $total_slots = request()->input("duration_in_minute") / 15;
-                                 $query->having('total_booked_slots', '>', $total_slots);
-                             })
-                             ->when(!empty($request->booking_type), function ($query) use ($request) {
-                                 $booking_typeArray = explode(',', $request->booking_type);
-                                 $query->whereIn("booking_type", $booking_typeArray);
-                             })
-                             ->when($request->date_filter === 'today', function ($query) {
-                                 return $query->whereDate('bookings.job_start_date', Carbon::today());
-                             })
-                             ->when($request->date_filter === 'this_week', function ($query) {
-                                 return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-                             })
-                             ->when($request->date_filter === 'previous_week', function ($query) {
-                                 return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-                             })
-                             ->when($request->date_filter === 'next_week', function ($query) {
-                                 return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
-                             })
-                             ->when($request->date_filter === 'this_month', function ($query) {
-                                 return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
-                                     ->whereYear('bookings.job_start_date', Carbon::now()->year);
-                             })
-                             ->when($request->date_filter === 'previous_month', function ($query) {
-                                 return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
-                                     ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
-                             })
-                             ->when($request->date_filter === 'next_month', function ($query) {
-                                 return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
-                                     ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
-                             });
-                     });
-                 })
-                 ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
-                 ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id')
-                 // Join job_payments on
-                 ->when(request()->filled("expert_id"), function ($query) {
-                     $query->where('users.id', request()->input("expert_id"));
-                 })
-                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                     $query->where('users.id', auth()->user()->id);
-                 })
+                            ->when($request->filled("payment_type"), function ($query) {
+                                $payment_typeArray = explode(',', request()->payment_type);
+                                $query->whereHas("booking_payments", function ($query) use ($payment_typeArray) {
+                                    $query->whereIn("job_payments.payment_type", $payment_typeArray);
+                                });
+                            })
+                            ->when($request->filled("discount_applied"), function ($query) {
+                                if (request()->boolean("discount_applied")) {
+                                    $query->where(function ($query) {
+                                        $query->where("discount_amount", ">", 0)
+                                            ->orWhere("coupon_discount_amount", ">", 0);
+                                    });
+                                } else {
+                                    $query->where(function ($query) {
+                                        $query->where("discount_amount", "<=", 0)
+                                            ->orWhere("coupon_discount_amount", "<=", 0);
+                                    });
+                                }
+                            })
+                            ->when((request()->filled("status") && request()->input("status") !== "all"), function ($query) use ($request) {
+                                $statusArray = explode(',', $request->status);
+                                $query->whereIn("status", $statusArray);
+                            })
+                            ->when(!empty($request->payment_status), function ($query) use ($request) {
+                                $statusArray = explode(',', $request->payment_status);
+                                $query->whereIn("payment_status", $statusArray);
+                            })
+                            ->when(!empty($request->expert_id), function ($query) use ($request) {
+                                $query->where('bookings.expert_id', request()->input("expert_id"));
+                            })
+                            ->when(!empty($request->sub_service_ids), function ($query) {
+                                $sub_service_ids = explode(',', request()->sub_service_ids);
+                                $query->whereHas('sub_services', function ($query) use ($sub_service_ids) {
+                                    $query->whereIn('sub_services.id', $sub_service_ids)
+                                        ->when(!empty(request()->service_ids), function ($query) {
+                                            $service_ids = explode(',', request()->service_ids);
+                                            $query->whereHas('service', function ($query) use ($service_ids) {
+                                                $query->whereIn('services.id', $service_ids);
+                                            });
+                                        });
+                                });
+                            })
+                            ->when($request->filled("duration_in_minute"), function ($query) use($businessSetting) {
+                                $total_slots = request()->input("duration_in_minute") / $businessSetting->slot_duration;
+                                $query->having('total_booked_slots', '>', $total_slots);
+                            })
+                            ->when(!empty($request->booking_type), function ($query) use ($request) {
+                                $booking_typeArray = explode(',', $request->booking_type);
+                                $query->whereIn("booking_type", $booking_typeArray);
+                            })
+                            ->when($request->date_filter === 'today', function ($query) {
+                                return $query->whereDate('bookings.job_start_date', Carbon::today());
+                            })
+                            ->when($request->date_filter === 'this_week', function ($query) {
+                                return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                            })
+                            ->when($request->date_filter === 'previous_week', function ($query) {
+                                return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
+                            })
+                            ->when($request->date_filter === 'next_week', function ($query) {
+                                return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
+                            })
+                            ->when($request->date_filter === 'this_month', function ($query) {
+                                return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
+                                    ->whereYear('bookings.job_start_date', Carbon::now()->year);
+                            })
+                            ->when($request->date_filter === 'previous_month', function ($query) {
+                                return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
+                                    ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
+                            })
+                            ->when($request->date_filter === 'next_month', function ($query) {
+                                return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
+                                    ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
+                            });
+                    });
+                })
+                ->leftJoin('bookings', 'users.id', '=', 'bookings.expert_id')
+                ->leftJoin('job_payments', 'bookings.id', '=', 'job_payments.booking_id')
+                // Join job_payments on
+                ->when(request()->filled("expert_id"), function ($query) {
+                    $query->where('users.id', request()->input("expert_id"));
+                })
+                ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                    $query->where('users.id', auth()->user()->id);
+                })
 
-                 ->whereHas('roles', function ($query) {
-                     $query->where('roles.name', 'business_experts');
-                 })
-                 ->where("business_id", auth()->user()->business_id)
-                 ->groupBy('users.id') // Group by user ID (expert)
-                 ->get();
+                ->whereHas('roles', function ($query) {
+                    $query->where('roles.name', 'business_experts');
+                })
+                ->where("business_id", auth()->user()->business_id)
+                ->groupBy('users.id') // Group by user ID (expert)
+                ->get();
 
-             foreach ($experts as $expert) {
-                 // Initialize an array for blocked slots
-                 $blockedSlots = []; // Separate variable for blocked slots
-                 $appointment_trends = [];
+            foreach ($experts as $expert) {
+                // Initialize an array for blocked slots
+                $blockedSlots = []; // Separate variable for blocked slots
+                $appointment_trends = [];
 
-                 if (request()->filled("start_date") && request()->filled("end_date")) {
-                     $startDate = Carbon::parse(request()->input("start_date"));
-                     $endDate = Carbon::parse(request()->input("end_date"));
+                if (request()->filled("start_date") && request()->filled("end_date")) {
+                    $startDate = Carbon::parse(request()->input("start_date"));
+                    $endDate = Carbon::parse(request()->input("end_date"));
 
-                     $date_range = $startDate->isSameDay($endDate) ? [$startDate] : $startDate->daysUntil($endDate->addDay());
+                    $date_range = $startDate->isSameDay($endDate) ? [$startDate] : $startDate->daysUntil($endDate->addDay());
 
-                     foreach ($date_range as $date) {
-                         $formattedDate = $date->toDateString(); // Format the date to a string for array key
-                         // Populate blocked slots for each date
-                         $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
-                         // Populate appointment trends for each date
-                         $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
-                     }
-
+                    foreach ($date_range as $date) {
+                        $formattedDate = $date->toDateString(); // Format the date to a string for array key
+                        // Populate blocked slots for each date
+                        $blockedSlots[$formattedDate] = $this->blockedSlots($formattedDate, $expert->id);
+                        // Populate appointment trends for each date
+                        $appointment_trends[$formattedDate] = $this->get_appointment_trend_data($formattedDate, $expert->id);
                     }
+                }
 
-                 $expert->average_rating = $this->calculateAverageRating($expert->id);
-                 $expert->busy_slots = $blockedSlots;
-                 $expert->appointment_trends = $appointment_trends;
+                $expert->average_rating = $this->calculateAverageRating($expert->id);
+                $expert->busy_slots = $blockedSlots;
+                $expert->appointment_trends = $appointment_trends;
 
-             // Usage for each revenue type:
-$expert->life_time_revenue = $this->calculateExpertRevenue($expert->id);
+                // Usage for each revenue type:
+                $expert->life_time_revenue = $this->calculateExpertRevenue($expert->id);
 
-$expert->this_month_revenue = $this->calculateExpertRevenue($expert->id, now()->month);
+                $expert->this_month_revenue = $this->calculateExpertRevenue($expert->id, now()->month);
 
-$expert->last_month_revenue = $this->calculateExpertRevenue($expert->id, now()->subMonth()->month);
+                $expert->last_month_revenue = $this->calculateExpertRevenue($expert->id, now()->subMonth()->month);
 
-                $expert->all_booked_slots = Booking::
-                 where("garage_id", auth()->user()->business_id)
-                 ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-                 ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
+                $expert->all_booked_slots = Booking::where("garage_id", auth()->user()->business_id)
+                    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+                    ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
 
-                 $expert->average_booked_slots_time = Booking::
-    where("garage_id", auth()->user()->business_id)
-    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-    ->avg(DB::raw('JSON_LENGTH(booked_slots)')) * 15;
+                $expert->average_booked_slots_time = Booking::where("garage_id", auth()->user()->business_id)
+                    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+                    ->avg(DB::raw('JSON_LENGTH(booked_slots)')) * $businessSetting->slot_duration;
 
-    $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
-    $expert->booking_distribution = collect($bookingTypes)->mapWithKeys(function ($bookingType) {
-        return [
-            $bookingType => Booking::where('booking_type', $bookingType)
-                ->where('garage_id', auth()->user()->business_id)
-                ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
-                ->count()
-        ];
-    })->toArray();
+                $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
+                $expert->booking_distribution = collect($bookingTypes)->mapWithKeys(function ($bookingType) {
+                    return [
+                        $bookingType => Booking::where('booking_type', $bookingType)
+                            ->where('garage_id', auth()->user()->business_id)
+                            ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+                            ->count()
+                    ];
+                })->toArray();
 
 
-                 // Use object property syntax instead of array-like syntax
-                 $expert->today_bookings = $this->bookingsByStatus('today', $expert->id);
-                 $expert->this_week_bookings = $this->bookingsByStatus('this_week', $expert->id);
-                 $expert->this_month_bookings = $this->bookingsByStatus('this_month', $expert->id);
-                 $expert->next_week_bookings = $this->bookingsByStatus('next_week', $expert->id);
-                 $expert->next_month_bookings = $this->bookingsByStatus('next_month', $expert->id);
-                 $expert->previous_week_bookings = $this->bookingsByStatus('previous_week', $expert->id);
-                 $expert->previous_month_bookings = $this->bookingsByStatus('previous_month', $expert->id);
+                // Use object property syntax instead of array-like syntax
+                $expert->today_bookings = $this->bookingsByStatus('today', $expert->id);
+                $expert->this_week_bookings = $this->bookingsByStatus('this_week', $expert->id);
+                $expert->this_month_bookings = $this->bookingsByStatus('this_month', $expert->id);
+                $expert->next_week_bookings = $this->bookingsByStatus('next_week', $expert->id);
+                $expert->next_month_bookings = $this->bookingsByStatus('next_month', $expert->id);
+                $expert->previous_week_bookings = $this->bookingsByStatus('previous_week', $expert->id);
+                $expert->previous_month_bookings = $this->bookingsByStatus('previous_month', $expert->id);
 
-                 $expert->today_revenue = $this->revenue('today', $expert->id);
-                 $expert->this_week_revenue = $this->revenue('this_week', $expert->id);
-                 $expert->this_month_revenue = $this->revenue('this_month', $expert->id);
-                 $expert->next_week_revenue = $this->revenue('next_week', $expert->id);
-                 $expert->next_month_revenue = $this->revenue('next_month', $expert->id);
-                 $expert->previous_week_revenue = $this->revenue('previous_week', $expert->id);
-                 $expert->previous_month_revenue = $this->revenue('previous_month', $expert->id);
+                $expert->today_revenue = $this->revenue('today', $expert->id);
+                $expert->this_week_revenue = $this->revenue('this_week', $expert->id);
+                $expert->this_month_revenue = $this->revenue('this_month', $expert->id);
+                $expert->next_week_revenue = $this->revenue('next_week', $expert->id);
+                $expert->next_month_revenue = $this->revenue('next_month', $expert->id);
+                $expert->previous_week_revenue = $this->revenue('previous_week', $expert->id);
+                $expert->previous_month_revenue = $this->revenue('previous_month', $expert->id);
 
-                 if (request()->filled("start_date") && request()->filled("end_date")) {
-                     $expert->booking_by_date = $this->bookingsByStatus('all', $expert->id);
-                     $expert->revenue_by_date = $this->revenue('all', $expert->id);
-                 }
-             }
+                if (request()->filled("start_date") && request()->filled("end_date")) {
+                    $expert->booking_by_date = $this->bookingsByStatus('all', $expert->id);
+                    $expert->revenue_by_date = $this->revenue('all', $expert->id);
+                }
+            }
 
-              $experts;
-
+            $experts;
 
 
 
 
-             return response()->json($experts, 200);
-         } catch (Exception $e) {
-             return $this->sendError($e, 500, $request);
-         }
-     }
+
+            return response()->json($experts, 200);
+        } catch (Exception $e) {
+            return $this->sendError($e, 500, $request);
+        }
+    }
     /**
      *
      * @OA\Get(
@@ -2904,23 +2893,23 @@ $expert->last_month_revenue = $this->calculateExpertRevenue($expert->id, now()->
             $vats = Booking::where([
                 "garage_id" => auth()->user()->business_id
             ])
-            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                $query->where('bookings.expert_id', auth()->user()->id);
-            })
-            ->whereNotNull('bookings.vat_amount') // vat_amount should not be null
-            ->whereNotNull('bookings.vat_percentage') // vat_percentage should not be null
+                ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                    $query->where('bookings.expert_id', auth()->user()->id);
+                })
+                ->whereNotNull('bookings.vat_amount') // vat_amount should not be null
+                ->whereNotNull('bookings.vat_percentage') // vat_percentage should not be null
 
-            ->when($request->filled("id"), function ($query) use ($request) {
-                return $query
-                    ->where("bookings.id", $request->input("id")) // Change to customers.id
-                    ->first();
-            }, function ($query) {
-                return $query->when(!empty(request()->per_page), function ($query) {
-                    return $query->paginate(request()->per_page);
+                ->when($request->filled("id"), function ($query) use ($request) {
+                    return $query
+                        ->where("bookings.id", $request->input("id")) // Change to customers.id
+                        ->first();
                 }, function ($query) {
-                    return $query->get();
+                    return $query->when(!empty(request()->per_page), function ($query) {
+                        return $query->paginate(request()->per_page);
+                    }, function ($query) {
+                        return $query->get();
+                    });
                 });
-            });
 
             return response()->json($vats, 200);
         } catch (Exception $e) {

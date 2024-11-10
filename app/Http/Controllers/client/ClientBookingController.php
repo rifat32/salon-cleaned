@@ -199,8 +199,10 @@ class ClientBookingController extends Controller
                         "price" => $price
                     ]);
                 }
+                $businessSetting = $this->get_business_setting($booking->garage_id);
+                $slotValidation =  $this->validateBookingSlots($businessSetting,$booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
-                $slotValidation =  $this->validateBookingSlots($booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
+
 
                 if ($slotValidation['status'] === 'error') {
                     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
@@ -338,7 +340,7 @@ class ClientBookingController extends Controller
 
                 if ($booking->payment_method == "stripe") {
                     // Stripe settings retrieval based on business or garage ID
-                    $stripeSetting = BusinessSetting::where('business_id', $booking->garage_id)->first();
+                    $stripeSetting = $this->get_business_setting($booking->garage_id);
 
                     if (empty($stripeSetting)) {
                         throw new Exception("No stripe seting found", 403);

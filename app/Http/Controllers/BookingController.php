@@ -59,7 +59,7 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($bookingId);
 
         // Stripe settings retrieval based on business or garage ID
-        $stripeSetting = BusinessSetting::where('business_id', $booking->garage_id)->first();
+        $stripeSetting = $this->get_business_setting($booking->garage_id);
 
 
         if (empty($stripeSetting)) {
@@ -143,7 +143,7 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($bookingId);
 
         // Get the Stripe settings
-        $stripeSetting = BusinessSetting::where('business_id', $booking->garage_id)->first();
+        $stripeSetting = $this->get_business_setting($booking->garage_id);
 
 
         if (empty($stripeSetting)) {
@@ -224,12 +224,7 @@ class BookingController extends Controller
             ], 409);
         }
 
-
-
-        $stripeSetting = BusinessSetting::where([
-            "business_id" => $booking->garage_id
-        ])
-            ->first();
+        $stripeSetting = $this->get_business_setting($booking->garage_id);
 
 
         if (empty($stripeSetting)) {
@@ -273,6 +268,7 @@ class BookingController extends Controller
         }
 
         $discount = $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
+
         $coupon_discount = $this->canculate_discount_amount($booking->price, $booking->coupon_discount_type, $booking->coupon_discount_amount);
 
         $total_discount = $discount + $coupon_discount;
@@ -283,35 +279,68 @@ class BookingController extends Controller
             $booking->tip_amount
         );
 
+        $vatAmount = $booking->vat_amount ?? 0;
+
+        $lineItems = [];
+
+        // Loop through each sub-service and add its price as a line item
+        foreach ($booking->sub_services as $subService) {
+            $lineItems[] = [
+                'price_data' => [
+                    'currency' => 'GBP',
+                    'product_data' => [
+                        'name' => $subService->name, // Name of the sub-service
+                    ],
+                    'unit_amount' => $subService->price * 100, // Amount in cents
+                ],
+                'quantity' => 1,
+            ];
+        }
+
+        if($vatAmount > 0) {
+ // Add VAT as a separate line item
+ $lineItems[] = [
+    'price_data' => [
+        'currency' => 'GBP',
+        'product_data' => [
+            'name' => 'VAT',
+        ],
+        'unit_amount' => $vatAmount * 100, // Amount in cents
+    ],
+    'quantity' => 1,
+];
+        }
+
+        if($totalTip > 0) {
+            // Add VAT as a separate line item
+            $lineItems[] = [
+               'price_data' => [
+                   'currency' => 'GBP',
+                   'product_data' => [
+                       'name' => 'VAT',
+                   ],
+                   'unit_amount' => $vatAmount * 100, // Amount in cents
+               ],
+               'quantity' => 1,
+           ];
+                   }
+
+
+
+
+
         $session_data = [
             'payment_method_types' => ['card'],
             'metadata' => [
                 'our_url' => route('stripe.webhook'),
                 "booking_id" => $booking->id
-
             ],
-            'line_items' => [
-                [
-                    'price_data' => [
-                        'currency' => 'GBP',
-                        'product_data' => [
-                            'name' => 'Your Service set up amount',
-                        ],
-                        'unit_amount' => ($booking->price + $totalTip + ($booking->vat_amount ?? 0)) * 100, // Amount in cents
-                    ],
-                    'quantity' => 1,
-                ]
-            ],
-
-            'customer' => $user->stripe_id  ?? null,
-
+            'line_items' => $lineItems,
+            'customer' => $user->stripe_id ?? null,
             'mode' => 'payment',
             'success_url' => env("FRONT_END_URL") . "/bookings",
             'cancel_url' => env("FRONT_END_URL") . "/bookings",
         ];
-
-
-
 
 
         // Add discount line item only if discount amount is greater than 0 and not null
@@ -529,12 +558,18 @@ class BookingController extends Controller
                     "price" => $price
                 ]);
             }
-
-            $slotValidation =  $this->validateBookingSlots($booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
+            $businessSetting = $this->get_business_setting($booking->garage_id);
+            $slotValidation =  $this->validateBookingSlots($businessSetting,$booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
             if ($slotValidation['status'] === 'error') {
                 // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
                 return response()->json($slotValidation, 422);
+            }
+
+            $processedSlotInformation =  $this->processSlots($businessSetting,$request["booked_slots"]);
+            if (count($processedSlotInformation) > 1) {
+                // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
+                throw new Exception("Slots must be continuous");
             }
 
 
@@ -2158,6 +2193,7 @@ class BookingController extends Controller
                     "message" => "You can not perform this action"
                 ], 401);
             }
+            $businessSetting = $this->get_business_setting(auth()->user()->business_id);
 
             $users = User::withCount([
                     'bookings as completed_booking_count' => function ($query) {
@@ -2247,7 +2283,7 @@ class BookingController extends Controller
                     });
                 })
 
-                ->whereHas("bookings", function ($query) use ($request) {
+                ->whereHas("bookings", function ($query) use ($request,$businessSetting) {
                     $query->where("bookings.garage_id", auth()->user()->business_id)
 
                         ->when(request()->filled("expert_id"), function ($query) {
@@ -2302,8 +2338,8 @@ class BookingController extends Controller
                                     });
                             });
                         })
-                        ->when(request()->filled("duration_in_minute"), function ($query) {
-                            $total_slots = request()->input("duration_in_minute") / 15;
+                        ->when(request()->filled("duration_in_minute"), function ($query) use($businessSetting) {
+                            $total_slots = request()->input("duration_in_minute") / $businessSetting->slot_duration;
                             $query->having('total_booked_slots', '>', $total_slots);
                         })
                         ->when(!empty($request->booking_type), function ($query) use ($request) {

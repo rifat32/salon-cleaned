@@ -11,6 +11,7 @@ class BusinessSetting extends Model
 
 
     protected $fillable = [
+        "slot_duration",
         'STRIPE_KEY',
         "STRIPE_SECRET",
         "business_id",

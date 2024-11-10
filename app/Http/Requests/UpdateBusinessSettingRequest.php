@@ -24,6 +24,9 @@ class UpdateBusinessSettingRequest extends FormRequest
     public function rules()
     {
         return [
+
+        'slot_duration' => 'required|integer',
+
         'stripe_enabled' => 'boolean',
         'STRIPE_KEY' => 'string|nullable|required_if:stripe_enabled,true',
         'STRIPE_SECRET' => 'string|nullable|required_if:stripe_enabled,true',

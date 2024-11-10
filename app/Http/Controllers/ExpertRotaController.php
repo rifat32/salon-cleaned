@@ -968,6 +968,8 @@ class ExpertRotaController extends Controller
             // Retrieve validated data
             $validated = $validator->validated();
 
+            $businessSetting = $this->get_business_setting(auth()->user()->business_id);
+
 
     $startDate = Carbon::parse($validated['start_date']);
     $endDate = Carbon::parse($validated['end_date']);
@@ -1025,14 +1027,14 @@ class ExpertRotaController extends Controller
 
                         if(!empty($expert_rota)) {
                             $attendances->push([
-                              "worked_hours" => (53 - count($expert_rota->busy_slots)) * 15,
-                              "served_hours" => $total_booked_slots * 15,
+                              "worked_hours" => (53 - count($expert_rota->busy_slots)) * $businessSetting->slot_duration,
+                              "served_hours" => $total_booked_slots * $businessSetting->slot_duration,
                               "date" => $date->toDateString()
                             ]);
                         } else {
                             $attendances->push([
-                            "worked_hours" => 53 * 15,
-                            "served_hours" => $total_booked_slots * 15,
+                            "worked_hours" => 53 * $businessSetting->slot_duration,
+                            "served_hours" => $total_booked_slots * $businessSetting->slot_duration,
                             "date" => $date->toDateString()
                             ]);
                         }

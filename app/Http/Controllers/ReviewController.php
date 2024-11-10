@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Models\Booking;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\DB;
 
 class ReviewController extends Controller
 {
-    use ErrorUtil, UserActivityUtil;
+    use ErrorUtil, UserActivityUtil, BasicUtil;
 
 
 
@@ -3151,10 +3152,9 @@ class ReviewController extends Controller
                 ], 400); // Bad Request status
             }
             $is_auto_booking_approve = false;
-            $businessSetting = BusinessSetting::where([
-                "business_id" => auth()->user()->business_id
-            ])
-            ->first();
+
+            $businessSetting = $this->get_business_setting(auth()->user()->business_id);
+
 
             if(!empty($businessSetting)) {
                $is_auto_booking_approve = $businessSetting->is_auto_booking_approve;

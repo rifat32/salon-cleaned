@@ -54,9 +54,6 @@ class SubService extends Model
                      $price = $subServicePrice->price;
                   }
 
-
-
-
         }
          return number_format($price, 2); // Format as currency
      }

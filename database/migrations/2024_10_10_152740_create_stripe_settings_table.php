@@ -26,6 +26,7 @@ class CreateStripeSettingsTable extends Migration
     $table->boolean('stripe_enabled')->default(false); // Whether Stripe is enabled
     $table->boolean('is_expert_price')->default(1);
     $table->boolean('is_auto_booking_approve')->default(false);
+    $table->integer('slot_duration');
 
     // Business settings
     $table->boolean('allow_pay_after_service')->default(false); // Allow pay after service
