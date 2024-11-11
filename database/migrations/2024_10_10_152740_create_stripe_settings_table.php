@@ -29,6 +29,11 @@ class CreateStripeSettingsTable extends Migration
     $table->integer('slot_duration');
 
     // Business settings
+
+    $table->boolean('allow_receptionist_user_discount')->default(true);
+    $table->integer('discount_percentage_limit')->default(0);
+
+
     $table->boolean('allow_pay_after_service')->default(false); // Allow pay after service
     $table->boolean('allow_expert_booking')->default(false); // Expert can take booking
     $table->boolean('allow_expert_self_busy')->default(false); // Expert can mark themselves as busy

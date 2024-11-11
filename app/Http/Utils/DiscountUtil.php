@@ -5,9 +5,46 @@ namespace App\Http\Utils;
 use App\Models\Coupon;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 trait DiscountUtil
 {
+
+    public function applyCoupon($request_data, $total_price, $booking)
+    {
+        if (empty($request_data["coupon_code"])) {
+            return $booking; // No coupon to process
+        }
+
+        $coupon_discount = $this->getCouponDiscount(
+            $request_data["garage_id"],
+            $request_data["coupon_code"],
+            $total_price
+        );
+
+        if ($coupon_discount["success"]) {
+            $booking->coupon_discount_type = $coupon_discount["discount_type"];
+            $booking->coupon_discount_amount = $coupon_discount["discount_amount"];
+            $booking->coupon_code = $request_data["coupon_code"];
+            $booking->save();
+
+            // Increment customer redemptions for the coupon
+            Coupon::where([
+                "code" => $booking->coupon_code,
+                "garage_id" => $booking->garage_id
+            ])->update([
+                "customer_redemptions" => DB::raw("customer_redemptions + 1")
+            ]);
+        } else {
+            $error = [
+                "message" => "The given data was invalid.",
+                "errors" => ["coupon_code" => [$coupon_discount["message"]]]
+            ];
+            throw new Exception(json_encode($error), 422);
+        }
+
+        return $booking;
+    }
     // this function do all the task and returns transaction id or -1
     public function getCouponDiscount($garage_id,$code,$amount)
     {

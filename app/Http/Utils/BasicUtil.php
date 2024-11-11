@@ -16,6 +16,7 @@ use App\Models\SubService;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 trait BasicUtil
@@ -845,4 +846,9 @@ trait BasicUtil
             }
         }
     }
+
+
+
+
+
 }

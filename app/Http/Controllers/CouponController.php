@@ -121,6 +121,7 @@ class CouponController extends Controller
 
 
                 $coupon =  Coupon::create($request_data);
+                // $coupon->sub_services()->sync($request_data["sub_service_ids"]);
 
 
                 return response($coupon, 201);
@@ -202,13 +203,13 @@ class CouponController extends Controller
         try {
             $this->storeActivity($request,"");
             return  DB::transaction(function () use ($request) {
+
                 if (!$request->user()->hasPermissionTo('coupon_update')) {
                     return response()->json([
                         "message" => "You can not perform this action"
                     ], 401);
                 }
                 $request_data = $request->validated();
-
 
                 if (!$this->garageOwnerCheck($request_data["garage_id"])) {
                     return response()->json([
@@ -228,7 +229,6 @@ class CouponController extends Controller
                             "errors" => ["code"=>["This code is already taken"]]
                      ];
                         throw new Exception(json_encode($error),422);
-
                     }
 
                 $coupon  =  tap(Coupon::where(["id" => $request_data["id"]]))->update(
@@ -248,15 +248,16 @@ class CouponController extends Controller
                     ])->toArray()
                 )
                     // ->with("somthing")
-
                     ->first();
 
                     if(!$coupon) {
                         return response()->json([
                             "message" => "no coupon found"
                             ],404);
-
+                    // $coupon->sub_services()->sync($request_data["sub_service_ids"]);
                 }
+
+
                 return response($coupon, 201);
             });
         } catch (Exception $e) {

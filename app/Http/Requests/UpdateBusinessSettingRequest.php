@@ -24,25 +24,29 @@ class UpdateBusinessSettingRequest extends FormRequest
     public function rules()
     {
         return [
-
+            "allow_receptionist_user_discount" => "required|boolean",
+            "discount_percentage_limit" => "required|numeric",
+            
         'slot_duration' => 'required|integer',
 
-        'stripe_enabled' => 'boolean',
+        'stripe_enabled' => 'required|boolean',
         'STRIPE_KEY' => 'string|nullable|required_if:stripe_enabled,true',
         'STRIPE_SECRET' => 'string|nullable|required_if:stripe_enabled,true',
-        'is_expert_price' => 'boolean',
+        'is_expert_price' => 'required|boolean',
         'is_auto_booking_approve' => 'boolean',
 
-        'allow_pay_after_service' => 'boolean',
-        'allow_expert_booking' => 'boolean',
-        'allow_expert_self_busy' => 'boolean',
-        'allow_expert_booking_cancel' => 'boolean',
-        'allow_expert_view_revenue' => 'boolean',
-        'allow_expert_view_customer_details' => 'boolean',
-        'allow_receptionist_add_question' => 'boolean',
-        'default_currency' => 'string|nullable|max:10',
-        'default_language' => 'string|nullable|max:10',
-        'vat_enabled' => 'boolean',
+
+
+        'allow_pay_after_service' => 'required|boolean',
+        'allow_expert_booking' => 'required|boolean',
+        'allow_expert_self_busy' => 'required|boolean',
+        'allow_expert_booking_cancel' => 'required|boolean',
+        'allow_expert_view_revenue' => 'required|boolean',
+        'allow_expert_view_customer_details' => 'required|boolean',
+        'allow_receptionist_add_question' => 'required|boolean',
+        'default_currency' => 'required|string|max:10',
+        'default_language' => 'required|string|max:10',
+        'vat_enabled' => 'required|boolean',
         'vat_percentage' => 'nullable|numeric|required_if:vat_enabled,true|min:0|max:100',
         'vat_number' => 'nullable|string|required_if:vat_enabled,true'
 

@@ -11,6 +11,9 @@ class BusinessSetting extends Model
 
 
     protected $fillable = [
+        "allow_receptionist_user_discount",
+        "discount_percentage_limit",
+        
         "slot_duration",
         'STRIPE_KEY',
         "STRIPE_SECRET",

@@ -29,14 +29,18 @@ class CouponCreateRequest extends FormRequest
              'code' => 'required|string',
              "discount_type"=>"required|string|in:fixed,percentage",
             "discount_amount"=>"required|numeric",
+
             "min_total"=>"nullable|numeric",
             "max_total"=>"nullable|numeric",
             "redemptions"=>"nullable|numeric",
 
             "coupon_start_date"=>"required|date",
             "coupon_end_date"=>"required|date",
+
             "is_auto_apply"=>"required|boolean",
             "is_active"=>"required|boolean",
+            // "sub_service_ids" => "required|array",
+            // "sub_service_ids.*" => "numeric|exists:sub_services,id",
         ];
     }
 }

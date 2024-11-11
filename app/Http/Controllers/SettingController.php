@@ -27,8 +27,10 @@ class SettingController extends Controller
    *  @OA\RequestBody(
    *         required=true,
    *         @OA\JsonContent(
-   *
-   * *         @OA\Property(property="STRIPE_KEY", type="string", format="string",example="STRIPE_KEY"),
+
+        *          @OA\Property(property="allow_receptionist_user_discount", type="string", format="string",example=""),
+   *           @OA\Property(property="discount_percentage_limit", type="string", format="string",example=""),
+   *          @OA\Property(property="STRIPE_KEY", type="string", format="string",example="STRIPE_KEY"),
    *           @OA\Property(property="STRIPE_SECRET", type="string", format="string",example="STRIPE_SECRET"),
    *  *   @OA\Property(property="stripe_enabled", type="boolean", example=true),
    *      @OA\Property(property="is_expert_price", type="boolean", example=true),
@@ -142,6 +144,9 @@ if (!$busunessSetting) {
 
 
     $busunessSetting->fill(collect($request_data)->only([
+        "allow_receptionist_user_discount",
+        "discount_percentage_limit",
+
         'STRIPE_KEY',
         "STRIPE_SECRET",
         "business_id",
