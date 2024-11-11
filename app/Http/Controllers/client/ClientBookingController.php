@@ -169,6 +169,7 @@ class ClientBookingController extends Controller
                 }
 
 
+
                 $booking =  Booking::create($request_data);
 
                 $total_price = 0;
@@ -215,10 +216,11 @@ class ClientBookingController extends Controller
                     throw new Exception("Slots must be continuous");
                 }
 
-                $booking->start_time = $processedSlotInformation[0]["start_time"];
-                $booking->end_time = $processedSlotInformation[0]["end_time"];
+                $booking->job_start_time = $processedSlotInformation[0]["start_time"];
+                $booking->job_end_time = $processedSlotInformation[0]["end_time"];
 
-                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->start_time, $booking->end_time);
+
+                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
 
 
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
@@ -254,8 +256,9 @@ class ClientBookingController extends Controller
                         $request_data["coupon_code"],
                         $total_price
                     );
+                    $booking = $this->applyCoupon($request_data, $booking, $coupon);
                 }
-                $booking = $this->applyCoupon($request_data, $total_price, $booking, $coupon);
+
 
                 $booking->final_price = $booking->price;
                 $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
@@ -769,10 +772,10 @@ class ClientBookingController extends Controller
                     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
                     throw new Exception("Slots must be continuous");
                 }
-                $booking->start_time = $processedSlotInformation[0]["start_time"];
-                $booking->end_time = $processedSlotInformation[0]["end_time"];
+                $booking->job_start_time = $processedSlotInformation[0]["start_time"];
+                $booking->job_end_time = $processedSlotInformation[0]["end_time"];
 
-                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->start_time, $booking->end_time);
+                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
 
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([

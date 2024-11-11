@@ -656,7 +656,7 @@ trait BasicUtil
                     // If the difference is exactly 15 minutes, add to the current group
                     $currentGroup[] = $slot;
                 } else {
-                    // If the difference is not 15 minutes, throw an error
+                    // If the difference is not  minutes, throw an error
                     throw new Exception("Slots must be continuous in " . $slot_duration . "-minute intervals. Invalid interval between '$lastSlotTime' and '$currentSlotTime'.");
                 }
             }
@@ -666,10 +666,10 @@ trait BasicUtil
         if (!empty($currentGroup)) {
             // Get the next 15-minute increment after the last slot for the end time
             $lastSlotTime = strtotime(end($currentGroup));
-            $endTime = $this->getNext15MinuteInterval($slot_duration, $lastSlotTime);
+            $endTime = $this->getNextMinuteInterval($slot_duration, $lastSlotTime);
 
             $groups[] = [
-                'start_time' => $currentGroup[0],
+                'start_time' => date('H:i:s', strtotime($currentGroup[0])), // 24-hour format
                 'end_time' => $endTime
             ];
         }
@@ -687,11 +687,11 @@ trait BasicUtil
 
     while ($currentSlotTime < $endSlotTime) {
         // Format the current slot time
-        $slotStart = date("H:i", $currentSlotTime);
+        $slotStart = date("g:i A", $currentSlotTime);
 
         // Calculate the end time for this slot by adding the slot duration
         $currentSlotTime += $slot_duration * 60;
-        $slotEnd = date("H:i", $currentSlotTime);
+        $slotEnd = date("g:i A", $currentSlotTime);
 
         if ($currentSlotTime <= $endSlotTime) {
             // Add this slot to the slots array
@@ -705,7 +705,7 @@ trait BasicUtil
     return $slots;
 }
 
-    private function getNext15MinuteInterval($slot_duration, $time)
+    private function getNextMinuteInterval($slot_duration, $time)
     {
         // Round up the given time to the next 15-minute increment
         $minutes = (int)date('i', $time);
@@ -714,7 +714,7 @@ trait BasicUtil
         // Set the next 15-minute mark
         $nextTime = strtotime(date('Y-m-d H:', $time) . str_pad($roundedMinutes, 2, '0', STR_PAD_LEFT));
 
-        return date('g:i A', $nextTime); // Format to a readable time format like "10:30 AM"
+        return date('H:i:s', $nextTime); // 24-hour format
     }
 
     public function calculate_vat($total_price, $business_id)
@@ -815,6 +815,7 @@ trait BasicUtil
 
     public function validateGarageTimes($garage_id,$job_start_date, $job_start_time, $job_end_time = null)
     {
+
         $date = Carbon::createFromFormat('Y-m-d', $job_start_date);
         $dayOfWeek = $date->dayOfWeek; // 6 (0 for Sunday, 1 for Monday, 2 for Tuesday, etc.)
         $garage_time = GarageTime::where([
@@ -828,23 +829,30 @@ trait BasicUtil
             throw new Exception("The salon is not open on this day.",401);
         }
 
-        $jobStartTime = Carbon::createFromFormat('H:i', $job_start_time)->format('H:i:s');
-        $jobStartTime = Carbon::parse($jobStartTime);
+
+
+
+
+        $jobStartTime = Carbon::parse($job_start_time);
         $openingTime = Carbon::parse($garage_time->opening_time);
         $closingTime = Carbon::parse($garage_time->closing_time);
+
 
         if ($jobStartTime->lessThan($openingTime) || $jobStartTime->greaterThanOrEqualTo($closingTime)) {
             throw new Exception('The start time is outside of the salon operating hours.', 401);
         }
 
         if ($job_end_time) {
-            $jobEndTime = Carbon::createFromFormat('H:i', $job_end_time)->format('H:i:s');
-            $jobEndTime = Carbon::parse($jobEndTime);
+
+
+            $jobEndTime = Carbon::parse($job_end_time);
 
             if ($jobEndTime->lessThan($openingTime) || $jobEndTime->greaterThanOrEqualTo($closingTime)) {
                 throw new Exception('The end time is outside of the salon operating hours.', 401);
             }
+
         }
+
     }
 
 

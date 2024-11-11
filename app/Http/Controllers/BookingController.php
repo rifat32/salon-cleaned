@@ -575,10 +575,10 @@ class BookingController extends Controller
                 throw new Exception("Slots must be continuous");
             }
 
-            $booking->start_time = $processedSlotInformation[0]["start_time"];
-            $booking->end_time = $processedSlotInformation[0]["end_time"];
+            $booking->job_start_time = $processedSlotInformation[0]["start_time"];
+            $booking->job_end_time = $processedSlotInformation[0]["end_time"];
 
-            $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->start_time, $booking->end_time);
+            $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
 
             foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                 $garage_package =  GaragePackage::where([
@@ -617,8 +617,9 @@ class BookingController extends Controller
                     $request_data["coupon_code"],
                     $total_price
                 );
+                $booking = $this->applyCoupon($request_data, $booking, $coupon);
             }
-            $booking = $this->applyCoupon($request_data, $total_price, $booking, $coupon);
+
 
 
             $booking->final_price = $booking->price;
@@ -947,10 +948,10 @@ class BookingController extends Controller
                     throw new Exception("Slots must be continuous");
                 }
 
-                $booking->start_time = $processedSlotInformation[0]["start_time"];
-                $booking->end_time = $processedSlotInformation[0]["end_time"];
+                $booking->job_start_time = $processedSlotInformation[0]["start_time"];
+                $booking->job_end_time = $processedSlotInformation[0]["end_time"];
 
-                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->start_time, $booking->end_time);
+                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
 
 
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {

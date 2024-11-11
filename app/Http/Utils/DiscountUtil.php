@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\DB;
 trait DiscountUtil
 {
 
-    public function applyCoupon($request_data, $total_price, $booking, $coupon)
+    public function applyCoupon($request_data, $booking, $coupon)
     {
-        if (empty($request_data["coupon_code"]) || empty($coupon)) {
+        if (empty($request_data["coupon_code"])) {
             return $booking; // No coupon to process
         }
         if ($request_data["coupon_code"] == $booking->coupon_code) {
@@ -47,7 +47,7 @@ trait DiscountUtil
                 if ($coupon_sub_service_ids->contains($booking_sub_service->sub_service_id)) {
                     // Apply discount logic here
                     // For example, add a discount to the booking or modify booking_sub_service
-                    $discount_amount = $this->canculate_discount_amount($booking_sub_service->price, "percentage",$coupon->discount_amount);
+                    $discount_amount = $this->canculate_discount($booking_sub_service->price, "percentage",$coupon->discount_amount);
 
                     $booking_sub_service->discount_percentage =   $coupon->discount_amount;
                     $booking_sub_service->discounted_price_to_show = $booking_sub_service->price - $discount_amount;
@@ -167,7 +167,7 @@ trait DiscountUtil
     }
 
 
-    public function canculate_discount_amount($total_price, $discount_type, $discount_amount)
+    public function canculate_discount($total_price, $discount_type, $discount_amount)
     {
         if (!empty($discount_type) && !empty($discount_amount)) {
             if ($discount_type == "fixed") {
