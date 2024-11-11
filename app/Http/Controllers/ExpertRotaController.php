@@ -9,6 +9,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ExpertRotaCreateRequest;
 use App\Http\Requests\ExpertRotaUpdateRequest;
 use App\Http\Requests\GetIdRequest;
+use App\Http\Utils\BasicUtil;
 use App\Http\Utils\BusinessUtil;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Utils\ErrorUtil;
@@ -16,6 +17,7 @@ use App\Http\Utils\UserActivityUtil;
 use App\Models\Booking;
 use App\Models\ExpertRota;
 use App\Models\DisabledExpertRota;
+use App\Models\ExpertRotaTime;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -25,7 +27,7 @@ use Illuminate\Support\Facades\DB;
 class ExpertRotaController extends Controller
 {
 
-    use ErrorUtil, UserActivityUtil, BusinessUtil;
+    use ErrorUtil, UserActivityUtil, BusinessUtil, BasicUtil;
 
 
     /**
@@ -101,7 +103,6 @@ class ExpertRotaController extends Controller
 
                 $request_data["is_active"] = 1;
 
-
                 $request_data["created_by"] = auth()->user()->id;
                 $request_data["business_id"] = auth()->user()->business_id;
 
@@ -154,6 +155,13 @@ class ExpertRotaController extends Controller
             }
 
 
+
+
+
+
+
+
+
               $expert_rota =  ExpertRota::where([
                     "expert_id" => $request_data["expert_id"],
                 ])
@@ -161,12 +169,7 @@ class ExpertRotaController extends Controller
                 ->first();
 
 
-
-
-
-
                 if(!empty($expert_rota)) {
-
                     $expert_rota->fill(collect($request_data)->only([
                         "expert_id",
                         "date",
@@ -176,21 +179,36 @@ class ExpertRotaController extends Controller
                         // "business_id",
                         // "created_by"
                     ])->toArray());
-                    $expert_rota->save();
 
+                    $expert_rota->save();
 
                 } else {
                     $expert_rota =  ExpertRota::create($request_data);
                 }
 
+                $businessSetting = $this->get_business_setting($booking->garage_id);
+                $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration,$request_data["busy_slots"]);
 
 
 
+                if(!empty($processedSlotInformation)) {
 
+                    foreach($processedSlotInformation as $slot) {
+                        ExpertRotaTime::create(
+                            [
+                                "expert_rota_id" => $expert_rota->id,
+                                "start_time" => $slot["start_time"],
+                                "end_time" => $slot["start_time"]
+                            ]
+                        );
+                    }
+
+                }
 
 
                 return response($expert_rota, 201);
             });
+
         } catch (Exception $e) {
 
             return $this->sendError($e, 500, $request);
@@ -292,6 +310,21 @@ class ExpertRotaController extends Controller
                 }
 
 
+                if(!empty($processedSlotInformation)) {
+                    ExpertRotaTime::where([
+                        "expert_rota_id" => $expert_rota->id,
+                    ])
+                    ->delete();
+                    foreach($processedSlotInformation as $slot) {
+                        ExpertRotaTime::create(
+                            [
+                                "expert_rota_id" => $expert_rota->id,
+                                "start_time" => $slot["start_time"],
+                                "end_time" => $slot["end_time"]
+                            ]
+                        );
+                    }
+                }
 
 
                 return response($expert_rota, 201);

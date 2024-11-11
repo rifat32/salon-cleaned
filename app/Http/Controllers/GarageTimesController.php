@@ -106,14 +106,16 @@ class GarageTimesController extends Controller
                ])
                ->delete();
                $timesArray = collect($request_data["times"])->unique("day");
+               $businessSetting = $this->get_business_setting($garage_id);
                foreach($timesArray as $garage_time) {
+                $processedSlots = $this->generateSlots($businessSetting->slot_duration,$garage_time["opening_time"],$garage_time["closing_time"]);
                 GarageTime::create([
                     "garage_id" => $garage_id,
                     "day"=> $garage_time["day"],
                     "opening_time"=> $garage_time["opening_time"],
                     "closing_time"=> $garage_time["closing_time"],
                     "is_closed"=> $garage_time["is_closed"],
-                    "time_slots"=> $garage_time["time_slots"],
+                    "time_slots"=> $processedSlots,
 
                 ]);
                }

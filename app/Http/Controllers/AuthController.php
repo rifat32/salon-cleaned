@@ -11,6 +11,7 @@ use App\Http\Requests\EmailVerifyTokenRequest;
 use App\Http\Requests\ForgetPasswordRequest;
 use App\Http\Requests\PasswordChangeRequest;
 use App\Http\Requests\UserInfoUpdateRequest;
+use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\UserActivityUtil;
@@ -45,7 +46,7 @@ use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
-    use ErrorUtil, GarageUtil, UserActivityUtil;
+    use ErrorUtil, GarageUtil, UserActivityUtil, BasicUtil;
 
     /**
      *
@@ -991,14 +992,20 @@ class AuthController extends Controller
                 ])
                     ->delete();
                 $timesArray = collect($request_data["times"])->unique("day");
+
+                $businessSetting = $this->get_business_setting($garage->id);
+
                 foreach ($timesArray as $garage_time) {
+
+                    $processedSlots = $this->generateSlots($businessSetting->slot_duration,$garage_time["opening_time"],$garage_time["closing_time"]);
+
                     GarageTime::create([
                         "garage_id" => $garage->id,
                         "day" => $garage_time["day"],
                         "opening_time" => $garage_time["opening_time"],
                         "closing_time" => $garage_time["closing_time"],
                         "is_closed" => $garage_time["is_closed"],
-                        "time_slots" => $garage_time["time_slots"],
+                        "time_slots" => $processedSlots,
 
                     ]);
                 }

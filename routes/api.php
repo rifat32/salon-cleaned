@@ -179,7 +179,6 @@ Route::get('/v1.0/expert-rotas', [ExpertRotaController::class, "getExpertRotas"]
 Route::delete('/v1.0/expert-rotas/{ids}', [ExpertRotaController::class, "deleteExpertRotasByIds"]);
 Route::get('/v1.0/expert-attendances', [ExpertRotaController::class, "getExpertAttendances"]);
 
-
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // end expert rotas management section
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

@@ -15,7 +15,8 @@ class ReviewNew extends Model
         'rate',
         'user_id',
         'comment',
-        'status'
+        'status',
+        'total_review'
         // "question_id",
         // 'tag_id' ,
         // 'star_id',

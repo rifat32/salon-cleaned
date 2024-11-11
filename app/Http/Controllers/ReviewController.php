@@ -3182,21 +3182,22 @@ class ReviewController extends Controller
             $rate = 0;
             $questionCount = 0;
             $previousQuestionId = NULL;
+
             foreach ($request["values"] as $value) {
+                $rate += $value["star_id"];
                 if (!$previousQuestionId) {
                     $previousQuestionId = $value["question_id"];
-                    $rate += $value["star_id"];
+
                 } else {
 
                     if ($value["question_id"] != $previousQuestionId) {
-                        $rate += $value["star_id"];
+
                         $previousQuestionId = $value["question_id"];
                         $questionCount += 1;
                     }
                 }
 
-                $createdReview->rate =  $rate;
-                $createdReview->save();
+
                 $value["review_id"] = $createdReview->id;
                 // $value["question_id"] = $createdReview->question_id;
                 // $value["tag_id"] = $createdReview->tag_id;
@@ -3204,6 +3205,10 @@ class ReviewController extends Controller
                 ReviewValueNew::create($value);
             }
 
+            $createdReview->rate =  $rate;
+            $createdReview->total_review =  count($createdReview->value);
+
+            $createdReview->save();
 
             return response(["message" => "created successfully"], 201);
         } catch (Exception $e) {

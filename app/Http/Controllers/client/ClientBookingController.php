@@ -209,7 +209,7 @@ class ClientBookingController extends Controller
                     return response()->json($slotValidation, 422);
                 }
 
-                $processedSlotInformation =  $this->processSlots($businessSetting,$request["booked_slots"]);
+                $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration,$request["booked_slots"]);
                 if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
                     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
                     throw new Exception("Slots must be continuous");
@@ -780,14 +780,14 @@ class ClientBookingController extends Controller
                 //     return response()->json($slotValidation, 422);
                 // }
 
-                $processedSlotInformation =  $this->processSlots($businessSetting,$booking->booked_slots);
+                $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration,$booking->booked_slots);
                 if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
                     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
                     throw new Exception("Slots must be continuous");
                 }
                 $booking->start_time = $processedSlotInformation[0]["start_time"];
                 $booking->end_time = $processedSlotInformation[0]["end_time"];
-                
+
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([
                         "garage_id" => $booking->garage_id,

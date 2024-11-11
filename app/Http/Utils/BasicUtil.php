@@ -323,17 +323,17 @@ trait BasicUtil
 
 
         $user->top_sub_services = SubService::withCount([
-                'bookingSubServices as all_sales_count' => function ($query) use ($user) {
-                    $query->whereHas('booking', function ($query) use ($user) {
-                        $query
-                            ->where("bookings.customer_id", $user->id)
-                            ->where('bookings.status', 'converted_to_job') // Filter for converted bookings
-                            ->when(auth()->user()->hasRole("business_experts"), function ($query) {
-                                $query->where('bookings.expert_id', auth()->user()->id);
-                            }); // Sales this month
-                    });
-                }
-            ])
+            'bookingSubServices as all_sales_count' => function ($query) use ($user) {
+                $query->whereHas('booking', function ($query) use ($user) {
+                    $query
+                        ->where("bookings.customer_id", $user->id)
+                        ->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+                        ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                            $query->where('bookings.expert_id', auth()->user()->id);
+                        }); // Sales this month
+                });
+            }
+        ])
             ->with(['booking' => function ($query) {
                 $query->with(['expert' => function ($query) {
                     $query->select('users.id', 'users.first_Name', 'users.last_Name'); // Select expert details
@@ -543,7 +543,7 @@ trait BasicUtil
         return $timeFormat;
     }
 
-    public function validateBookingSlots($businessSetting,$id, $customer_id, $slots, $date, $expert_id, $total_time)
+    public function validateBookingSlots($businessSetting, $id, $customer_id, $slots, $date, $expert_id, $total_time)
     {
 
 
@@ -631,62 +631,90 @@ trait BasicUtil
     }
 
 
-    public function processSlots($businessSetting, $slots)
-{
-    // Step 1: Sort slots by time
-    usort($slots, function ($a, $b) {
-        return strtotime($a) - strtotime($b);
-    });
+    public function processSlots($slot_duration, $slots)
+    {
+        // Step 1: Sort slots by time
+        usort($slots, function ($a, $b) {
+            return strtotime($a) - strtotime($b);
+        });
 
-    $groups = [];
-    $currentGroup = [];
+        $groups = [];
+        $currentGroup = [];
 
-    foreach ($slots as $slot) {
-        if (empty($currentGroup)) {
-            // Start a new group with the first slot
-            $currentGroup[] = $slot;
-        } else {
-            // Calculate the difference in minutes from the last slot in the current group
-            $lastSlotTime = strtotime(end($currentGroup));
-            $currentSlotTime = strtotime($slot);
-            $diffInMinutes = ($currentSlotTime - $lastSlotTime) / 60;
-
-            if ($diffInMinutes == $businessSetting->slot_duration) {
-                // If the difference is exactly 15 minutes, add to the current group
+        foreach ($slots as $slot) {
+            if (empty($currentGroup)) {
+                // Start a new group with the first slot
                 $currentGroup[] = $slot;
             } else {
-                // If the difference is not 15 minutes, throw an error
-                throw new Exception("Slots must be continuous in ".$businessSetting->slot_duration."-minute intervals. Invalid interval between '$lastSlotTime' and '$currentSlotTime'.");
+                // Calculate the difference in minutes from the last slot in the current group
+                $lastSlotTime = strtotime(end($currentGroup));
+                $currentSlotTime = strtotime($slot);
+                $diffInMinutes = ($currentSlotTime - $lastSlotTime) / 60;
+
+                if ($diffInMinutes == $slot_duration) {
+                    // If the difference is exactly 15 minutes, add to the current group
+                    $currentGroup[] = $slot;
+                } else {
+                    // If the difference is not 15 minutes, throw an error
+                    throw new Exception("Slots must be continuous in " . $slot_duration . "-minute intervals. Invalid interval between '$lastSlotTime' and '$currentSlotTime'.");
+                }
             }
+        }
+
+        // Add the last group's start and end times if it's not empty
+        if (!empty($currentGroup)) {
+            // Get the next 15-minute increment after the last slot for the end time
+            $lastSlotTime = strtotime(end($currentGroup));
+            $endTime = $this->getNext15MinuteInterval($slot_duration, $lastSlotTime);
+
+            $groups[] = [
+                'start_time' => $currentGroup[0],
+                'end_time' => $endTime
+            ];
+        }
+
+        return $groups;
+    }
+
+    public function generateSlots($slot_duration,$startTime, $endTime)
+{
+    $slots = [];
+
+    // Convert start and end times to timestamps
+    $currentSlotTime = strtotime($startTime);
+    $endSlotTime = strtotime($endTime);
+
+    while ($currentSlotTime < $endSlotTime) {
+        // Format the current slot time
+        $slotStart = date("H:i", $currentSlotTime);
+
+        // Calculate the end time for this slot by adding the slot duration
+        $currentSlotTime += $slot_duration * 60;
+        $slotEnd = date("H:i", $currentSlotTime);
+
+        if ($currentSlotTime <= $endSlotTime) {
+            // Add this slot to the slots array
+            $slots[] = [
+                'start_time' => $slotStart,
+                'end_time' => $slotEnd,
+            ];
         }
     }
 
-    // Add the last group's start and end times if it's not empty
-    if (!empty($currentGroup)) {
-        // Get the next 15-minute increment after the last slot for the end time
-        $lastSlotTime = strtotime(end($currentGroup));
-        $endTime = $this->getNext15MinuteInterval($businessSetting, $lastSlotTime);
+    return $slots;
+}
 
-        $groups[] = [
-            'start_time' => $currentGroup[0],
-            'end_time' => $endTime
-        ];
+    private function getNext15MinuteInterval($slot_duration, $time)
+    {
+        // Round up the given time to the next 15-minute increment
+        $minutes = (int)date('i', $time);
+        $roundedMinutes = ceil($minutes / $slot_duration) * $slot_duration;
+
+        // Set the next 15-minute mark
+        $nextTime = strtotime(date('Y-m-d H:', $time) . str_pad($roundedMinutes, 2, '0', STR_PAD_LEFT));
+
+        return date('g:i A', $nextTime); // Format to a readable time format like "10:30 AM"
     }
-
-    return $groups;
-}
-
-private function getNext15MinuteInterval($businessSetting,$time)
-{
-    // Round up the given time to the next 15-minute increment
-    $minutes = (int)date('i', $time);
-    $roundedMinutes = ceil($minutes / $businessSetting->slot_duration) * $businessSetting->slot_duration;
-
-    // Set the next 15-minute mark
-    $nextTime = strtotime(date('Y-m-d H:', $time) . str_pad($roundedMinutes, 2, '0', STR_PAD_LEFT));
-
-    return date('g:i A', $nextTime); // Format to a readable time format like "10:30 AM"
-}
 
     public function calculate_vat($total_price, $business_id)
     {
@@ -815,13 +843,4 @@ private function getNext15MinuteInterval($businessSetting,$time)
             }
         }
     }
-
-
-
-
-
-
-
-
-
 }
