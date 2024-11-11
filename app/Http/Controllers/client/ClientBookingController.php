@@ -218,6 +218,8 @@ class ClientBookingController extends Controller
                 $booking->start_time = $processedSlotInformation[0]["start_time"];
                 $booking->end_time = $processedSlotInformation[0]["end_time"];
 
+                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->start_time, $booking->end_time);
+
 
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([
@@ -787,6 +789,8 @@ class ClientBookingController extends Controller
                 }
                 $booking->start_time = $processedSlotInformation[0]["start_time"];
                 $booking->end_time = $processedSlotInformation[0]["end_time"];
+
+                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->start_time, $booking->end_time);
 
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([

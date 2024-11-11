@@ -792,12 +792,11 @@ class JobBidController extends Controller
                     ], 401);
                 }
 
-                $date = Carbon::createFromFormat('Y-m-d', $request_data["job_start_date"]);
-                $dayOfWeek = $date->dayOfWeek; // 6 (0 for Sunday, 1 for Monday, 2 for Tuesday, etc.)
 
 
 
-                    $this->validateGarageTimes($request_data["garage_id"], $dayOfWeek, $request_data["job_start_time"], $request_data["job_end_time"]);
+
+                    $this->validateGarageTimes($request_data["garage_id"],$request_data["job_start_date"], $request_data["job_start_time"], $request_data["job_end_time"]);
                     // Proceed with your logic
 
 

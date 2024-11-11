@@ -812,8 +812,10 @@ trait BasicUtil
     }
 
 
-    public function validateGarageTimes($garage_id, $dayOfWeek, $job_start_time, $job_end_time = null)
+    public function validateGarageTimes($garage_id,$job_start_date, $job_start_time, $job_end_time = null)
     {
+        $date = Carbon::createFromFormat('Y-m-d', $job_start_date);
+        $dayOfWeek = $date->dayOfWeek; // 6 (0 for Sunday, 1 for Monday, 2 for Tuesday, etc.)
         $garage_time = GarageTime::where([
             "garage_id" => $garage_id
         ])
@@ -831,7 +833,7 @@ trait BasicUtil
         $closingTime = Carbon::parse($garage_time->closing_time);
 
         if ($jobStartTime->lessThan($openingTime) || $jobStartTime->greaterThanOrEqualTo($closingTime)) {
-            throw new Exception('The job start time is outside of garage operating hours.', 401);
+            throw new Exception('The start time is outside of the salon operating hours.', 401);
         }
 
         if ($job_end_time) {
@@ -839,7 +841,7 @@ trait BasicUtil
             $jobEndTime = Carbon::parse($jobEndTime);
 
             if ($jobEndTime->lessThan($openingTime) || $jobEndTime->greaterThanOrEqualTo($closingTime)) {
-                throw new Exception('The job end time is outside of garage operating hours.', 401);
+                throw new Exception('The end time is outside of the salon operating hours.', 401);
             }
         }
     }

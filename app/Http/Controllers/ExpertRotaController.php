@@ -194,6 +194,7 @@ class ExpertRotaController extends Controller
                 if(!empty($processedSlotInformation)) {
 
                     foreach($processedSlotInformation as $slot) {
+                        $this->validateGarageTimes($expert_rota->business_id,$expert_rota->date, $slot["start_time"], $slot["end_time"]);
                         ExpertRotaTime::create(
                             [
                                 "expert_rota_id" => $expert_rota->id,
@@ -316,6 +317,9 @@ class ExpertRotaController extends Controller
                     ])
                     ->delete();
                     foreach($processedSlotInformation as $slot) {
+
+                        $this->validateGarageTimes($expert_rota->business_id,$expert_rota->date, $slot["start_time"], $slot["end_time"]);
+
                         ExpertRotaTime::create(
                             [
                                 "expert_rota_id" => $expert_rota->id,
