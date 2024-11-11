@@ -15,6 +15,8 @@ class CreateCouponSubServicesTable extends Migration
     {
         Schema::create('coupon_sub_services', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('coupon_id')->constrained("coupons")->onDelete('cascade');
+            $table->foreignId('sub_service_id')->constrained("sub_services")->onDelete('cascade');
             $table->timestamps();
         });
     }

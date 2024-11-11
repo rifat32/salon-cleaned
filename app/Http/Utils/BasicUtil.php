@@ -825,7 +825,7 @@ trait BasicUtil
             ->first();
 
         if (empty($garage_time)) {
-            throw new Exception("Garage is not open on this day.");
+            throw new Exception("The salon is not open on this day.",401);
         }
 
         $jobStartTime = Carbon::createFromFormat('H:i', $job_start_time)->format('H:i:s');

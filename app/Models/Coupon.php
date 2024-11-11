@@ -24,7 +24,10 @@ class Coupon extends Model
         "is_active",
     ];
 
-
+    public function sub_services()
+    {
+        return $this->belongsToMany(SubService::class, 'coupon_sub_services','coupon_id','sub_service_id');
+    }
 
 
 }

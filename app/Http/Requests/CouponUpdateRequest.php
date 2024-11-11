@@ -38,8 +38,8 @@ class CouponUpdateRequest extends FormRequest
             "coupon_end_date"=>"required|date",
             "is_auto_apply"=>"required|boolean",
             "is_active"=>"required|boolean",
-            // "sub_service_ids" => "required|array",
-            // "sub_service_ids.*" => "numeric|exists:sub_services,id",
+            "sub_service_ids" => "required|array",
+            "sub_service_ids.*" => "numeric|exists:sub_services,id",
         ];
     }
 }

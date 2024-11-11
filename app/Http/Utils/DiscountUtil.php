@@ -2,6 +2,7 @@
 
 namespace App\Http\Utils;
 
+use App\Models\BookingSubService;
 use App\Models\Coupon;
 use Carbon\Carbon;
 use Exception;
@@ -10,41 +11,46 @@ use Illuminate\Support\Facades\DB;
 trait DiscountUtil
 {
 
-    public function applyCoupon($request_data, $total_price, $booking)
+    public function applyCoupon($request_data, $total_price, $booking, $coupon)
     {
-        if (empty($request_data["coupon_code"])) {
+        if (empty($request_data["coupon_code"]) || empty($coupon)) {
             return $booking; // No coupon to process
         }
+ // Increment customer redemptions for the coupon
+ Coupon::where([
+    "code" => $booking->coupon_code,
+    "garage_id" => $booking->garage_id
+])->update([
+    "customer_redemptions" => DB::raw("customer_redemptions + 1")
+]);
 
-        $coupon_discount = $this->getCouponDiscount(
-            $request_data["garage_id"],
-            $request_data["coupon_code"],
-            $total_price
-        );
+        $discount_type = $coupon->discount_type;
+        $discount_amount = $coupon->discount_amount;
+        if($coupon->discount_type == "fixed") {
+            $booking->coupon_type = $discount_type;
+            $booking->coupon_amount = $discount_amount;
+        } else if ($coupon->discount_type == "percentage") {
+            $coupon_sub_service_ids = $coupon->sub_services->pluck("id");
+             $booking_sub_services = BookingSubService::where([
+                 "booking_id" => $booking->id
+             ])->get();
 
-        if ($coupon_discount["success"]) {
-            $booking->coupon_discount_type = $coupon_discount["discount_type"];
-            $booking->coupon_discount_amount = $coupon_discount["discount_amount"];
-            $booking->coupon_code = $request_data["coupon_code"];
-            $booking->save();
+           foreach($booking_sub_services as $booking_sub_service){
 
-            // Increment customer redemptions for the coupon
-            Coupon::where([
-                "code" => $booking->coupon_code,
-                "garage_id" => $booking->garage_id
-            ])->update([
-                "customer_redemptions" => DB::raw("customer_redemptions + 1")
-            ]);
-        } else {
-            $error = [
-                "message" => "The given data was invalid.",
-                "errors" => ["coupon_code" => [$coupon_discount["message"]]]
-            ];
-            throw new Exception(json_encode($error), 422);
+            }
+
         }
+
+        $booking->coupon_code = $request_data["coupon_code"];
+        $booking->save();
+
+
 
         return $booking;
     }
+
+
+
     // this function do all the task and returns transaction id or -1
     public function getCouponDiscount($garage_id,$code,$amount)
     {
@@ -55,47 +61,41 @@ trait DiscountUtil
             "is_active" => 1,
 
         ])
-
         // ->where('coupon_start_date', '<=', Carbon::now()->subDay())
         // ->where('coupon_end_date', '>=', Carbon::now()->subDay())
         ->first();
 
-        if(!$coupon){
-         return [
-                "success" =>false,
-                "message" => "no coupon is found",
+        if (!$coupon) {
+            $error = [
+                "message" => "The given data was invalid.",
+                "errors" => ["coupon_code" => "no coupon is found"]
             ];
+            throw new Exception(json_encode($error), 422);
         }
-
 
         if(!empty($coupon->min_total) && ($coupon->min_total > $amount )){
-            return [
-                "success" =>false,
-                "message" => "minimim limit is " . $coupon->min_total,
+            $error = [
+                "message" => "The given data was invalid.",
+                "errors" => ["coupon_code" => "minimim limit is " . $coupon->min_total]
             ];
+            throw new Exception(json_encode($error), 422);
         }
         if(!empty($coupon->max_total) && ($coupon->max_total < $amount)){
-            return [
-                "success" =>false,
-                "message" => "maximum limit is " . $coupon->max_total,
+            $error = [
+                "message" => "The given data was invalid.",
+                "errors" => "maximum limit is " . $coupon->max_total
             ];
+            throw new Exception(json_encode($error), 422);
         }
 
         if(!empty($coupon->redemptions) && $coupon->redemptions == $coupon->customer_redemptions){
-            return [
-                "success" =>false,
-                "message" => "maximum people reached",
+            $error = [
+                "message" => "The given data was invalid.",
+                "errors" => "maximum people reached"
             ];
+            throw new Exception(json_encode($error), 422);
         }
-
-
-
-        return [
-            "success" =>true,
-            "discount_type" => $coupon->discount_type,
-            "discount_amount" => $coupon->discount_amount
-        ];
-
+        return $coupon;
 
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\GarageTimesUpdateRequest;
+use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\UserActivityUtil;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class GarageTimesController extends Controller
 {
-    use ErrorUtil,GarageUtil,UserActivityUtil;
+    use ErrorUtil,GarageUtil,UserActivityUtil,BasicUtil;
     /**
      *
      * @OA\Patch(

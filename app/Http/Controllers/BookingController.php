@@ -610,7 +610,16 @@ class BookingController extends Controller
             $booking->price = $total_price;
             $booking->save();
 
-            $booking = $this->applyCoupon($request_data, $total_price, $booking);
+
+            if (!empty($request_data["coupon_code"])) {
+                $coupon = $this->getCouponDiscount(
+                    $request_data["garage_id"],
+                    $request_data["coupon_code"],
+                    $total_price
+                );
+            }
+            $booking = $this->applyCoupon($request_data, $total_price, $booking, $coupon);
+
 
             $booking->final_price = $booking->price;
 
@@ -621,7 +630,6 @@ class BookingController extends Controller
             $vat_information = $this->calculate_vat(
                 $booking->final_price,
                 $booking->garage_id,
-
             );
 
             $booking->vat_percentage = $vat_information["vat_percentage"];
