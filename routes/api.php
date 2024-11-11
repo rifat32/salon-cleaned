@@ -52,6 +52,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Models\GaragePackage;
 use App\Models\JobBid;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
@@ -1279,6 +1280,8 @@ Route::middleware(['auth:api'])->group(function () {
 Route::get('/v1.0/client/blocked-slots/{expert_id}', [ClientBookingController::class, "getBlockedSlotsClient"]);
 
 Route::get('/v1.0/client/blocked-dates', [ClientBookingController::class, "getBlockedDatesClient"]);
+
+
 Route::post('/v1.0/hold-slot', [ClientBookingController::class, 'holdSlot']);
 Route::put('/v1.0/release-slot', [ClientBookingController::class, 'releaseSlot']);
 

@@ -120,5 +120,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(Booking::class, 'expert_id', 'id');
     }
-
+    public function expert_feedbacks()
+    {
+        return $this->hasManyThrough(ReviewNew::class, Booking::class, 'expert_id', 'booking_id', 'id', 'id');
+    }
 }

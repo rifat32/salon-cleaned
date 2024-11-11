@@ -209,6 +209,15 @@ class ClientBookingController extends Controller
                     return response()->json($slotValidation, 422);
                 }
 
+                $processedSlotInformation =  $this->processSlots($businessSetting,$request["booked_slots"]);
+                if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
+                    // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
+                    throw new Exception("Slots must be continuous");
+                }
+
+                $booking->start_time = $processedSlotInformation[0]["start_time"];
+                $booking->end_time = $processedSlotInformation[0]["end_time"];
+
 
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([
@@ -763,6 +772,7 @@ class ClientBookingController extends Controller
                     ]);
                 }
 
+                $businessSetting = $this->get_business_setting($booking->garage_id);
                 // $slotValidation =  $this->validateBookingSlots($booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
                 // if ($slotValidation['status'] === 'error') {
@@ -770,6 +780,14 @@ class ClientBookingController extends Controller
                 //     return response()->json($slotValidation, 422);
                 // }
 
+                $processedSlotInformation =  $this->processSlots($businessSetting,$booking->booked_slots);
+                if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
+                    // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
+                    throw new Exception("Slots must be continuous");
+                }
+                $booking->start_time = $processedSlotInformation[0]["start_time"];
+                $booking->end_time = $processedSlotInformation[0]["end_time"];
+                
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([
                         "garage_id" => $booking->garage_id,

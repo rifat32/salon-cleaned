@@ -1938,6 +1938,7 @@ class DashboardManagementController extends Controller
 
         return $data;
     }
+
     public function getBookedSlots($range)
     {
         $dateRange = $this->getDateRange($range);
@@ -2206,7 +2207,6 @@ class DashboardManagementController extends Controller
             $data["top_services"] = $this->getTopServices(request()->input("top_services_date_filter"));
 
             $data["busy_slots"] = $this->getBusySlots(request()->input("busy_slots_date"));
-
 
             $data["booked_slots"] = $this->getBookedSlots(request()->input("blocked_slots_date"));
 
@@ -2547,11 +2547,7 @@ class DashboardManagementController extends Controller
                 ])
                 ->with([
                     "translation",
-                    "feedbacks" => function ($query) {
-                        $query->whereHas("booking", function ($query) {
-                            $query->where("bookings.garage_id", auth()->user()->business_id);
-                        });
-                    }
+                    "expert_feedbacks" 
                 ])
                 ->where("users.is_active", 1)
                 ->when($request->hasAny([

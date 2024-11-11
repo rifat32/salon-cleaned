@@ -1533,7 +1533,7 @@ class UserManagementController extends Controller
         try{
             $this->storeActivity($request,"");
 
-            $usersQuery = User::with("translation")
+            $usersQuery = User::with("translation","expert_feedbacks")
             ->
             whereHas('roles', function($query) {
                 $query->where('roles.name', 'business_experts');

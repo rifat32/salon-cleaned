@@ -651,12 +651,12 @@ trait BasicUtil
             $currentSlotTime = strtotime($slot);
             $diffInMinutes = ($currentSlotTime - $lastSlotTime) / 60;
 
-            if ($diffInMinutes == 15) {
+            if ($diffInMinutes == $businessSetting->slot_duration) {
                 // If the difference is exactly 15 minutes, add to the current group
                 $currentGroup[] = $slot;
             } else {
                 // If the difference is not 15 minutes, throw an error
-                throw new Exception("Slots must be continuous in 15-minute intervals. Invalid interval between '$lastSlotTime' and '$currentSlotTime'.");
+                throw new Exception("Slots must be continuous in ".$businessSetting->slot_duration."-minute intervals. Invalid interval between '$lastSlotTime' and '$currentSlotTime'.");
             }
         }
     }
@@ -665,22 +665,22 @@ trait BasicUtil
     if (!empty($currentGroup)) {
         // Get the next 15-minute increment after the last slot for the end time
         $lastSlotTime = strtotime(end($currentGroup));
-        $endTime = $this->getNext15MinuteInterval($lastSlotTime);
+        $endTime = $this->getNext15MinuteInterval($businessSetting, $lastSlotTime);
 
         $groups[] = [
-            'start' => $currentGroup[0],
-            'end' => $endTime
+            'start_time' => $currentGroup[0],
+            'end_time' => $endTime
         ];
     }
 
     return $groups;
 }
 
-private function getNext15MinuteInterval($time)
+private function getNext15MinuteInterval($businessSetting,$time)
 {
     // Round up the given time to the next 15-minute increment
     $minutes = (int)date('i', $time);
-    $roundedMinutes = ceil($minutes / 15) * 15;
+    $roundedMinutes = ceil($minutes / $businessSetting->slot_duration) * $businessSetting->slot_duration;
 
     // Set the next 15-minute mark
     $nextTime = strtotime(date('Y-m-d H:', $time) . str_pad($roundedMinutes, 2, '0', STR_PAD_LEFT));

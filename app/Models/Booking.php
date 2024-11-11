@@ -9,10 +9,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Booking extends Model
 {
     use HasFactory,SoftDeletes;
+
     protected $appends = ['main_price']; // Append the main_price attribute
 
 
     protected $fillable = [
+        
+        "job_start_time",
+        "job_end_time",
 
 
         "receptionist_note",
@@ -102,6 +106,28 @@ class Booking extends Model
     public function booking_packages(){
         return $this->hasMany(BookingPackage::class,'booking_id', 'id');
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
