@@ -16,6 +16,10 @@ trait DiscountUtil
         if (empty($request_data["coupon_code"]) || empty($coupon)) {
             return $booking; // No coupon to process
         }
+        if ($request_data["coupon_code"] == $booking->coupon_code) {
+            return $booking; // No coupon to process
+        }
+
  // Increment customer redemptions for the coupon
  Coupon::where([
     "code" => $booking->coupon_code,
@@ -30,14 +34,30 @@ trait DiscountUtil
             $booking->coupon_type = $discount_type;
             $booking->coupon_amount = $discount_amount;
         } else if ($coupon->discount_type == "percentage") {
+
+
             $coupon_sub_service_ids = $coupon->sub_services->pluck("id");
              $booking_sub_services = BookingSubService::where([
                  "booking_id" => $booking->id
              ])->get();
 
-           foreach($booking_sub_services as $booking_sub_service){
+             $total_discount = 0;
 
+             foreach ($booking_sub_services as $booking_sub_service) {
+                if ($coupon_sub_service_ids->contains($booking_sub_service->sub_service_id)) {
+                    // Apply discount logic here
+                    // For example, add a discount to the booking or modify booking_sub_service
+                    $discount_amount = $this->canculate_discount_amount($booking_sub_service->price, "percentage",$coupon->discount_amount);
+
+                    $booking_sub_service->discount_percentage =   $coupon->discount_amount;
+                    $booking_sub_service->discounted_price_to_show = $booking_sub_service->price - $discount_amount;
+
+                    $booking_sub_service->save();
+                    $total_discount += $discount_amount;
+                }
             }
+            $booking->coupon_type = "fixed";
+            $booking->coupon_amount = $total_discount;
 
         }
 
@@ -147,7 +167,20 @@ trait DiscountUtil
     }
 
 
-
+    public function canculate_discount_amount($total_price, $discount_type, $discount_amount)
+    {
+        if (!empty($discount_type) && !empty($discount_amount)) {
+            if ($discount_type == "fixed") {
+                return $discount_amount;
+            } else if ($discount_type == "percentage") {
+                return ($total_price / 100) * $discount_amount;
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    }
 
 
 }

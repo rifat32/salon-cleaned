@@ -14,11 +14,8 @@ class Booking extends Model
 
 
     protected $fillable = [
-        
         "job_start_time",
         "job_end_time",
-
-
         "receptionist_note",
         "expert_note",
         "booking_type",
@@ -46,6 +43,7 @@ class Booking extends Model
         "created_from",
         'booking_from'
     ];
+
       protected $casts = [
         'booked_slots' => 'array',
       ];
@@ -106,32 +104,6 @@ class Booking extends Model
     public function booking_packages(){
         return $this->hasMany(BookingPackage::class,'booking_id', 'id');
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

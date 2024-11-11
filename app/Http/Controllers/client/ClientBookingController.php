@@ -248,7 +248,14 @@ class ClientBookingController extends Controller
                 $booking->price = $total_price;
                 $booking->save();
 
-                $booking = $this->applyCoupon($request_data, $total_price, $booking);
+                if (!empty($request_data["coupon_code"])) {
+                    $coupon = $this->getCouponDiscount(
+                        $request_data["garage_id"],
+                        $request_data["coupon_code"],
+                        $total_price
+                    );
+                }
+                $booking = $this->applyCoupon($request_data, $total_price, $booking, $coupon);
 
                 $booking->final_price = $booking->price;
                 $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);

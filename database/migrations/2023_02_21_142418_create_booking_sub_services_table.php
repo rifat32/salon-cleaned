@@ -23,6 +23,8 @@ class CreateBookingSubServicesTable extends Migration
 
             $table->double("price")->default(0);
 
+            $table->double('discount_percentage')->nullable();
+            $table->double('discounted_price_to_show')->nullable();
 
             // $table->string("coupon_discount_type")->nullable();
             // $table->double("coupon_discount")->nullable();
