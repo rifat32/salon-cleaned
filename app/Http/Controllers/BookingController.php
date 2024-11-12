@@ -2873,7 +2873,7 @@ class BookingController extends Controller
                 "garage",
                 "expert",
                 "payments",
-                "feedbacks"
+             "feedbacks.value"
             )
                 ->where([
                     "garage_id" => $garage_id,
