@@ -2194,6 +2194,10 @@ class BookingController extends Controller
             }
             $businessSetting = $this->get_business_setting(auth()->user()->business_id);
 
+            $dateRange = $this->getDateRange($request->date_filter);
+            $start = $dateRange['start'];
+            $end = $dateRange['end'];
+
             $users = User::withCount([
                     'bookings as completed_booking_count' => function ($query) {
                         $query
@@ -2209,6 +2213,7 @@ class BookingController extends Controller
                 ])
                 ->with([
                     "completedBookings.expert",
+                    "completedBookings.feedbacks",
                     "feedbacks" => function($query) {
                         $query->whereHas("booking", function($query) {
                               $query->where("bookings.garage_id",auth()->user()->business_id);
@@ -2282,7 +2287,7 @@ class BookingController extends Controller
                     });
                 })
 
-                ->whereHas("bookings", function ($query) use ($request,$businessSetting) {
+                ->whereHas("bookings", function ($query) use ($request,$businessSetting,$start,$end) {
                     $query->where("bookings.garage_id", auth()->user()->business_id)
 
                         ->when(request()->filled("expert_id"), function ($query) {
@@ -2345,31 +2350,10 @@ class BookingController extends Controller
                             $booking_typeArray = explode(',', $request->booking_type);
                             $query->whereIn("booking_type", $booking_typeArray);
                         })
-
-                        ->when($request->date_filter === 'today', function ($query) {
-                            return $query->whereDate('bookings.job_start_date', Carbon::today());
+                        ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                            $query->whereBetween('bookings.job_start_date', [$start, $end]);
                         })
-                        ->when($request->date_filter === 'this_week', function ($query) {
-                            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-                        })
-                        ->when($request->date_filter === 'previous_week', function ($query) {
-                            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-                        })
-                        ->when($request->date_filter === 'next_week', function ($query) {
-                            return $query->whereBetween('bookings.job_start_date', [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()]);
-                        })
-                        ->when($request->date_filter === 'this_month', function ($query) {
-                            return $query->whereMonth('bookings.job_start_date', Carbon::now()->month)
-                                ->whereYear('bookings.job_start_date', Carbon::now()->year);
-                        })
-                        ->when($request->date_filter === 'previous_month', function ($query) {
-                            return $query->whereMonth('bookings.job_start_date', Carbon::now()->subMonth()->month)
-                                ->whereYear('bookings.job_start_date', Carbon::now()->subMonth()->year);
-                        })
-                        ->when($request->date_filter === 'next_month', function ($query) {
-                            return $query->whereMonth('bookings.job_start_date', Carbon::now()->addMonth()->month)
-                                ->whereYear('bookings.job_start_date', Carbon::now()->addMonth()->year);
-                        });
+                      ;
                 })
                 ->when(!empty($request->name), function ($query) use ($request) {
                     $name = $request->name;
