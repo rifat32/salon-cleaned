@@ -1761,6 +1761,57 @@ class DashboardManagementController extends Controller
         return $counts;
     }
 
+    public function bookingsByStatusCountDateWise($range = 'today', $expert_id = NULL)
+    {
+        $dateRange = $this->getDateRange($range);
+        $start = $dateRange['start'];
+        $end = $dateRange['end'];
+        $statuses = [
+            "all",
+            "pending",
+            "confirmed",
+            "check_in",
+            "rejected_by_client",
+            "rejected_by_garage_owner",
+            "arrived",
+            "converted_to_job"
+        ];
+
+        $counts = [];
+
+        foreach ($statuses as $status) {
+            $bookings = $this->bookings($range)
+                ->where("garage_id", auth()->user()->business_id)
+                ->when($status != "all", function ($query) use ($status) {
+                    $query->where('status', $status);
+                })
+                ->when(!empty($expert_id), function ($query) use ($expert_id) {
+                    $query->where('expert_id', $expert_id);
+                })
+                ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                    $query->where('bookings.expert_id', auth()->user()->id);
+                })
+                ->get();
+
+           // Group bookings by their booking date
+        $groupedByDate = $bookings->groupBy(function($booking) {
+            return $booking->job_start_date; // Group by the formatted date (Y-m-d)
+        });
+
+        // Populate the counts array where the date is the key and statuses are nested under that date
+        foreach ($groupedByDate as $date => $bookingsOnDate) {
+            if (!isset($counts[$date])) {
+                $counts[$date] = [];
+            }
+            // Initialize each status count for the date
+            $counts[$date][$status] = $bookingsOnDate->count();
+        }
+
+        }
+
+        return $counts;
+    }
+
     public function bookingsByStatus($range = 'today', $expert_id = NULL)
     {
         $statuses = [
@@ -1954,6 +2005,27 @@ class DashboardManagementController extends Controller
 
         return $data;
     }
+    public function getBookingDistribution($range)
+    {
+        $dateRange = $this->getDateRange($range);
+        $start = $dateRange['start'];
+        $end = $dateRange['end'];
+
+        $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
+            $data = collect($bookingTypes)->mapWithKeys(function ($bookingType) use($start,$end)  {
+                    return [
+                        $bookingType => Booking::where('booking_type', $bookingType)
+                            ->where('garage_id', auth()->user()->business_id)
+                            ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                                $query->whereBetween('bookings.job_start_date', [$start, $end]);
+                            })
+                            ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+                            ->count()
+                    ];
+                })->toArray();
+
+        return  $data;
+    }
     public function getCustomersByPeriod($period)
     {
 
@@ -1963,7 +2035,9 @@ class DashboardManagementController extends Controller
 
         $app_customers = User::where("users.is_walk_in_customer", 0)
             ->whereHas('bookings', function ($query) use ($start, $end) {
-                $query->whereBetween('bookings.job_start_date', [$start, $end])
+                $query ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                    $query->whereBetween('bookings.job_start_date', [$start, $end]);
+                })
                     ->where("garage_id", auth()->user()->business_id)
                     ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                         $query->where('bookings.expert_id', auth()->user()->id);
@@ -1974,7 +2048,9 @@ class DashboardManagementController extends Controller
 
         $walk_in_customers = User::where("users.is_walk_in_customer", 1) // Assuming is_walk_in_customer should be 1 for walk-in customers
             ->whereHas('bookings', function ($query) use ($start, $end) {
-                $query->whereBetween('bookings.job_start_date', [$start, $end])
+                $query ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                    $query->whereBetween('bookings.job_start_date', [$start, $end]);
+                })
                     ->where("garage_id", auth()->user()->business_id)
                     ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                         $query->where('bookings.expert_id', auth()->user()->id);
@@ -1984,7 +2060,9 @@ class DashboardManagementController extends Controller
             ->get();
 
         $repeated_customers =  User::whereHas('bookings', function ($query) use ($start, $end) {
-            $query->whereBetween('bookings.job_start_date', [$start, $end])
+            $query ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                $query->whereBetween('bookings.job_start_date', [$start, $end]);
+            })
                 ->where("garage_id", auth()->user()->business_id)
                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                     $query->where('bookings.expert_id', auth()->user()->id);
@@ -2000,14 +2078,35 @@ class DashboardManagementController extends Controller
             ->distinct()
             ->get();
 
+            $new_customers =  User::whereHas('bookings', function ($query) use ($start, $end) {
+                $query->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+                    $query->whereBetween('bookings.job_start_date', [$start, $end]);
+                })
+                    ->where("garage_id", auth()->user()->business_id)
+                    ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+                        $query->where('bookings.expert_id', auth()->user()->id);
+                    })
+                    ->whereIn('bookings.customer_id', function ($subquery) {
+                        $subquery->select('customer_id')
+                            ->from('bookings')
+                            ->groupBy('customer_id')
+                            ->having(DB::raw('COUNT(id)'), '=', 1);
+                    });
+            })
+
+                ->distinct()
+                ->get();
+
+
         // Return the results
         return [
             'app_customers' => $app_customers,
             'walk_in_customers' => $walk_in_customers,
             'repeated_customers' => $repeated_customers,
-
+            'new_customers' => $new_customers,
         ];
     }
+
 
     public function getRepeatedCustomers($period)
     {
@@ -2157,29 +2256,31 @@ class DashboardManagementController extends Controller
             $businessSetting = $this->get_business_setting(auth()->user()->business_id);
 
 
-            //           // Define validation rules for date filters
-            // $validator = Validator::make($request->all(), [
-            //     'customer_date_filter' => 'required|string',
-            //   //  'repeated_customer_date_filter' => 'required|string',
-            //     'booking_date_filter' => 'required|string',
-            //     'expert_booking_date_filter' => 'required|string',
-            //     'expert_revenue_date_filter' => 'required|string',
+                      // Define validation rules for date filters
+            $validator = Validator::make($request->all(), [
+                'customer_date_filter' => 'required|string',
+              //  'repeated_customer_date_filter' => 'required|string',
+                'booking_date_filter' => 'required|string',
+                'expert_booking_date_filter' => 'required|string',
+                'expert_revenue_date_filter' => 'required|string',
 
-            //     'revenue_date_filter' => 'required|string',
-            //     'top_services_date_filter' => 'required|string',
-            //     'busy_slots_date' => 'required|string',
-            //     'blocked_slots_date' => 'required|string',
-            // ], [
-            //     '*.required' => 'The :attribute field is required.',
-            //     '*.string' => 'The :attribute must be a valid string.'
-            // ]);
+                'revenue_date_filter' => 'required|string',
+                'top_services_date_filter' => 'required|string',
+                'busy_slots_date' => 'required|string',
+                'blocked_slots_date' => 'required|string',
+                'booking_distribution_date' => 'required|string',
 
-            // Check if validation fails and return errors
-            // if ($validator->fails()) {
-            //     return response()->json([
-            //         'errors' => $validator->errors()
-            //     ], 422);
-            // }
+            ], [
+                '*.required' => 'The :attribute field is required.',
+                '*.string' => 'The :attribute must be a valid string.'
+            ]);
+
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
 
             $data["today_available_experts"] = [];
             $today_remaining_slots = request()->input("today_remaining_slots");
@@ -2199,7 +2300,7 @@ class DashboardManagementController extends Controller
 
             // $data["repeated_customers"] = $this->getRepeatedCustomers(request()->input("repeated_customer_date_filter"));
 
-            $data["bookings"] = $this->bookingsByStatusCount(request()->input("booking_date_filter"));
+            $data["bookings"] = $this->bookingsByStatusCountDateWise(request()->input("booking_date_filter"));
 
             $data["revenue"] = $this->revenue(request()->input("revenue_date_filter"));
 
@@ -2209,6 +2310,12 @@ class DashboardManagementController extends Controller
             $data["busy_slots"] = $this->getBusySlots(request()->input("busy_slots_date"));
 
             $data["booked_slots"] = $this->getBookedSlots(request()->input("blocked_slots_date"));
+
+
+
+
+
+            $data["booking_distribution"] = $this->getBookingDistribution(request()->input("booking_distribution_date"));
 
 
             $expert_booking_date_filter = $this->getDateRange(request()->input("expert_booking_date_filter"));
@@ -2388,10 +2495,11 @@ class DashboardManagementController extends Controller
 
                 $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
 
-                $expert->booking_distribution = collect($bookingTypes)->mapWithKeys(function ($bookingType) {
+                $expert->booking_distribution = collect($bookingTypes)->mapWithKeys(function ($bookingType) use($expert) {
                     return [
                         $bookingType => Booking::where('booking_type', $bookingType)
                             ->where('garage_id', auth()->user()->business_id)
+                              ->where('expert_id', $expert->id)
                             ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
                             ->count()
                     ];
@@ -2547,7 +2655,7 @@ class DashboardManagementController extends Controller
                 ])
                 ->with([
                     "translation",
-                    "expert_feedbacks" 
+                    "expert_feedbacks"
                 ])
                 ->where("users.is_active", 1)
                 ->when($request->hasAny([
@@ -2719,10 +2827,11 @@ class DashboardManagementController extends Controller
                     ->avg(DB::raw('JSON_LENGTH(booked_slots)')) * $businessSetting->slot_duration;
 
                 $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
-                $expert->booking_distribution = collect($bookingTypes)->mapWithKeys(function ($bookingType) {
+                $expert->booking_distribution = collect($bookingTypes)->mapWithKeys(function ($bookingType) use($expert) {
                     return [
                         $bookingType => Booking::where('booking_type', $bookingType)
                             ->where('garage_id', auth()->user()->business_id)
+                            ->where('expert_id', $expert->id)
                             ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
                             ->count()
                     ];

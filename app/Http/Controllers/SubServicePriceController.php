@@ -361,10 +361,10 @@ if ($existingPrice) {
  *      @OA\RequestBody(
  *         required=true,
  *         @OA\JsonContent(
+ *  * @OA\Property(property="expert_id", type="string", format="string", example="expert_id"),
  *             @OA\Property(property="sub_service_prices", type="array", @OA\Items(
  *                 @OA\Property(property="sub_service_id", type="string", format="string", example="sub_service_id"),
  *                 @OA\Property(property="price", type="string", format="string", example="price"),
- *                 @OA\Property(property="expert_id", type="string", format="string", example="expert_id"),
  *                 @OA\Property(property="description", type="string", format="string", example="description")
  *             )),
  *         ),
@@ -410,31 +410,18 @@ if ($existingPrice) {
                         "message" => "You cannot perform this action"
                     ], 401);
                 }
+                $request_data = $request->validated();
+
+                SubServicePrice::where([
+                    "business_id" => auth()->user()->business_id,
+                  "expert_id" => $request_data["expert_id"]
+                ])->delete();
 
                 $updatedPrices = [];
-                foreach ($request->sub_service_prices as $priceData) {
-                    $sub_service_price_query_params = [
-                        "id" => $priceData['id'],
-                        "business_id" => auth()->user()->business_id
-                    ];
-
-                    $sub_service_price = SubServicePrice::where($sub_service_price_query_params)->first();
-
-                    if ($sub_service_price) {
-                        // Fill the fields to be updated
-                        $sub_service_price->fill(collect($priceData)->only([
-                            "sub_service_id",
-                            "price",
-                            "expert_id",
-                            "description",
-                        ])->toArray());
-                        $sub_service_price->save();
-                        $updatedPrices[] = $sub_service_price; // Store the updated prices
-                    } else {
-                        return response()->json([
-                            "message" => "No sub service price found for ID {$priceData['id']}."
-                        ], 404);
-                    }
+                foreach ($request_data["sub_service_prices"] as $priceData) {
+                    $priceData["expert_id"] = $request_data["expert_id"];
+                    $priceData["business_id"] = auth()->user()->business_id;
+                    $updatedPrices[] =  SubServicePrice::create($priceData);
                 }
 
                 return response($updatedPrices, 200);

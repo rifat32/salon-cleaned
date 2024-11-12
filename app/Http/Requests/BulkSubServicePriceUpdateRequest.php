@@ -14,11 +14,10 @@ class BulkSubServicePriceUpdateRequest extends FormRequest
     public function rules()
     {
         return [
+            'expert_id' => 'required|numeric',
             'sub_service_prices' => 'required|array',
-            'sub_service_prices.*.id' => 'required|numeric',
             'sub_service_prices.*.sub_service_id' => 'required|numeric',
             'sub_service_prices.*.price' => 'required|numeric',
-            'sub_service_prices.*.expert_id' => 'required|numeric',
             'sub_service_prices.*.description' => 'nullable|string',
         ];
     }

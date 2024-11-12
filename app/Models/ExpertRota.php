@@ -25,7 +25,10 @@ class ExpertRota extends Model
     'busy_slots' => 'array',
   ];
 
-
+  public function rota_times()
+  {
+      return $this->hasMany(ExpertRotaTime::class, 'id','expert_rota_id');
+  }
 
 
 

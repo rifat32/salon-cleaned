@@ -1583,8 +1583,7 @@ return response()->json($response,200);
         return response()->json(['message' => 'Slots released successfully']);
     }
 
-
-    /**
+   /**
      *
      * @OA\Get(
      *      path="/v1.0/client/blocked-slots/{expert_id}",
@@ -1667,7 +1666,118 @@ return response()->json($response,200);
      *     )
      */
 
-    public function getBlockedSlotsClient($expert_id, Request $request)
+     public function getBlockedSlotsClient($expert_id, Request $request)
+     {
+         try {
+             $this->storeActivity($request, "");
+
+             if (!request()->filled("date")) {
+                 return response()->json([
+                     "message" => "Date field is required"
+                 ], 401);
+             }
+
+             $data = $this->blockedSlots(request()->input("date"), $expert_id);
+
+
+
+             // else {
+             //     return response()->json([
+             //             "message" => "No slots are available"
+             //     ], 400);
+             // }
+
+             return response()->json($data, 200);
+         } catch (Exception $e) {
+
+             return $this->sendError($e, 500, $request);
+         }
+     }
+
+    /**
+     *
+     * @OA\Get(
+     *      path="/v2.0/client/blocked-slots/{expert_id}",
+     *      operationId="getBlockedSlotsClientV2",
+     *      tags={"client.booking"},
+     *       security={
+     *           {"bearerAuth": {}}
+     *       },
+
+     *              @OA\Parameter(
+     *         name="perPage",
+     *         in="path",
+     *         description="perPage",
+     *         required=true,
+     *  example="6"
+     *      ),
+     *      *      * *  @OA\Parameter(
+     * name="status",
+     * in="query",
+     * description="status",
+     * required=true,
+     * example="pending"
+     * ),
+     *      * *  @OA\Parameter(
+     * name="start_date",
+     * in="query",
+     * description="start_date",
+     * required=true,
+     * example="2019-06-29"
+     * ),
+     * *  @OA\Parameter(
+     * name="end_date",
+     * in="query",
+     * description="end_date",
+     * required=true,
+     * example="2019-06-29"
+     * ),
+     * *  @OA\Parameter(
+     * name="search_key",
+     * in="query",
+     * description="search_key",
+     * required=true,
+     * example="search_key"
+     * ),
+     *      summary="This method is to get  bookings ",
+     *      description="This method is to get bookings",
+     *
+
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
+
+    public function getBlockedSlotsClientV2($expert_id, Request $request)
     {
         try {
             $this->storeActivity($request, "");
@@ -1678,7 +1788,8 @@ return response()->json($response,200);
                 ], 401);
             }
 
-            $data = $this->blockedSlots(request()->input("date"), $expert_id);
+
+            $data = $this->blockedSlotsV2(request()->input("date"), $expert_id);
 
 
 

@@ -847,7 +847,7 @@ class BookingController extends Controller
                     // Return an error response indicating that the status cannot be updated
                     return response()->json(["message" => "Unable to change the appointment status because it is already complete."], 422);
                 }
-                if ($request_data["status"] == "converted_to_job" && $booking->status != "check_in") {
+                if ($request_data["status"] == "converted_to_job" && ($booking->status != "check_in" && $booking->status != "converted_to_job")) {
                     return response()->json(["message" => "You cannot check out before check in."], 422);
                 }
                 if ($request_data["status"] == "check_in") {
@@ -1936,8 +1936,10 @@ class BookingController extends Controller
                 });
 
                 if (request()->boolean("includes_vat")) {
-                    $bookingQuery->whereNotNull('bookings.vat_amount') // vat_amount should not be null
-                    ->whereNotNull('bookings.vat_percentage'); // vat_percentage should not be null;
+                    $bookingQuery->whereNotNull('bookings.vat_amount')
+                                 ->where('bookings.vat_amount', '>', 0) // vat_amount should not be 0
+                                 ->whereNotNull('bookings.vat_percentage')
+                                 ->where('bookings.vat_percentage', '>', 0); // vat_percentage should not be 0
                 }
 
 

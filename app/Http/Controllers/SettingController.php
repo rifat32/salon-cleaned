@@ -269,7 +269,7 @@ if (!$busunessSetting) {
 /**
    *
    * @OA\Get(
-   *      path="/v1.0/client/business-settingss",
+   *      path="/v1.0/client/business-settings",
    *      operationId="getBusinessSettingsClient",
    *      tags={"setting"},
    *       security={

@@ -697,7 +697,7 @@ Route::get('/v1.0/notification-template-types', [NotificationTemplateController:
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 Route::patch('/v1.0/garage-times', [GarageTimesController::class, "updateGarageTimes"]);
-Route::get('/v1.0/garage-times/{garage_id}', [GarageTimesController::class, "getGarageTimes"]);
+
 
 
 
@@ -1145,7 +1145,7 @@ Route::delete('/v1.0/products/{id}', [ProductController::class, "deleteProductBy
 
 
 
-
+Route::get('/v1.0/garage-times/{garage_id}', [GarageTimesController::class, "getGarageTimes"]);
 
 // !!!!!!!@@@@@@@@@@@@$$$$$$$$$$$$%%%%%%%%%%%%%%%%^^^^^^^^^^
 // client routes
@@ -1278,6 +1278,7 @@ Route::middleware(['auth:api'])->group(function () {
 // booking management section
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 Route::get('/v1.0/client/blocked-slots/{expert_id}', [ClientBookingController::class, "getBlockedSlotsClient"]);
+Route::get('/v2.0/client/blocked-slots/{expert_id}', [ClientBookingController::class, "getBlockedSlotsClientV2"]);
 
 Route::get('/v1.0/client/blocked-dates', [ClientBookingController::class, "getBlockedDatesClient"]);
 

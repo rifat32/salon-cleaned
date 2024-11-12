@@ -186,10 +186,13 @@ class ExpertRotaController extends Controller
                     $expert_rota =  ExpertRota::create($request_data);
                 }
 
-                $businessSetting = $this->get_business_setting($booking->garage_id);
+                $businessSetting = $this->get_business_setting(auth()->user()->business_id);
                 $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration,$request_data["busy_slots"]);
 
-
+                ExpertRotaTime::where([
+                    "expert_rota_id" => $expert_rota->id,
+                ])
+                ->delete();
 
                 if(!empty($processedSlotInformation)) {
 
@@ -199,7 +202,7 @@ class ExpertRotaController extends Controller
                             [
                                 "expert_rota_id" => $expert_rota->id,
                                 "start_time" => $slot["start_time"],
-                                "end_time" => $slot["start_time"]
+                                "end_time" => $slot["end_time"]
                             ]
                         );
                     }
@@ -309,13 +312,13 @@ class ExpertRotaController extends Controller
                         "message" => "something went wrong."
                     ], 500);
                 }
-
+                ExpertRotaTime::where([
+                    "expert_rota_id" => $expert_rota->id,
+                ])
+                ->delete();
 
                 if(!empty($processedSlotInformation)) {
-                    ExpertRotaTime::where([
-                        "expert_rota_id" => $expert_rota->id,
-                    ])
-                    ->delete();
+
                     foreach($processedSlotInformation as $slot) {
 
                         $this->validateGarageTimes($expert_rota->business_id,$expert_rota->date, $slot["start_time"], $slot["end_time"]);
