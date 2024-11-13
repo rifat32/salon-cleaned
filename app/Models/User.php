@@ -23,6 +23,7 @@ class User extends Authenticatable
     protected $guard_name = "api";
     protected $fillable = [
         'joining_date',
+        'experience',
         'weekly_minimum_days',
         'weekly_minimum_hours',
         'first_Name',

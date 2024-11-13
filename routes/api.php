@@ -1008,6 +1008,7 @@ Route::get('/v1.0/data-collector-dashboard', [DashboardManagementController::cla
 Route::get('/v1.0/business-owner-dashboard', [DashboardManagementController::class, "getBusinessOwnerDashboardData"]);
 
 Route::get("/v1.0/expert-report",[DashboardManagementController::class, "getExpertReport"]);
+Route::get("/v2.0/expert-report",[DashboardManagementController::class, "getExpertReportV2"]);
 
 Route::get("/v1.0/vat-report",[DashboardManagementController::class, "getVatReport"]);
 
