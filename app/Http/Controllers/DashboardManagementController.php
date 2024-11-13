@@ -2301,6 +2301,7 @@ class DashboardManagementController extends Controller
             // $data["repeated_customers"] = $this->getRepeatedCustomers(request()->input("repeated_customer_date_filter"));
 
             $data["bookings"] = $this->bookingsByStatusCountDateWise(request()->input("booking_date_filter"));
+            $data["bookings_date_wise"] = $this->bookingsByStatusCount(request()->input("booking_date_filter"));
 
             $data["revenue"] = $this->revenue(request()->input("revenue_date_filter"));
 

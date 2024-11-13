@@ -1280,6 +1280,8 @@ Route::middleware(['auth:api'])->group(function () {
 Route::get('/v1.0/client/blocked-slots/{expert_id}', [ClientBookingController::class, "getBlockedSlotsClient"]);
 Route::get('/v2.0/client/blocked-slots/{expert_id}', [ClientBookingController::class, "getBlockedSlotsClientV2"]);
 
+
+
 Route::get('/v1.0/client/blocked-dates', [ClientBookingController::class, "getBlockedDatesClient"]);
 
 
