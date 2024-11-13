@@ -164,7 +164,9 @@ if (!$busunessSetting) {
         'default_language',
         'vat_enabled',
         'vat_percentage',
-        'vat_number'
+        'vat_number',
+
+        'slot_duration'
       ])->toArray());
       $busunessSetting->save();
 }

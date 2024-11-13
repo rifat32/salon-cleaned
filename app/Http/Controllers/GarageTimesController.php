@@ -191,16 +191,16 @@ class GarageTimesController extends Controller
     public function getGarageTimes($garage_id,Request $request) {
         try{
             $this->storeActivity($request,"");
-            if(!$request->user()->hasPermissionTo('garage_times_view')){
-                return response()->json([
-                   "message" => "You can not perform this action"
-                ],401);
-           }
-           if (!$this->garageOwnerCheck($garage_id)) {
-            return response()->json([
-                "message" => "you are not the owner of the garage or the requested garage does not exist."
-            ], 401);
-        }
+        //     if(!$request->user()->hasPermissionTo('garage_times_view')){
+        //         return response()->json([
+        //            "message" => "You can not perform this action"
+        //         ],401);
+        //    }
+        //    if (!$this->garageOwnerCheck($garage_id)) {
+        //     return response()->json([
+        //         "message" => "you are not the owner of the garage or the requested garage does not exist."
+        //     ], 401);
+        // }
 
             $garageTimes = GarageTime::where([
                 "garage_id" => $garage_id
