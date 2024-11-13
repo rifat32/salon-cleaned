@@ -2261,7 +2261,10 @@ class DashboardManagementController extends Controller
                 'customer_date_filter' => 'required|string',
               //  'repeated_customer_date_filter' => 'required|string',
                 'booking_date_filter' => 'required|string',
+                'booking_date_filter_date_wise' => 'required|string',
+
                 'expert_booking_date_filter' => 'required|string',
+
                 'expert_revenue_date_filter' => 'required|string',
 
                 'revenue_date_filter' => 'required|string',
@@ -2300,7 +2303,7 @@ class DashboardManagementController extends Controller
 
             // $data["repeated_customers"] = $this->getRepeatedCustomers(request()->input("repeated_customer_date_filter"));
 
-            $data["bookings_date_wise"] = $this->bookingsByStatusCountDateWise(request()->input("booking_date_filter"));
+            $data["bookings_date_wise"] = $this->bookingsByStatusCountDateWise(request()->input("booking_date_filter_date_wise"));
             $data["bookings"] = $this->bookingsByStatusCount(request()->input("booking_date_filter"));
 
             $data["revenue"] = $this->revenue(request()->input("revenue_date_filter"));
