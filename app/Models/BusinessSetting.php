@@ -13,7 +13,7 @@ class BusinessSetting extends Model
     protected $fillable = [
         "allow_receptionist_user_discount",
         "discount_percentage_limit",
-        
+
         "slot_duration",
         'STRIPE_KEY',
         "STRIPE_SECRET",
@@ -25,6 +25,7 @@ class BusinessSetting extends Model
         'allow_expert_booking',
         'allow_expert_self_busy',
         'allow_expert_booking_cancel',
+        'allow_expert_take_payment',
         'allow_expert_view_revenue',
         'allow_expert_view_customer_details',
         'allow_receptionist_add_question',

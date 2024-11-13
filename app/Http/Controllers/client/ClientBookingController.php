@@ -35,6 +35,7 @@ use App\Models\Notification;
 use App\Models\NotificationTemplate;
 use App\Models\PreBooking;
 use App\Models\BusinessSetting;
+use App\Models\ExpertRotaTime;
 use App\Models\SlotHold;
 use App\Models\SubService;
 use App\Models\User;
@@ -43,6 +44,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 class ClientBookingController extends Controller
 {
@@ -201,7 +203,7 @@ class ClientBookingController extends Controller
                     ]);
                 }
                 $businessSetting = $this->get_business_setting($booking->garage_id);
-                $slotValidation =  $this->validateBookingSlots($businessSetting,$booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
+                $slotValidation =  $this->validateBookingSlots($businessSetting, $booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
 
 
@@ -210,7 +212,7 @@ class ClientBookingController extends Controller
                     return response()->json($slotValidation, 422);
                 }
 
-                $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration,$request["booked_slots"]);
+                $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration, $request["booked_slots"]);
                 if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
                     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
                     throw new Exception("Slots must be continuous");
@@ -220,7 +222,7 @@ class ClientBookingController extends Controller
                 $booking->job_end_time = $processedSlotInformation[0]["end_time"];
 
 
-                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
+                $this->validateGarageTimes($booking->garage_id, $booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
 
 
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
@@ -268,7 +270,7 @@ class ClientBookingController extends Controller
                     $booking->coupon_discount_amount
                 );
 
-              $vat_information = $this->calculate_vat(
+                $vat_information = $this->calculate_vat(
                     $booking->final_price,
                     $booking->garage_id,
                 );
@@ -417,7 +419,7 @@ class ClientBookingController extends Controller
                     Mail::to(
                         $recipientEmails
                     )
-                    ->send(new BookingCreateMail($booking));
+                        ->send(new BookingCreateMail($booking));
                 }
                 $booking = $booking->load(["payments"]);
                 return response($booking, 201);
@@ -699,29 +701,29 @@ class ClientBookingController extends Controller
                         "conflicted_holidays" => $holidays
                     ], 409);
                 }
-           $booking = Booking::where(["id" => $request_data["id"]])->first();
+                $booking = Booking::where(["id" => $request_data["id"]])->first();
 
-           if (!$booking) {
-            return response()->json([
-                "message" => "booking not found"
-            ], 404);
-        }
-           if ($booking->status != "pending") {
-            // Return an error response indicating that the status cannot be updated
-            return response()->json(["message" => "only pending booking can be deleted"], 422);
-        }
+                if (!$booking) {
+                    return response()->json([
+                        "message" => "booking not found"
+                    ], 404);
+                }
+                if ($booking->status != "pending") {
+                    // Return an error response indicating that the status cannot be updated
+                    return response()->json(["message" => "only pending booking can be deleted"], 422);
+                }
 
 
 
-        $booking->fill(collect($request_data)->only([
-            "garage_id",
-            "additional_information",
-            'booking_from',
-            "coupon_code",
-            "expert_id",
-            "booked_slots",
-            "reason",
-        ])->toArray());
+                $booking->fill(collect($request_data)->only([
+                    "garage_id",
+                    "additional_information",
+                    'booking_from',
+                    "coupon_code",
+                    "expert_id",
+                    "booked_slots",
+                    "reason",
+                ])->toArray());
 
 
 
@@ -767,7 +769,7 @@ class ClientBookingController extends Controller
                 //     return response()->json($slotValidation, 422);
                 // }
 
-                $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration,$booking->booked_slots);
+                $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration, $booking->booked_slots);
                 if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
                     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
                     throw new Exception("Slots must be continuous");
@@ -775,7 +777,7 @@ class ClientBookingController extends Controller
                 $booking->job_start_time = $processedSlotInformation[0]["start_time"];
                 $booking->job_end_time = $processedSlotInformation[0]["end_time"];
 
-                $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
+                $this->validateGarageTimes($booking->garage_id, $booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
 
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([
@@ -926,7 +928,7 @@ class ClientBookingController extends Controller
 
 
                     if ($total_payable <= $total_payment) {
-                        if($total_payable < $total_payment) {
+                        if ($total_payable < $total_payment) {
                             JobPayment::create([
                                 "booking_id" => $booking->id,
                                 "payment_type" => "change",
@@ -941,11 +943,10 @@ class ClientBookingController extends Controller
                                 "payment_method" => "cash"
                             ]);
                     }
-
                 }
 
                 if (env("SEND_EMAIL") == true) {
-                     $recipientEmails = $this->getNotificationRecipients($booking);
+                    $recipientEmails = $this->getNotificationRecipients($booking);
                     Mail::to($recipientEmails)->send(new BookingUpdateMail($booking));
                 }
                 $booking = $booking->load(["payments"]);
@@ -1045,18 +1046,17 @@ class ClientBookingController extends Controller
     {
         try {
             $this->storeActivity($request, "");
-            $bookingQuery = Booking::
-            with(
-                "feedbacks",
-                "sub_services.translation",
-                "sub_services.service",
-                "sub_services.service.translation",
-                "booking_packages.garage_package",
-                "customer.translation",
-                "garage",
-                "expert.translation",
-                "payments",
-            )
+            $bookingQuery = Booking::with(
+                    "feedbacks",
+                    "sub_services.translation",
+                    "sub_services.service",
+                    "sub_services.service.translation",
+                    "booking_packages.garage_package",
+                    "customer.translation",
+                    "garage",
+                    "expert.translation",
+                    "payments",
+                )
                 ->where([
                     "customer_id" => $request->user()->id
                 ])
@@ -1212,22 +1212,20 @@ class ClientBookingController extends Controller
             }
 
             $slots = explode(',', request()->input("slots"));
-          // Get available experts
-$response = $this->getAvailableExperts(request()->input("date"), request()->input("business_id"), $slots);
+            // Get available experts
+            $response = $this->getAvailableExperts(request()->input("date"), request()->input("business_id"), $slots);
 
-if ($response['status'] === 'error') {
-    return response()->json($response, 422);
-}
+            if ($response['status'] === 'error') {
+                return response()->json($response, 422);
+            }
 
 
-return response()->json($response,200);
+            return response()->json($response, 200);
         } catch (Exception $e) {
 
             return $this->sendError($e, 500, $request);
         }
     }
-
-
     /**
      *
      * @OA\Get(
@@ -1325,7 +1323,7 @@ return response()->json($response,200);
                 $dates[] = Carbon::today()->addDays($i)->toDateString();
             }
             $experts = User::with("translation")
-            ->where("users.is_active",1)
+                ->where("users.is_active", 1)
                 ->when(request()->filled("expert_id"), function ($query) {
                     $query->where("users.id", request()->input("expert_id"));
                 })
@@ -1337,9 +1335,9 @@ return response()->json($response,200);
                 })
                 ->get();
 
-            $total_experts = $experts->count();
+            $total_experts_count = $experts->count();
 
-            $total_slots_in_one_day = $total_experts * 53;
+            $total_slots_in_one_day = $total_experts_count * 53;
 
             $total_busy_slots_in_day = collect();
 
@@ -1407,7 +1405,7 @@ return response()->json($response,200);
             return response()->json([
                 "available_dates" => $available_dates->toArray(),
                 "blocked_dates" => $blocked_dates->toArray(),
-                //   "total_experts" => $total_experts,
+                //   "total_experts_count" => $total_experts_count,
                 //   "total_slots_in_one_day" => $total_slots_in_one_day,
                 //  "total_busy_slots_in_day" => $total_busy_slots_in_day->toArray()
 
@@ -1418,7 +1416,238 @@ return response()->json($response,200);
         }
     }
 
-   /**
+    /**
+     *
+     * @OA\Get(
+     *      path="/v2.0/client/blocked-dates",
+     *      operationId="getBlockedDatesClientV2",
+     *      tags={"client.booking"},
+     *       security={
+     *           {"bearerAuth": {}}
+     *       },
+
+     *              @OA\Parameter(
+     *         name="expert_id",
+     *         in="query",
+     *         description="expert_id",
+     *         required=true,
+     *  example=""
+     *      ),
+
+     *      *      * *  @OA\Parameter(
+     * name="status",
+     * in="query",
+     * description="status",
+     * required=true,
+     * example=""
+     * ),
+     *      * *  @OA\Parameter(
+     * name="start_date",
+     * in="query",
+     * description="start_date",
+     * required=true,
+     * example=""
+     * ),
+     * *  @OA\Parameter(
+     * name="end_date",
+     * in="query",
+     * description="end_date",
+     * required=true,
+     * example=""
+     * ),
+     * *  @OA\Parameter(
+     * name="search_key",
+     * in="query",
+     * description="search_key",
+     * required=true,
+     * example=""
+     * ),
+     *      summary="This method is to get  bookings ",
+     *      description="This method is to get bookings",
+     *
+
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
+
+    public function getBlockedDatesClientV2(Request $request)
+    {
+        try {
+            $this->storeActivity($request, "");
+
+            $validator = Validator::make($request->all(), [
+
+
+                'business_id' => 'required|numeric|exists:businesses,id',
+
+            ], [
+                '*.required' => 'The :attribute field is required.',
+                '*.string' => 'The :attribute must be a valid string.'
+            ]);
+
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            $businessSetting = $this->get_business_setting(request()->input("business_id"));
+
+
+            $dates = [];
+            $available_dates = collect();
+            $blocked_dates = collect();
+            for ($i = 0; $i <= 30; $i++) {
+                $dates[] = Carbon::today()->addDays($i)->toDateString();
+            }
+            $experts = User::with("translation")
+                ->where("users.is_active", 1)
+                ->when(request()->filled("expert_id"), function ($query) {
+                    $query->where("users.id", request()->input("expert_id"));
+                })
+                ->whereHas('roles', function ($query) {
+                    $query->where('roles.name', 'business_experts');
+                })
+                ->when(request()->filled("business_id"), function ($query) {
+                    $query->where("business_id", request()->input("business_id"));
+                })
+                ->get();
+
+            $total_experts_count = $experts->count();
+
+
+
+
+
+            // Get all garage times for the specified business_id in one query
+            $garageTimes = GarageTime::where("garage_id", request()->input("business_id"))->get();
+
+            foreach ($dates as $date) {
+                $date = Carbon::parse($date);
+                $dayOfWeek = $date->dayOfWeek;
+
+                // Filter the collection for the current day of the week and check if it's not closed
+                $garage_time = $garageTimes->firstWhere('day', $dayOfWeek);
+
+                if (empty($garage_time) || $garage_time->is_closed) {
+                    $blocked_dates->push($date);
+                    continue;
+                }
+
+
+
+                // Parse opening and closing times for the garage on this day
+                $openingTime = Carbon::parse($garage_time->opening_time);
+                $closingTime = Carbon::parse($garage_time->closing_time);
+
+                // Calculate the total minutes from now until the closing time
+                $minutesUntilClose = Carbon::now()->diffInMinutes($closingTime);
+
+                // Get the highest time divisible by the slot duration
+                $highestDivisibleTime = floor($minutesUntilClose / $businessSetting->slot_duration) * $businessSetting->slot_duration;
+
+                // Check if the highest divisible time is 0 (i.e., no valid slot duration remaining)
+                if ($highestDivisibleTime === 0) {
+                    $blocked_dates->push($date);
+                    continue;
+                }
+                // Calculate the extra (remaining) time after the highest divisible time
+                $extraTime = $minutesUntilClose - $highestDivisibleTime;
+
+                // Add the extra time to the current time
+                $adjustedCurrentTime = Carbon::now()->addMinutes($extraTime);
+
+                $total_available_times = $total_experts_count * $highestDivisibleTime;
+                $total_busy_time = 0;
+
+                // $booking->booked_slots =  $this->generateSlots($businessSetting->slot_duration, $booking->job_start_time, $booking->job_end_time);
+
+                $expert_rota_times = ExpertRotaTime::whereHas("rota", function ($query) use ($date) {
+                    $query->when(request()->filled("expert_id"), function ($query) {
+                        $query->where("expert_rotas.expert_id", request()->input("expert_id"));
+                    })
+                        ->where('expert_rotas.is_active', 1)
+                        ->whereDate('expert_rotas.date', $date);
+                })
+                    ->where('end_time', '>', $adjustedCurrentTime)
+                    ->get();
+
+                $total_busy_time += $this->calculateTotalMinutes($expert_rota_times, "start_time", "end_time", $adjustedCurrentTime);
+
+
+                $bookings =  Booking::when(request()->filled("expert_id"), function ($query) {
+                    $query->where("expert_id", request()->input("expert_id"));
+                })
+                    ->when(request()->filled("business_id"), function ($query) {
+                        $query->where("garage_id", request()->input("business_id"));
+                    })
+                    ->whereDate('job_start_date', $date)
+                    ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+                    ->get();
+
+
+                $total_busy_time += $this->calculateTotalMinutes($bookings, "job_start_time", "job_end_time", $adjustedCurrentTime);
+                // $total_busy_slots_in_day->push([
+                //     "date" => $date,
+                //     "total_busy_slots" => $total_busy_slots
+                // ]);
+
+                if (($total_available_times - $total_busy_time) > ($businessSetting->slot_duration * $total_experts_count)) {
+                    $available_dates->push($date);
+                } else {
+                    $blocked_dates->push($date);
+                }
+            }
+
+            // Get all bookings for the provided date except the rejected ones
+
+
+
+            return response()->json([
+                "available_dates" => $available_dates->toArray(),
+                "blocked_dates" => $blocked_dates->toArray(),
+                //   "total_experts_count" => $total_experts_count,
+                //   "total_slots_in_one_day" => $total_slots_in_one_day,
+                //  "total_busy_slots_in_day" => $total_busy_slots_in_day->toArray()
+
+            ], 200);
+        } catch (Exception $e) {
+
+            return $this->sendError($e, 500, $request);
+        }
+    }
+
+    /**
      *
      * @OA\Post(
      *     path="/v1.0/hold-slot",
@@ -1489,16 +1718,16 @@ return response()->json($response,200);
         $request_data["customer_id"] = auth()->user()->id;
         $request_data["held_until"] = Carbon::now()->addSeconds(30);
 
-     // Delete all slots for the customer, including expired ones
-     SlotHold::where('customer_id', $request_data["customer_id"])
-     ->orWhere('held_until', '<=', Carbon::now())
-     ->delete();
+        // Delete all slots for the customer, including expired ones
+        SlotHold::where('customer_id', $request_data["customer_id"])
+            ->orWhere('held_until', '<=', Carbon::now())
+            ->delete();
 
 
 
 
         // Hold the slots for 90 seconds
-      $heldUntil =  SlotHold::create($request_data);
+        $heldUntil =  SlotHold::create($request_data);
 
         return response()->json(['message' => 'Slots held successfully', 'held_until' => $heldUntil]);
     }
@@ -1574,16 +1803,16 @@ return response()->json($response,200);
         $request_data["customer_id"] = auth()->user()->id;
         $request_data["held_until"] = Carbon::now()->addSeconds(90);
 
-     // Delete all slots for the customer, including expired ones
-     SlotHold::where('customer_id', $request_data["customer_id"])
-     ->orWhere('held_until', '<=', Carbon::now())
-     ->delete();
+        // Delete all slots for the customer, including expired ones
+        SlotHold::where('customer_id', $request_data["customer_id"])
+            ->orWhere('held_until', '<=', Carbon::now())
+            ->delete();
 
 
         return response()->json(['message' => 'Slots released successfully']);
     }
 
-   /**
+    /**
      *
      * @OA\Get(
      *      path="/v1.0/client/blocked-slots/{expert_id}",
@@ -1666,33 +1895,33 @@ return response()->json($response,200);
      *     )
      */
 
-     public function getBlockedSlotsClient($expert_id, Request $request)
-     {
-         try {
-             $this->storeActivity($request, "");
+    public function getBlockedSlotsClient($expert_id, Request $request)
+    {
+        try {
+            $this->storeActivity($request, "");
 
-             if (!request()->filled("date")) {
-                 return response()->json([
-                     "message" => "Date field is required"
-                 ], 401);
-             }
+            if (!request()->filled("date")) {
+                return response()->json([
+                    "message" => "Date field is required"
+                ], 401);
+            }
 
-             $data = $this->blockedSlots(request()->input("date"), $expert_id);
+            $data = $this->blockedSlots(request()->input("date"), $expert_id);
 
 
 
-             // else {
-             //     return response()->json([
-             //             "message" => "No slots are available"
-             //     ], 400);
-             // }
+            // else {
+            //     return response()->json([
+            //             "message" => "No slots are available"
+            //     ], 400);
+            // }
 
-             return response()->json($data, 200);
-         } catch (Exception $e) {
+            return response()->json($data, 200);
+        } catch (Exception $e) {
 
-             return $this->sendError($e, 500, $request);
-         }
-     }
+            return $this->sendError($e, 500, $request);
+        }
+    }
 
     /**
      *

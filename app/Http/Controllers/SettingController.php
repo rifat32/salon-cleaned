@@ -38,6 +38,8 @@ class SettingController extends Controller
  *   @OA\Property(property="allow_expert_booking", type="boolean", example=true),
  *   @OA\Property(property="allow_expert_self_busy", type="boolean", example=true),
  *   @OA\Property(property="allow_expert_booking_cancel", type="boolean", example=false),
+ *   @OA\Property(property="allow_expert_take_payment", type="boolean", example=false),
+ *
  *   @OA\Property(property="allow_expert_view_revenue", type="boolean", example=true),
  *   @OA\Property(property="allow_expert_view_customer_details", type="boolean", example=false),
  *   @OA\Property(property="allow_receptionist_add_question", type="boolean", example=true),
@@ -147,6 +149,7 @@ if (!$busunessSetting) {
         "allow_receptionist_user_discount",
         "discount_percentage_limit",
 
+        "slot_duration",
         'STRIPE_KEY',
         "STRIPE_SECRET",
         "business_id",
@@ -157,6 +160,7 @@ if (!$busunessSetting) {
         'allow_expert_booking',
         'allow_expert_self_busy',
         'allow_expert_booking_cancel',
+        'allow_expert_take_payment',
         'allow_expert_view_revenue',
         'allow_expert_view_customer_details',
         'allow_receptionist_add_question',
@@ -164,9 +168,7 @@ if (!$busunessSetting) {
         'default_language',
         'vat_enabled',
         'vat_percentage',
-        'vat_number',
-
-        'slot_duration'
+        'vat_number'
       ])->toArray());
       $busunessSetting->save();
 }

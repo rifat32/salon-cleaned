@@ -973,6 +973,30 @@ private function getNextMinuteInterval($slot_duration, $time, $addDuration = fal
     }
 
 
+    function calculateTotalMinutes($timeIntervals, $start_time_field_name, $end_time_field_name,$adjustedCurrentTime)
+    {
+        $totalMinutes = 0;
+        $currentTime = $adjustedCurrentTime; // Get the current time
+
+        foreach ($timeIntervals as $interval) {
+            // Convert the Eloquent model to an array if needed, you can also directly access the attributes.
+            $intervalArray = $interval->toArray();
+
+            // Assuming each interval has 'start' and 'end' keys with time in 'H:i' format
+            $start = Carbon::parse($intervalArray[$start_time_field_name]);
+            $end = Carbon::parse($intervalArray[$end_time_field_name]);
+
+            // If the start time is earlier than the current time, set it to the current time
+            if ($start->lt($currentTime)) {
+                $start = $currentTime;
+            }
+
+            // Calculate the difference in minutes and add it to total
+            $totalMinutes += $end->diffInMinutes($start);
+        }
+
+        return $totalMinutes;
+    }
 
 
 

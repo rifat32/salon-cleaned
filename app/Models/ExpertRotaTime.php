@@ -13,4 +13,9 @@ class ExpertRotaTime extends Model
         'start_time',
         'end_time',
     ];
+
+    public function rota()
+  {
+      return $this->belongsTo(ExpertRota::class, 'expert_rota_id','id');
+  }
 }

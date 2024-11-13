@@ -26,7 +26,7 @@ class UpdateBusinessSettingRequest extends FormRequest
         return [
             "allow_receptionist_user_discount" => "required|boolean",
             "discount_percentage_limit" => "required|numeric",
-            
+
         'slot_duration' => 'required|integer',
 
         'stripe_enabled' => 'required|boolean',
@@ -41,6 +41,8 @@ class UpdateBusinessSettingRequest extends FormRequest
         'allow_expert_booking' => 'required|boolean',
         'allow_expert_self_busy' => 'required|boolean',
         'allow_expert_booking_cancel' => 'required|boolean',
+        'allow_expert_take_payment' => 'required|boolean',
+
         'allow_expert_view_revenue' => 'required|boolean',
         'allow_expert_view_customer_details' => 'required|boolean',
         'allow_receptionist_add_question' => 'required|boolean',

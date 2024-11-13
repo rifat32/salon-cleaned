@@ -1284,6 +1284,7 @@ Route::get('/v2.0/client/blocked-slots/{expert_id}', [ClientBookingController::c
 
 
 Route::get('/v1.0/client/blocked-dates', [ClientBookingController::class, "getBlockedDatesClient"]);
+Route::get('/v2.0/client/blocked-dates', [ClientBookingController::class, "getBlockedDatesClientV2"]);
 
 
 Route::post('/v1.0/hold-slot', [ClientBookingController::class, 'holdSlot']);

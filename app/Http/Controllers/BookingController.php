@@ -843,10 +843,15 @@ class BookingController extends Controller
                     ], 404);
                 }
 
-                if ($booking->status == "converted_to_job" && $booking->payment_status == "complete") {
-                    // Return an error response indicating that the status cannot be updated
-                    return response()->json(["message" => "Unable to change the appointment status because it is already complete."], 422);
+                if(!auth()->user()->hasRole("garage_owner")) {
+                    if ($booking->status == "converted_to_job" && $booking->payment_status == "complete") {
+                        // Return an error response indicating that the status cannot be updated
+                        return response()->json(["message" => "Unable to change the appointment status because it is already complete."], 422);
+                    }
                 }
+
+
+
                 if ($request_data["status"] == "converted_to_job" && ($booking->status != "check_in" && $booking->status != "converted_to_job")) {
                     return response()->json(["message" => "You cannot check out before check in."], 422);
                 }
@@ -959,7 +964,6 @@ class BookingController extends Controller
                         "garage_id" => $booking->garage_id,
                         "id" => $garage_package_id
                     ])
-
                         ->first();
 
                     if (!$garage_package) {

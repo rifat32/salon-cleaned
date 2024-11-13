@@ -1944,7 +1944,7 @@ class DashboardManagementController extends Controller
             "walk_in_customer_revenue" => $this->calculateRevenue($businessSetting, $range, $expert_id, 1),
         ];
     }
-    public function getTopServices($range,$expert_id=NULL)
+    public function getTopServices($range,$expert_id=NULL,$limit=true)
     {
         $dateRange = $this->getDateRange($range);
         $start = $dateRange['start'];
@@ -1972,9 +1972,27 @@ class DashboardManagementController extends Controller
 
 
         ])
-            ->orderBy('all_sales_count', 'desc') // Sort by this month's sales
-            ->limit(5)
-            ->get();
+        ->when(!empty($expert_id), function($query) use ($start, $end,$expert_id){
+$query->whereHas('booking', function ($query) use ($start, $end,$expert_id) {
+    $query->where('bookings.status', 'converted_to_job') // Filter for converted bookings
+        ->when(auth()->user()->hasRole("business_experts"), function ($query) {
+            $query->where('bookings.expert_id', auth()->user()->id);
+        })
+        ->where('bookings.expert_id',$expert_id)
+        ->when((!empty($start) && !empty($end)), function ($query) use ($start, $end) {
+            $query->whereBetween('bookings.job_start_date', [$start, $end]);
+        });
+});
+        })
+
+            ->orderBy('all_sales_count', 'desc'); // Sort by this month's sales
+
+
+            if ($limit) {
+                $top_services = $top_services->limit(5);
+            }
+
+            $top_services = $top_services->get();
 
         return $top_services;
     }
@@ -2853,6 +2871,8 @@ class DashboardManagementController extends Controller
                 }
 
 
+                $expert->all_services = $this->getTopServices("all",$expert->id,false);
+
 
 
                 $expert->average_rating = $this->calculateAverageRating($expert->id);
@@ -3060,6 +3080,8 @@ class DashboardManagementController extends Controller
 
 
 
+
+
                      ], [
                          '*.required' => 'The :attribute field is required.',
                          '*.string' => 'The :attribute must be a valid string.'
@@ -3246,8 +3268,10 @@ class DashboardManagementController extends Controller
 
 
                  $expert->revenue = $this->calculateExpertRevenueV2($expert->id, request()->input("expert_revenue_date_filter"));
-                 $expert->top_services = $this->getTopServices(request()->input("expert_top_services_date_filter"));
 
+                 $expert->top_services = $this->getTopServices(request()->input("expert_top_services_date_filter",$expert->id));
+
+                 $expert->all_services = $this->getTopServices("all",$expert->id,false);
 
                  $expert->average_rating = $this->calculateAverageRating($expert->id);
                  $expert->busy_slots = $blockedSlots;

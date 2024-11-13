@@ -38,6 +38,8 @@ class CreateStripeSettingsTable extends Migration
     $table->boolean('allow_expert_booking')->default(false); // Expert can take booking
     $table->boolean('allow_expert_self_busy')->default(false); // Expert can mark themselves as busy
     $table->boolean('allow_expert_booking_cancel')->default(false); // Expert can cancel booking
+
+    $table->boolean('allow_expert_take_payment')->default(false);
     $table->boolean('allow_expert_view_revenue')->default(false); // Expert can view their revenue
     $table->boolean('allow_expert_view_customer_details')->default(false); // Expert can view customer details
     $table->boolean('allow_receptionist_add_question')->default(false); // Receptionist can add question
