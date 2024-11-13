@@ -1788,6 +1788,7 @@ class DashboardManagementController extends Controller
                 ->when(!empty($expert_id), function ($query) use ($expert_id) {
                     $query->where('expert_id', $expert_id);
                 })
+
                 ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                     $query->where('bookings.expert_id', auth()->user()->id);
                 })
@@ -1804,7 +1805,8 @@ class DashboardManagementController extends Controller
                 $counts[$date] = [];
             }
             // Initialize each status count for the date
-            $counts[$date][$status] = $bookingsOnDate->count();
+            $counts[$date][$status]["total_booking"] = $bookingsOnDate->count();
+            $counts[$date][$status]["total_revenue"] = $bookingsOnDate->sum("main_price");
         }
 
         }
@@ -2194,6 +2196,36 @@ class DashboardManagementController extends Controller
      *     required=true,
      *     example=""
      * ),
+     * * @OA\Parameter(
+     *     name="booking_distribution_date",
+     *     in="query",
+     *     description="Top services date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     *  * * @OA\Parameter(
+     *     name="blocked_slots_date",
+     *     in="query",
+     *     description="Top services date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     * *  * * @OA\Parameter(
+     *     name="booking_distribution_date",
+     *     in="query",
+     *     description="Top services date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     *    * *  * * @OA\Parameter(
+     *     name="booking_date_filter_date_wise",
+     *     in="query",
+     *     description="Top services date filter",
+     *     required=true,
+     *     example=""
+     * ),
+     *
+     *
      * @OA\Parameter(
      *     name="top_services_date_filter",
      *     in="query",
@@ -2308,6 +2340,7 @@ class DashboardManagementController extends Controller
             // $data["repeated_customers"] = $this->getRepeatedCustomers(request()->input("repeated_customer_date_filter"));
 
             $data["bookings_date_wise"] = $this->bookingsByStatusCountDateWise(request()->input("booking_date_filter_date_wise"));
+
             $data["bookings"] = $this->bookingsByStatusCount(request()->input("booking_date_filter"));
 
             $data["revenue"] = $this->revenue(request()->input("revenue_date_filter"));
@@ -2322,8 +2355,9 @@ class DashboardManagementController extends Controller
 
 
 
-
             $data["booking_distribution"] = $this->getBookingDistribution(request()->input("booking_distribution_date"));
+
+
 
 
             $expert_booking_date_filter = $this->getDateRange(request()->input("expert_booking_date_filter"));
@@ -3018,6 +3052,7 @@ class DashboardManagementController extends Controller
 
 
                          'expert_booking_date_filter' => 'required|string',
+                         'expert_booking_date_filter_date_wise' => 'required|string',
 
                          'expert_revenue_date_filter' => 'required|string',
                          'expert_top_services_date_filter' => 'required|string',
@@ -3206,6 +3241,10 @@ class DashboardManagementController extends Controller
                  }
 
                  $expert->bookings = $this->bookingsByStatusCount(request()->input("expert_booking_date_filter"), $expert->id);
+                 $expert->bookings_date_wise = $this->bookingsByStatusCountDateWise(request()->input("expert_booking_date_filter_date_wise", $expert->id));
+
+
+
                  $expert->revenue = $this->calculateExpertRevenueV2($expert->id, request()->input("expert_revenue_date_filter"));
                  $expert->top_services = $this->getTopServices(request()->input("expert_top_services_date_filter"));
 
