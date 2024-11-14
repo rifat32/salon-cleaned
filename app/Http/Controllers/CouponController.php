@@ -466,7 +466,7 @@ class CouponController extends Controller
                 ], 401);
             }
 
-            $couponQuery = Coupon::where([
+            $couponQuery = Coupon::with("sub_services")->where([
                 "garage_id" => $garage_id
             ]);
 
