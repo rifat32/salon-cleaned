@@ -30,7 +30,7 @@ class GaragePackageUpdateRequest extends FormRequest
             "description" => "nullable|string",
             "price" => "required|numeric",
             'sub_service_ids' => 'required|array',
-            'sub_service_ids.*' => 'required|numeric',
+            'sub_service_ids.*' => 'required|numeric|exists:sub_services,id',
             "is_active" => "required|boolean"
         ];
     }

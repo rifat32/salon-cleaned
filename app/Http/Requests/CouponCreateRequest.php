@@ -39,6 +39,7 @@ class CouponCreateRequest extends FormRequest
 
             "is_auto_apply"=>"required|boolean",
             "is_active"=>"required|boolean",
+            
             "sub_service_ids" => "required|array",
             "sub_service_ids.*" => "numeric|exists:sub_services,id",
         ];

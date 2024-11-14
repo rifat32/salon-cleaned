@@ -113,44 +113,13 @@ class GaragePackageController extends Controller
 
 
                     foreach ($request_data["sub_service_ids"] as $index=>$sub_service_id) {
-                        $garage_sub_service =  GarageSubService::leftJoin('garage_services', 'garage_sub_services.garage_service_id', '=', 'garage_services.id')
-
-                            ->where([
-                                "garage_services.garage_id" => $request_data["garage_id"],
-                                "garage_sub_services.sub_service_id" => $sub_service_id,
-
-                            ])
-
-                            ->select(
-                                "garage_sub_services.id",
-                                "garage_sub_services.sub_service_id",
-                                "garage_sub_services.garage_service_id"
-                            )
-                            ->first();
-
-                        if (!$garage_sub_service) {
-                            $error =  [
-                                "message" => "The given data was invalid.",
-                                "errors" => [("sub_service_ids[".$index."]")=>["invalid service"]]
-                         ];
-                            throw new Exception(json_encode($error),422);
-                        }
 
                         GaragePackageSubService::create([
-                            "sub_service_id" => $garage_sub_service->sub_service_id,
+                            "sub_service_id" => $sub_service_id,
                             "garage_package_id" => $garage_package->id,
                         ]);
 
-
-
-
                     }
-
-
-
-
-
-
 
 
 
@@ -283,24 +252,11 @@ class GaragePackageController extends Controller
 
 
                 foreach ($request_data["sub_service_ids"] as $sub_service_id) {
-                    $garage_sub_service =  GarageSubService::where([
-                            "garage_sub_services.sub_service_id" => $sub_service_id
-                        ])
-                        ->select(
-                            "garage_sub_services.id",
-                            "garage_sub_services.sub_service_id",
-                            "garage_sub_services.garage_service_id"
-                        )
-                        ->first();
-
-                    if (!$garage_sub_service) {
-                        throw new Exception("invalid service");
-                    }
 
 
                     GaragePackageSubService::create([
 
-                        "sub_service_id" => $garage_sub_service->sub_service_id,
+                        "sub_service_id" => $sub_service_id,
                         "garage_package_id" => $garage_package->id,
 
                     ]);
