@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 class CouponController extends Controller
 {
-    use ErrorUtil,GarageUtil,UserActivityUtil;
+    use ErrorUtil, GarageUtil, UserActivityUtil;
 
     /**
      *
@@ -86,7 +86,7 @@ class CouponController extends Controller
     public function createCoupon(CouponCreateRequest $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             return DB::transaction(function () use ($request) {
 
                 if (!$request->user()->hasPermissionTo('coupon_create')) {
@@ -107,28 +107,27 @@ class CouponController extends Controller
                 // }
 
                 $code_exists = Coupon::where([
-                    "garage_id" =>$request_data["garage_id"],
+                    "garage_id" => $request_data["garage_id"],
                     "code" => $request_data["code"]
                 ])->first();
 
-              if ($code_exists) {
-                        $error =  [
-                            "message" => "The given data was invalid.",
-                            "errors" => ["code"=>["This code is already taken"]]
-                     ];
-                        throw new Exception(json_encode($error),422);
-              }
+                if ($code_exists) {
+                    $error =  [
+                        "message" => "The given data was invalid.",
+                        "errors" => ["code" => ["This code is already taken"]]
+                    ];
+                    throw new Exception(json_encode($error), 422);
+                }
 
 
                 $coupon =  Coupon::create($request_data);
                 $coupon->sub_services()->sync($request_data["sub_service_ids"]);
 
                 return response($coupon, 201);
-
             });
         } catch (Exception $e) {
             error_log($e->getMessage());
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
 
@@ -201,7 +200,7 @@ class CouponController extends Controller
     public function updateCoupon(CouponUpdateRequest $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             return  DB::transaction(function () use ($request) {
                 if (!$request->user()->hasPermissionTo('coupon_update')) {
                     return response()->json([
@@ -216,20 +215,19 @@ class CouponController extends Controller
                     ], 401);
                 }
                 $code_exists = Coupon::where([
-                    "garage_id" =>$request_data["garage_id"],
+                    "garage_id" => $request_data["garage_id"],
                     "code" => $request_data["code"]
                 ])
-                ->where('id', '<>',$request_data["id"])
-                ->first();
+                    ->where('id', '<>', $request_data["id"])
+                    ->first();
 
-              if ($code_exists) {
-                        $error =  [
-                            "message" => "The given data was invalid.",
-                            "errors" => ["code"=>["This code is already taken"]]
-                     ];
-                        throw new Exception(json_encode($error),422);
-
-                    }
+                if ($code_exists) {
+                    $error =  [
+                        "message" => "The given data was invalid.",
+                        "errors" => ["code" => ["This code is already taken"]]
+                    ];
+                    throw new Exception(json_encode($error), 422);
+                }
 
                 $coupon  =  tap(Coupon::where(["id" => $request_data["id"]]))->update(
                     collect($request_data)->only([
@@ -251,13 +249,12 @@ class CouponController extends Controller
 
                     ->first();
 
-                    if(!$coupon) {
-                        return response()->json([
-                            "message" => "no coupon found"
-                            ],404);
+                if (!$coupon) {
+                    return response()->json([
+                        "message" => "no coupon found"
+                    ], 404);
 
                     $coupon->sub_services()->sync($request_data["sub_service_ids"]);
-
                 }
 
 
@@ -265,17 +262,17 @@ class CouponController extends Controller
             });
         } catch (Exception $e) {
             error_log($e->getMessage());
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
 
-   /**
-        *
+    /**
+     *
      * @OA\Put(
      *      path="/v1.0/coupons/toggle-active",
      *      operationId="toggleActiveCoupon",
      *      tags={"garage_management"},
-    *       security={
+     *       security={
      *           {"bearerAuth": {}}
      *       },
      *      summary="This method is to toggle coupon",
@@ -325,15 +322,15 @@ class CouponController extends Controller
      *     )
      */
 
-     public function toggleActiveCoupon(GarageOwnerToggleOptionsRequest $request)
-     {
+    public function toggleActiveCoupon(GarageOwnerToggleOptionsRequest $request)
+    {
 
-         try{
-             $this->storeActivity($request,"");
-             if(!$request->user()->hasPermissionTo('coupon_update')){
-                 return response()->json([
+        try {
+            $this->storeActivity($request, "");
+            if (!$request->user()->hasPermissionTo('coupon_update')) {
+                return response()->json([
                     "message" => "You can not perform this action"
-                 ],401);
+                ], 401);
             }
             $request_data = $request->validated();
 
@@ -346,10 +343,10 @@ class CouponController extends Controller
 
 
             $coupon =  Coupon::where([
-                "garage_id"=> $request_data["garage_id"],
-                "id"=> $request_data["id"]
+                "garage_id" => $request_data["garage_id"],
+                "id" => $request_data["id"]
             ])
-            ->first();
+                ->first();
 
 
 
@@ -358,15 +355,11 @@ class CouponController extends Controller
             ]);
 
             return response()->json(['message' => 'coupon status updated successfully'], 200);
-
-
-         } catch(Exception $e){
-             error_log($e->getMessage());
-         return $this->sendError($e,500,$request);
-         }
-     }
-
-
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            return $this->sendError($e, 500, $request);
+        }
+    }
 
 
     /**
@@ -378,7 +371,7 @@ class CouponController extends Controller
      *       security={
      *           {"bearerAuth": {}}
      *       },
-    *              @OA\Parameter(
+     *              @OA\Parameter(
      *         name="garage_id",
      *         in="path",
      *         description="garage_id",
@@ -393,26 +386,26 @@ class CouponController extends Controller
      *  example="6"
      *      ),
      *      * *  @OA\Parameter(
-* name="start_date",
-* in="query",
-* description="start_date",
-* required=true,
-* example="2019-06-29"
-* ),
+     * name="start_date",
+     * in="query",
+     * description="start_date",
+     * required=true,
+     * example="2019-06-29"
+     * ),
      * *  @OA\Parameter(
-* name="end_date",
-* in="query",
-* description="end_date",
-* required=true,
-* example="2019-06-29"
-* ),
+     * name="end_date",
+     * in="query",
+     * description="end_date",
+     * required=true,
+     * example="2019-06-29"
+     * ),
      * *  @OA\Parameter(
-* name="search_key",
-* in="query",
-* description="search_key",
-* required=true,
-* example="search_key"
-* ),
+     * name="search_key",
+     * in="query",
+     * description="search_key",
+     * required=true,
+     * example="search_key"
+     * ),
      *      summary="This method is to get coupons ",
      *      description="This method is to get coupons",
      *
@@ -451,10 +444,10 @@ class CouponController extends Controller
      *     )
      */
 
-    public function getCoupons($garage_id,$perPage, Request $request)
+    public function getCoupons($garage_id, $perPage, Request $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             if (!$request->user()->hasPermissionTo('coupon_view')) {
                 return response()->json([
                     "message" => "You can not perform this action"
@@ -487,11 +480,10 @@ class CouponController extends Controller
 
             $couponQuery = $couponQuery->orderByDesc("id");
 
-            if($perPage == '0') {
+            if ($perPage == '0') {
                 $coupons = $couponQuery->get();
-            }else {
+            } else {
                 $coupons = $couponQuery->paginate($perPage);
-
             }
 
 
@@ -500,11 +492,11 @@ class CouponController extends Controller
             return response()->json($coupons, 200);
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
 
-     /**
+    /**
      *
      * @OA\Get(
      *      path="/v1.0/coupons/single/{garage_id}/{id}",
@@ -513,7 +505,7 @@ class CouponController extends Controller
      *       security={
      *           {"bearerAuth": {}}
      *       },
-    *              @OA\Parameter(
+     *              @OA\Parameter(
      *         name="garage_id",
      *         in="path",
      *         description="garage_id",
@@ -565,10 +557,10 @@ class CouponController extends Controller
      *     )
      */
 
-    public function getCouponById($garage_id,$id, Request $request)
+    public function getCouponById($garage_id, $id, Request $request)
     {
         try {
-            $this->storeActivity($request,"");
+            $this->storeActivity($request, "");
             if (!$request->user()->hasPermissionTo('coupon_view')) {
                 return response()->json([
                     "message" => "You can not perform this action"
@@ -584,19 +576,19 @@ class CouponController extends Controller
                 "garage_id" => $garage_id,
                 "id" => $id
             ])
-            ->first();
+                ->first();
 
-            if(!$coupon) {
-                 return response()->json([
+            if (!$coupon) {
+                return response()->json([
                     "message" => "coupon not found"
-                 ],404);
+                ], 404);
             }
 
 
             return response()->json($coupon, 200);
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
 
@@ -663,33 +655,33 @@ class CouponController extends Controller
      *     )
      */
 
-    public function deleteCouponById($garage_id,$id, Request $request)
+    public function deleteCouponById($garage_id, $id, Request $request)
     {
 
         try {
 
-            $this->storeActivity($request,"");
-            if(!$request->user()->hasPermissionTo('coupon_delete')){
+            $this->storeActivity($request, "");
+            if (!$request->user()->hasPermissionTo('coupon_delete')) {
                 return response()->json([
-                   "message" => "You can not perform this action"
-                ],401);
-           }
-           if (!$this->garageOwnerCheck($garage_id)) {
-            return response()->json([
-                "message" => "you are not the owner of the garage or the requested garage does not exist."
-            ], 401);
-        }
+                    "message" => "You can not perform this action"
+                ], 401);
+            }
+            if (!$this->garageOwnerCheck($garage_id)) {
+                return response()->json([
+                    "message" => "you are not the owner of the garage or the requested garage does not exist."
+                ], 401);
+            }
 
 
 
             $coupon = Coupon::where([
-                 "garage_id" => $garage_id,
+                "garage_id" => $garage_id,
                 "id" => $id
             ])
-            ->first();
-             if(!$coupon){
+                ->first();
+            if (!$coupon) {
                 return response()->json([
-            "message" => "coupon not found"
+                    "message" => "coupon not found"
                 ], 404);
             }
 
@@ -699,10 +691,9 @@ class CouponController extends Controller
 
 
             return response()->json(["ok" => true], 200);
-
         } catch (Exception $e) {
 
-            return $this->sendError($e, 500,$request);
+            return $this->sendError($e, 500, $request);
         }
     }
 }

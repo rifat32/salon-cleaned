@@ -13,6 +13,7 @@ class ExpertRota extends Model
 {
     use HasFactory, DefaultQueryScopesTrait;
     protected $fillable = [
+        'worked_minutes',
         'expert_id',
         'date',
         'busy_slots',

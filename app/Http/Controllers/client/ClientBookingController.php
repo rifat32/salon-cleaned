@@ -1506,23 +1506,19 @@ class ClientBookingController extends Controller
             $this->storeActivity($request, "");
 
             $validator = Validator::make($request->all(), [
-
-
                 'business_id' => 'required|numeric|exists:businesses,id',
-
             ], [
                 '*.required' => 'The :attribute field is required.',
                 '*.string' => 'The :attribute must be a valid string.'
             ]);
-
 
             if ($validator->fails()) {
                 return response()->json([
                     'errors' => $validator->errors()
                 ], 422);
             }
-            $businessSetting = $this->get_business_setting(request()->input("business_id"));
 
+            $businessSetting = $this->get_business_setting(request()->input("business_id"));
 
             $dates = [];
             $available_dates = collect();

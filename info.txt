@@ -1,3 +1,35 @@
+1. first we need calculate attendance by cron job
+1. then attendance v2 api.
+1. then reports of slots, peak hours
+1. on garage time update. we need to do the same thing like cron job. so an attendance will be taken for that.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 today
 utils to set up super admin for the first time. clear the database.
 

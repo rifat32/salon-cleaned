@@ -177,7 +177,9 @@ Route::put('/v1.0/expert-rotas', [ExpertRotaController::class, "updateExpertRota
 Route::put('/v1.0/expert-rotas/toggle-active', [ExpertRotaController::class, "toggleActiveExpertRota"]);
 Route::get('/v1.0/expert-rotas', [ExpertRotaController::class, "getExpertRotas"]);
 Route::delete('/v1.0/expert-rotas/{ids}', [ExpertRotaController::class, "deleteExpertRotasByIds"]);
+
 Route::get('/v1.0/expert-attendances', [ExpertRotaController::class, "getExpertAttendances"]);
+Route::get('/v2.0/expert-attendances', [ExpertRotaController::class, "getExpertAttendancesV2"]);
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // end expert rotas management section
@@ -1280,8 +1282,6 @@ Route::middleware(['auth:api'])->group(function () {
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 Route::get('/v1.0/client/blocked-slots/{expert_id}', [ClientBookingController::class, "getBlockedSlotsClient"]);
 Route::get('/v2.0/client/blocked-slots/{expert_id}', [ClientBookingController::class, "getBlockedSlotsClientV2"]);
-
-
 
 Route::get('/v1.0/client/blocked-dates', [ClientBookingController::class, "getBlockedDatesClient"]);
 Route::get('/v2.0/client/blocked-dates', [ClientBookingController::class, "getBlockedDatesClientV2"]);

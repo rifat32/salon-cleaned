@@ -20,6 +20,7 @@ class CreateExpertRotasTable extends Migration
             $table->unsignedBigInteger('expert_id');
             $table->foreign('expert_id')->references('id')->on('users')->onDelete('cascade');
 
+            $table->date('worked_minutes');
 
             $table->date('date');
             $table->json('busy_slots');
