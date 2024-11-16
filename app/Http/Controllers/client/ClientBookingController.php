@@ -174,6 +174,8 @@ class ClientBookingController extends Controller
 
                 $booking =  Booking::create($request_data);
 
+                $businessSetting = $this->get_business_setting($booking->garage_id);
+
                 $total_price = 0;
                 $total_time = 0;
                 foreach ($request_data["booking_sub_service_ids"] as $index => $sub_service_id) {
@@ -193,7 +195,7 @@ class ClientBookingController extends Controller
 
                     $price = $this->getPrice($sub_service, $request_data["expert_id"]);
 
-                    $total_time += $sub_service->service_time_in_minute;
+                    $total_time += $sub_service->number_of_slots * $businessSetting->slot_duration;
 
                     $total_price += $price;
 
@@ -221,7 +223,7 @@ class ClientBookingController extends Controller
                     }
 
                     $total_price += $garage_package->price;
-                    $total_time += $garage_package->service_time_in_minute;
+                    $total_time += $garage_package->number_of_slots * $businessSetting->slot_duration;
                     $booking->booking_packages()->create([
                         "garage_package_id" => $garage_package->id,
                         "price" => $garage_package->price
@@ -229,7 +231,7 @@ class ClientBookingController extends Controller
                 }
 
 
-                $businessSetting = $this->get_business_setting($booking->garage_id);
+
                 $slotValidation =  $this->validateBookingSlots($businessSetting, $booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
 
@@ -713,10 +715,13 @@ class ClientBookingController extends Controller
                         "message" => "booking not found"
                     ], 404);
                 }
+                $businessSetting = $this->get_business_setting($booking->garage_id);
                 if ($booking->status != "pending") {
                     // Return an error response indicating that the status cannot be updated
                     return response()->json(["message" => "only pending booking can be deleted"], 422);
                 }
+
+
 
 
 
@@ -755,7 +760,7 @@ class ClientBookingController extends Controller
 
                     $price = $this->getPrice($sub_service, $request["expert_id"]);
 
-                    $total_time += $sub_service->service_time_in_minute;
+                    $total_time += $sub_service->number_of_slots * $businessSetting->slot_duration;
 
 
                     $total_price += $price;
@@ -784,7 +789,7 @@ class ClientBookingController extends Controller
 
 
                     $total_price += $garage_package->price;
-                    $total_time += $garage_package->service_time_in_minute;
+                    $total_time += $garage_package->number_of_slots * $businessSetting->slot_duration;
 
                     $booking->booking_packages()->create([
                         "garage_package_id" => $garage_package->id,
@@ -793,7 +798,7 @@ class ClientBookingController extends Controller
                 }
 
 
-                $businessSetting = $this->get_business_setting($booking->garage_id);
+
                 // $slotValidation =  $this->validateBookingSlots($booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
                 // if ($slotValidation['status'] === 'error') {

@@ -528,6 +528,7 @@ class BookingController extends Controller
 
 
             $booking =  Booking::create($request_data);
+            $businessSetting = $this->get_business_setting($booking->garage_id);
 
 
             $total_price = 0;
@@ -549,7 +550,7 @@ class BookingController extends Controller
 
                 $price = $this->getPrice($sub_service, $request_data["expert_id"]);
 
-                $total_time += $sub_service->service_time_in_minute;
+                $total_time += $sub_service->number_of_slots * $businessSetting->slot_duration;
 
 
                 $total_price += $price;
@@ -578,7 +579,7 @@ class BookingController extends Controller
 
                 $total_price += $garage_package->price;
 
-                    $total_time += $garage_package->service_time_in_minute;
+                    $total_time += $garage_package->number_of_slots * $businessSetting->slot_duration;
 
 
                 $booking->booking_packages()->create([
@@ -588,7 +589,7 @@ class BookingController extends Controller
             }
 
 
-            $businessSetting = $this->get_business_setting($booking->garage_id);
+
 
             $slotValidation =  $this->validateBookingSlots($businessSetting,$booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
@@ -849,6 +850,8 @@ class BookingController extends Controller
                     ], 404);
                 }
 
+                $businessSetting = $this->get_business_setting($booking->garage_id);
+
                 if(!auth()->user()->hasRole("garage_owner")) {
                     if ($booking->status == "converted_to_job" && $booking->payment_status == "complete") {
                         // Return an error response indicating that the status cannot be updated
@@ -933,7 +936,7 @@ class BookingController extends Controller
 
                     $price = $this->getPrice($sub_service, $request["expert_id"]);
 
-                    $total_time += $sub_service->service_time_in_minute;
+                    $total_time += $sub_service->number_of_slots * $businessSetting->slot_duration;
 
 
                     $total_price += $price;
@@ -960,7 +963,7 @@ class BookingController extends Controller
 
 
                     $total_price += $garage_package->price;
-                    $total_time += $garage_package->service_time_in_minute;
+                    $total_time += $garage_package->number_of_slots * $businessSetting->slot_duration;
 
                     $booking->booking_packages()->create([
                         "garage_package_id" => $garage_package->id,
@@ -968,7 +971,7 @@ class BookingController extends Controller
                     ]);
                 }
 
-                $businessSetting = $this->get_business_setting($booking->garage_id);
+
                 // $slotValidation =  $this->validateBookingSlots($booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
 
                 // if ($slotValidation['status'] === 'error') {

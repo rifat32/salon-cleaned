@@ -1,7 +1,6 @@
 
-1. then attendance v2 api.
 1. then reports of slots, peak hours
-1. service time will update when updating the slot. also business schedule will be affected.
+1. service time will update when updating the slot.
 
 
 

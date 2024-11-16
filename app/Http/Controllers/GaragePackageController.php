@@ -100,15 +100,9 @@ class GaragePackageController extends Controller
 
 
                 $request_data = $request->validated();
-                $businessSetting = $this->get_business_setting(auth()->user()->business_id);
 
-           // Check if service_time_in_minute is divisible by slot_duration
-if ($request_data["service_time_in_minute"] % $businessSetting->slot_duration !== 0) {
-    // Return 409 Conflict error if not divisible
-    return response()->json([
-        'error' => 'Service time must be divisible by slot duration.'
-    ], 409);
-}
+
+
 
 
                     if (!$this->garageOwnerCheck($request_data["garage_id"])) {
@@ -224,15 +218,7 @@ if ($request_data["service_time_in_minute"] % $businessSetting->slot_duration !=
 
                 $request_data = $request->validated();
 
-                $businessSetting = $this->get_business_setting(auth()->user()->business_id);
 
-           // Check if service_time_in_minute is divisible by slot_duration
-if ($request_data["service_time_in_minute"] % $businessSetting->slot_duration !== 0) {
-    // Return 409 Conflict error if not divisible
-    return response()->json([
-        'error' => 'Service time must be divisible by slot duration.'
-    ], 409);
-}
 
 
             if (!$this->garageOwnerCheck($request_data["garage_id"])) {
@@ -250,6 +236,7 @@ if ($request_data["service_time_in_minute"] % $businessSetting->slot_duration !=
                     collect($request_data)->only([
                         "name",
                         "description",
+                        "number_of_slots",
                         "price",
                         "garage_id",
                         "is_active"

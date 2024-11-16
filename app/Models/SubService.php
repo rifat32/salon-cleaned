@@ -17,7 +17,7 @@ class SubService extends Model
         "service_id",
         "default_price",
         "is_fixed_price",
-        "service_time_in_minute"
+        "number_of_slots"
         // "is_active",
 
     ];

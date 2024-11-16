@@ -1112,7 +1112,7 @@ if(!empty($service->description)) {
      *    @OA\Property(property="service_id", type="string", format="number",example="1"),
      *    @OA\Property(property="is_fixed_price", type="number", format="number",example="1"),
      *    *    @OA\Property(property="default_price", type="number", format="number",example="1"),
-     *    @OA\Property(property="service_time_in_minute", type="number", format="number",example="1")
+     *    @OA\Property(property="number_of_slots", type="number", format="number",example="1")
      *
      *
      *         ),
@@ -1163,15 +1163,6 @@ if(!empty($service->description)) {
 
             $request_data = $request->validated();
 
-            $businessSetting = $this->get_business_setting(auth()->user()->business_id);
-
-           // Check if service_time_in_minute is divisible by slot_duration
-if ($request_data["service_time_in_minute"] % $businessSetting->slot_duration !== 0) {
-    // Return 409 Conflict error if not divisible
-    return response()->json([
-        'error' => 'Service time must be divisible by slot duration.'
-    ], 409);
-}
 
 
 
@@ -1252,7 +1243,7 @@ if(!empty($sub_service->description)) {
      *             @OA\Property(property="is_fixed_price", type="number", format="number",example="1"),
      *              @OA\Property(property="default_price", type="number", format="number",example="1"),
      *
-     *            @OA\Property(property="service_time_in_minute", type="number", format="number",example="1")
+     *            @OA\Property(property="number_of_slots", type="number", format="number",example="1")
      *         ),
      *      ),
      *      @OA\Response(
@@ -1301,15 +1292,9 @@ if(!empty($sub_service->description)) {
            }
             $request_data = $request->validated();
 
-            $businessSetting = $this->get_business_setting(auth()->user()->business_id);
 
-           // Check if service_time_in_minute is divisible by slot_duration
-if ($request_data["service_time_in_minute"] % $businessSetting->slot_duration !== 0) {
-    // Return 409 Conflict error if not divisible
-    return response()->json([
-        'error' => 'Service time must be divisible by slot duration.'
-    ], 409);
-}
+
+
 
 
 
@@ -1324,7 +1309,7 @@ if ($request_data["service_time_in_minute"] % $businessSetting->slot_duration !=
                     "service_id",
                     "is_fixed_price",
                     "default_price",
-                    "service_time_in_minute"
+                    "number_of_slots"
                     // "automobile_category_id"
                 ])->toArray()
                 )

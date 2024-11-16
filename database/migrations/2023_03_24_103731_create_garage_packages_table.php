@@ -18,7 +18,8 @@ class CreateGaragePackagesTable extends Migration
             $table->string("name");
             $table->text("description")->nullable();
             $table->double("price")->default(0);
-            $table->integer("service_time_in_minute")->default(0);
+            $table->integer("number_of_slots")->default(0);
+           
 
             $table->unsignedBigInteger("garage_id");
             $table->foreign('garage_id')->references('id')->on('garages')->onDelete('cascade');
