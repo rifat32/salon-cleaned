@@ -46,47 +46,7 @@ class SendNextVisitReminders extends Command
      */
     public function handle()
     {
-        $experts = User::with("translation")
-                ->where("users.is_active", 1)
-                ->whereHas('roles', function ($query) {
-                    $query->where('roles.name', 'business_experts');
-                })
-                ->get();
-
-                foreach($experts as $expert){
-                    $date = Carbon::yesterday();
-                    $dayOfWeek = $date->dayOfWeek;
-
-                    $businessSetting = $this->get_business_setting($expert->business_id);
-                    $garageTime = GarageTime::
-                    where("garage_id", request()->input($expert->business_id))
-                    ->where("day",yesterday())
-                    ->first();
-
-                    $total_slots = count($garageTime->time_slots);
-
-                    $expert_rota = ExpertRota::where('expert_rotas.business_id', $expert->business_id)
-                    ->whereDate('expert_rotas.date', ">=", $date)
-                    ->where('expert_rotas.expert_id', $expert->id)
-                    ->orderBy("expert_rotas.id", "DESC")
-                    ->first();
-
-                    if(empty($expert_rota)) {
-                        $expert_rota = ExpertRota::create([
-                        'expert_id' => $expert->id,
-                        'date' => $date ,
-                        'busy_slots' => [],
-                        "is_active" => 1,
-                        "business_id" => $expert->business_id,
-                        "created_by" => 1
-                      ]);
-                    }
-
-                    $expert_rota->worked_minutes = ($total_slots - count($expert_rota->busy_slots)) * $businessSetting->slot_duration;
-$expert_rota->save();
-
-                }
-
+           $this->attendanceCommand();
     }
 
 }

@@ -466,6 +466,7 @@ class BookingController extends Controller
                 if(auth()->user()->id !== $request_data["expert_id"]) {
                     unset($request_data["expert_note"]);
                 }
+
             } else {
                 unset($request_data["expert_note"]);
             }
@@ -558,28 +559,6 @@ class BookingController extends Controller
                     "price" => $price
                 ]);
             }
-
-            $businessSetting = $this->get_business_setting($booking->garage_id);
-
-            $slotValidation =  $this->validateBookingSlots($businessSetting,$booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
-
-            if ($slotValidation['status'] === 'error') {
-                // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
-                throw new Exception($slotValidation["message"],422);
-
-            }
-
-            $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration,$request["booked_slots"]);
-            if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
-                // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
-                throw new Exception("Slots must be continuous");
-            }
-
-            $booking->job_start_time = $processedSlotInformation[0]["start_time"];
-            $booking->job_end_time = $processedSlotInformation[0]["end_time"];
-
-            $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
-
             foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                 $garage_package =  GaragePackage::where([
                     "garage_id" => $request_data["garage_id"],
@@ -599,11 +578,38 @@ class BookingController extends Controller
 
                 $total_price += $garage_package->price;
 
+                    $total_time += $garage_package->service_time_in_minute;
+
+
                 $booking->booking_packages()->create([
                     "garage_package_id" => $garage_package->id,
                     "price" => $garage_package->price
                 ]);
             }
+
+
+            $businessSetting = $this->get_business_setting($booking->garage_id);
+
+            $slotValidation =  $this->validateBookingSlots($businessSetting,$booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
+
+
+            if ($slotValidation['status'] === 'error') {
+                // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
+                throw new Exception($slotValidation["message"],422);
+
+            }
+
+            $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration,$request["booked_slots"]);
+            if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
+                // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
+                throw new Exception("Slots must be continuous");
+            }
+
+            $booking->job_start_time = $processedSlotInformation[0]["start_time"];
+            $booking->job_end_time = $processedSlotInformation[0]["end_time"];
+
+            $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
+
 
 
 
@@ -937,6 +943,30 @@ class BookingController extends Controller
                         "price" => $price
                     ]);
                 }
+                foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
+                    $garage_package =  GaragePackage::where([
+                        "garage_id" => $booking->garage_id,
+                        "id" => $garage_package_id
+                    ])
+                        ->first();
+
+                    if (!$garage_package) {
+                        $error =  [
+                            "message" => "The given data was invalid.",
+                            "errors" => [("booking_garage_package_ids[" . $index . "]") => ["invalid package"]]
+                        ];
+                        throw new Exception(json_encode($error), 422);
+                    }
+
+
+                    $total_price += $garage_package->price;
+                    $total_time += $garage_package->service_time_in_minute;
+
+                    $booking->booking_packages()->create([
+                        "garage_package_id" => $garage_package->id,
+                        "price" => $garage_package->price
+                    ]);
+                }
 
                 $businessSetting = $this->get_business_setting($booking->garage_id);
                 // $slotValidation =  $this->validateBookingSlots($booking->id,$booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
@@ -959,29 +989,7 @@ class BookingController extends Controller
                 $this->validateGarageTimes($booking->garage_id,$booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
 
 
-                foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
-                    $garage_package =  GaragePackage::where([
-                        "garage_id" => $booking->garage_id,
-                        "id" => $garage_package_id
-                    ])
-                        ->first();
 
-                    if (!$garage_package) {
-                        $error =  [
-                            "message" => "The given data was invalid.",
-                            "errors" => [("booking_garage_package_ids[" . $index . "]") => ["invalid package"]]
-                        ];
-                        throw new Exception(json_encode($error), 422);
-                    }
-
-
-                    $total_price += $garage_package->price;
-
-                    $booking->booking_packages()->create([
-                        "garage_package_id" => $garage_package->id,
-                        "price" => $garage_package->price
-                    ]);
-                }
 
                 // $booking->price = (!empty($request_data["price"]?$request_data["price"]:$total_price));
                 $booking->price = $total_price;

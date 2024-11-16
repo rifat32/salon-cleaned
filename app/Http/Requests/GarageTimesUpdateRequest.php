@@ -27,6 +27,7 @@ class GarageTimesUpdateRequest extends FormRequest
     public function rules()
     {
         return [
+            'slot_duration' => 'required|integer',
             'garage_id' => 'required|numeric',
             "times" => "array",
             "times.*.day" => ["numeric", new DayValidation],

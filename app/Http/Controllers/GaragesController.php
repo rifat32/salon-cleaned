@@ -10,6 +10,7 @@ use App\Http\Requests\GarageUpdateSeparateRequest;
 use App\Http\Requests\ImageUploadRequest;
 use App\Http\Requests\MultipleImageUploadRequest;
 use App\Http\Requests\GetIdRequest;
+use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\UserActivityUtil;
@@ -35,7 +36,7 @@ use Spatie\Permission\Models\Role;
 
 class GaragesController extends Controller
 {
-    use ErrorUtil,GarageUtil,UserActivityUtil;
+    use ErrorUtil,GarageUtil,UserActivityUtil, BasicUtil;
 
 
        /**
@@ -739,14 +740,16 @@ if(!$user->hasRole('garage_owner')) {
            $timesArray = collect($request_data["times"])->unique("day");
            $businessSetting = $this->get_business_setting($garage->id);
            foreach($timesArray as $garage_time) {
+
             $processedSlots = $this->generateSlots($businessSetting->slot_duration,$garage_time["opening_time"],$garage_time["closing_time"]);
+
             GarageTime::create([
                 "garage_id" => $garage->id,
                 "day"=> $garage_time["day"],
                 "opening_time"=> $garage_time["opening_time"],
                 "closing_time"=> $garage_time["closing_time"],
                 "is_closed"=> $garage_time["is_closed"],
-                "time_slots"=> $processedSlots,
+                "time_slots"=> $processedSlots
 
             ]);
            }

@@ -7,6 +7,7 @@ use App\Http\Requests\ServiceFuelTypeUpdateRequest;
 use App\Http\Requests\ServiceUpdateRequest;
 use App\Http\Requests\SubServiceCreateRequest;
 use App\Http\Requests\SubServiceUpdateRequest;
+use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Models\AutomobileCategory;
@@ -14,6 +15,7 @@ use App\Models\AutomobileMake;
 use App\Models\AutomobileModel;
 use App\Models\BookingSubService;
 use App\Models\FuelStationService;
+use App\Models\GaragePackage;
 use App\Models\Service;
 use App\Models\SubService;
 use App\Models\PaymentType;
@@ -28,7 +30,7 @@ use Spatie\Permission\Models\Role;
 
 class ServiceController extends Controller
 {
-    use ErrorUtil,UserActivityUtil;
+    use ErrorUtil,UserActivityUtil, BasicUtil;
        /**
         *
      * @OA\Post(
@@ -374,7 +376,8 @@ if(!empty($service->description)) {
             // $automobilesQuery = AutomobileMake::with("makes");
 
             $servicesQuery = Service::
-            where("business_id",auth()->user()->business_id)
+            withCount("subServices")
+            ->where("business_id",auth()->user()->business_id)
             ->with("category", "translation");
 
             if(!empty($request->search_key)) {
@@ -938,6 +941,13 @@ if(!empty($service->description)) {
             ->orderBy("name",'asc')
             ->get();
 
+            $garage_package = GaragePackage::with("sub_services")
+            ->when(request()->filled("business_id"), function($query) {
+                $query->where("garage_id",request()->input("business_id"));
+            })
+            ->orderBy("name",'asc')
+            ->get();
+
             // GETTING AUTOMOBILE CATEGORIES
             $automobile_categories =  AutomobileCategory::orderBy("name",'asc')
             ->select(
@@ -960,6 +970,7 @@ if(!empty($service->description)) {
                 "automobile_categories" => $automobile_categories,
                 "roles" => $roles,
                 "payment_types" => $payment_types,
+                "garage_package" => $garage_package
             ];
 
 
@@ -1151,8 +1162,25 @@ if(!empty($service->description)) {
             }
 
             $request_data = $request->validated();
+
+            $businessSetting = $this->get_business_setting(auth()->user()->business_id);
+
+           // Check if service_time_in_minute is divisible by slot_duration
+if ($request_data["service_time_in_minute"] % $businessSetting->slot_duration !== 0) {
+    // Return 409 Conflict error if not divisible
+    return response()->json([
+        'error' => 'Service time must be divisible by slot duration.'
+    ], 409);
+}
+
+
+
             $request_data["is_fixed_price"] = 1;
             $request_data["business_id"] = auth()->user()->business_id;
+
+
+
+
             $sub_service =  SubService::create($request_data);
 
 
@@ -1273,6 +1301,16 @@ if(!empty($sub_service->description)) {
            }
             $request_data = $request->validated();
 
+            $businessSetting = $this->get_business_setting(auth()->user()->business_id);
+
+           // Check if service_time_in_minute is divisible by slot_duration
+if ($request_data["service_time_in_minute"] % $businessSetting->slot_duration !== 0) {
+    // Return 409 Conflict error if not divisible
+    return response()->json([
+        'error' => 'Service time must be divisible by slot duration.'
+    ], 409);
+}
+
 
 
                 $sub_service  =  tap(SubService::where([
@@ -1344,8 +1382,7 @@ if(!empty($sub_service->description)) {
         }
     }
 
-
-     /**
+    /**
         *
      * @OA\Get(
      *      path="/v1.0/sub-services/{serviceId}/{perPage}",
@@ -1435,7 +1472,7 @@ if(!empty($sub_service->description)) {
      *     )
      */
 
-    public function getSubServicesByServiceId($serviceId,$perPage,Request $request) {
+     public function getSubServicesByServiceId($serviceId,$perPage,Request $request) {
         try{
             $this->storeActivity($request,"");
             if(!$request->user()->hasPermissionTo('service_view')){
@@ -1447,6 +1484,130 @@ if(!empty($sub_service->description)) {
             $servicesQuery = SubService::with("service.category", 'translation')
             ->where("business_id",auth()->user()->business_id)
             ->where("service_id" , $serviceId);
+            if(!empty($request->search_key)) {
+                $servicesQuery = $servicesQuery->where(function($query) use ($request){
+                    $term = $request->search_key;
+                    $query->where("name", "like", "%" . $term . "%");
+                });
+
+            }
+            if (!empty($request->start_date)) {
+                $servicesQuery = $servicesQuery->where('created_at', ">=", $request->start_date);
+            }
+            if (!empty($request->end_date)) {
+                $servicesQuery = $servicesQuery->where('created_at', "<=", $request->end_date);
+            }
+            if (!empty($request->is_fixed_price)) {
+                $is_fixed_price = (int)$request->is_fixed_price;
+                $servicesQuery = $servicesQuery->where('is_fixed_price',  $is_fixed_price);
+            }
+            $services = $servicesQuery->orderBy("name",'asc')->paginate($perPage);
+            return response()->json($services, 200);
+        } catch(Exception $e){
+
+        return $this->sendError($e,500,$request);
+        }
+    }
+
+     /**
+        *
+     * @OA\Get(
+     *      path="/v1.0/sub-services/{perPage}",
+     *      operationId="getSubServices",
+     *      tags={"service_management.sub"},
+    *       security={
+     *           {"bearerAuth": {}}
+     *       },
+
+     *              @OA\Parameter(
+     *         name="perPage",
+     *         in="path",
+     *         description="perPage",
+     *         required=true,
+     *  example="6"
+     *      ),
+     *      * *  @OA\Parameter(
+* name="start_date",
+* in="query",
+* description="start_date",
+* required=true,
+* example="2019-06-29"
+* ),
+     * *  @OA\Parameter(
+* name="end_date",
+* in="query",
+* description="end_date",
+* required=true,
+* example="2019-06-29"
+* ),
+     * *  @OA\Parameter(
+* name="search_key",
+* in="query",
+* description="search_key",
+* required=true,
+* example="search_key"
+* ),
+*
+     * *  @OA\Parameter(
+* name="is_fixed_price",
+* in="query",
+* description="is_fixed_price 0 or 1 as it is string sending in request true will be catch in string like 'true'",
+* required=true,
+* example="0"
+* ),
+     *      summary="This method is to get automobile sub Services by service id",
+     *      description="This method is to get automobile sub Services by service id",
+     *
+
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *       @OA\JsonContent(),
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     * @OA\JsonContent(),
+     *      ),
+     *        @OA\Response(
+     *          response=422,
+     *          description="Unprocesseble Content",
+     *    @OA\JsonContent(),
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden",
+     *   @OA\JsonContent()
+     * ),
+     *  * @OA\Response(
+     *      response=400,
+     *      description="Bad Request",
+     *   *@OA\JsonContent()
+     *   ),
+     * @OA\Response(
+     *      response=404,
+     *      description="not found",
+     *   *@OA\JsonContent()
+     *   )
+     *      )
+     *     )
+     */
+
+    public function getSubServices($perPage,Request $request) {
+        try{
+            $this->storeActivity($request,"");
+            if(!$request->user()->hasPermissionTo('service_view')){
+                return response()->json([
+                   "message" => "You can not perform this action"
+                ],401);
+           }
+            // $automobilesQuery = AutomobileMake::with("makes");
+            $servicesQuery = SubService::with("service.category", 'translation')
+            ->where("business_id",auth()->user()->business_id)
+            ->when(request()->filled("service_id"), function($query) {
+            $query ->where("service_id" , request()->input("service_id"));
+            })
+           ;
             if(!empty($request->search_key)) {
                 $servicesQuery = $servicesQuery->where(function($query) use ($request){
                     $term = $request->search_key;

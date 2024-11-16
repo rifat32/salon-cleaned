@@ -30,7 +30,8 @@ class GaragePackageCreateRequest extends FormRequest
             "price" => "required|numeric",
     'sub_service_ids' => 'required|array',
     'sub_service_ids.*' => 'required|numeric|exists:sub_services,id',
-    "is_active" => "required|boolean"
+    "is_active" => "required|boolean",
+    "service_time_in_minute" => "required|numeric"
 
         ];
     }

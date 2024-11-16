@@ -100,8 +100,6 @@ class SettingController extends Controller
            $request_data["business_id"] = auth()->user()->business_id;
 
 
-
-
            if(!empty($request_data['stripe_enabled'])){
  // Verify the Stripe credentials before updating
  $stripeValid = false;
@@ -148,8 +146,6 @@ if (!$busunessSetting) {
     $busunessSetting->fill(collect($request_data)->only([
         "allow_receptionist_user_discount",
         "discount_percentage_limit",
-
-        "slot_duration",
         'STRIPE_KEY',
         "STRIPE_SECRET",
         "business_id",

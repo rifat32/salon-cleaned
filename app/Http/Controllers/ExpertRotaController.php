@@ -18,6 +18,7 @@ use App\Models\Booking;
 use App\Models\ExpertRota;
 use App\Models\DisabledExpertRota;
 use App\Models\ExpertRotaTime;
+use App\Models\GarageTime;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
@@ -1230,6 +1231,13 @@ class ExpertRotaController extends Controller
 
                 foreach ($date_range as $date) {
                     $date = Carbon::parse($date);
+                    $dayOfWeek = $date->dayOfWeek;
+                    $garageTime = GarageTime::
+            where("garage_id", auth()->user()->business_id)
+            ->where("day", $dayOfWeek)
+            ->first();
+
+            $total_slots = count($garageTime->time_slots);
 
                     $expert_rota = $expert_rotas->first(function ($rota) use ($date) {
                         $rota_date = Carbon::parse($rota->date);
@@ -1248,13 +1256,13 @@ class ExpertRotaController extends Controller
 
                     if (!empty($expert_rota)) {
                         $attendances->push([
-                            "worked_hours" => (53 - count($expert_rota->busy_slots)) * $businessSetting->slot_duration,
+                            "worked_minutes" => $expert_rota->worked_minutes,
                             "served_hours" => $total_booked_slots * $businessSetting->slot_duration,
                             "date" => $date->toDateString()
                         ]);
                     } else {
                         $attendances->push([
-                            "worked_hours" => 53 * $businessSetting->slot_duration,
+                            "worked_hours" => $total_slots * $businessSetting->slot_duration,
                             "served_hours" => $total_booked_slots * $businessSetting->slot_duration,
                             "date" => $date->toDateString()
                         ]);

@@ -14,7 +14,8 @@ class GaragePackage extends Model
         "description",
         "price",
         "garage_id",
-        "is_active"
+        "is_active",
+        "service_time_in_minute"
     ];
 
     public function garage(){

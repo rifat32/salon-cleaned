@@ -812,13 +812,36 @@ private function getNextMinuteInterval($slot_duration, $time, $addDuration = fal
 
 
 
-    public function generateSlots($slot_duration,$startTime, $endTime)
+    public function generateSlots($slot_duration,$startTime, $endTime,$day=0, $throwError=false)
 {
+    // Map day number to weekday name
+    $daysOfWeek = [
+        0 => 'Sunday',
+        1 => 'Monday',
+        2 => 'Tuesday',
+        3 => 'Wednesday',
+        4 => 'Thursday',
+        5 => 'Friday',
+        6 => 'Saturday'
+    ];
+
     $slots = [];
 
     // Convert start and end times to timestamps
     $currentSlotTime = strtotime($startTime);
     $endSlotTime = strtotime($endTime);
+
+      // Calculate the total duration in minutes
+      $totalDuration = ($endSlotTime - $currentSlotTime) / 60;
+
+      if(!empty($throwError)) {
+// Check if the total duration is divisible by the slot duration
+if ($totalDuration % $slot_duration !== 0) {
+    $errorMessage = "The total time between '" . $startTime . "' and '" . $endTime . "' on " . $daysOfWeek[$day] . " is not divisible by the slot duration of " . $slot_duration . " minutes.";
+    throw new Exception($errorMessage,409);
+}
+      }
+
 
     while ($currentSlotTime < $endSlotTime) {
 
@@ -998,6 +1021,68 @@ private function getNextMinuteInterval($slot_duration, $time, $addDuration = fal
         return $totalMinutes;
     }
 
+
+  public function  attendanceCommand($business_id=NULL,$date=NULL) {
+        $experts = User::with("translation")
+        ->when(!empty($business_id), function($query) use($business_id) {
+             $query->where([
+                "business_id" => $business_id
+             ]);
+        })
+        ->where("users.is_active", 1)
+        ->whereHas('roles', function ($query) {
+            $query->where('roles.name', 'business_experts');
+        })
+        ->get();
+
+        if(!empty($date)) {
+            $date = Carbon::parse($date);
+        } else {
+            $date = Carbon::yesterday();
+        }
+
+        $dayOfWeek = $date->dayOfWeek;
+
+        foreach($experts as $expert){
+
+
+            $businessSetting = $this->get_business_setting($expert->business_id);
+
+            $garageTime = GarageTime::
+            where("garage_id", request()->input($expert->business_id))
+            ->where("day",$dayOfWeek)
+            ->first();
+
+            if(!empty($garageTime)) {
+                $total_slots = count($garageTime->time_slots);
+
+                $expert_rota = ExpertRota::where('expert_rotas.business_id', $expert->business_id)
+                ->whereDate('expert_rotas.date', ">=", $date)
+                ->where('expert_rotas.expert_id', $expert->id)
+                ->orderBy("expert_rotas.id", "DESC")
+                ->first();
+
+                if(empty($expert_rota)) {
+                    $expert_rota = ExpertRota::create([
+                    'expert_id' => $expert->id,
+                    'date' => $date ,
+                    'busy_slots' => [],
+                    "is_active" => 1,
+                    "business_id" => $expert->business_id,
+                    "created_by" => 1
+                  ]);
+                }
+
+                $expert_rota->worked_minutes = ($total_slots - count($expert_rota->busy_slots)) * $businessSetting->slot_duration;
+
+                $expert_rota->save();
+            }
+
+
+
+        }
+
+    }
 
 
 }

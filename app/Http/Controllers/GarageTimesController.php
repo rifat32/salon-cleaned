@@ -7,6 +7,7 @@ use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\UserActivityUtil;
+use App\Models\BusinessSetting;
 use App\Models\Garage;
 use App\Models\GarageTime;
 use Exception;
@@ -93,6 +94,8 @@ class GarageTimesController extends Controller
                     ], 401);
                 }
                 $request_data = $request->validated();
+                $request_data["business_id"] = auth()->user()->business_id;
+
 
                 $garage_id = $request_data["garage_id"];
            if (!$this->garageOwnerCheck($garage_id)) {
@@ -100,17 +103,20 @@ class GarageTimesController extends Controller
                 "message" => "you are not the owner of the garage or the requested garage does not exist."
             ], 401);
         }
+        $this->attendanceCommand($garage_id,today());
 
+
+
+               $timesArray = collect($request_data["times"])->unique("day");
+               $businessSetting = $this->get_business_setting($garage_id);
 
                GarageTime::where([
                 "garage_id" => $garage_id
                ])
                ->delete();
 
-               $timesArray = collect($request_data["times"])->unique("day");
-               $businessSetting = $this->get_business_setting($garage_id);
                foreach($timesArray as $garage_time) {
-                $processedSlots = $this->generateSlots($businessSetting->slot_duration,$garage_time["opening_time"],$garage_time["closing_time"]);
+                $processedSlots = $this->generateSlots($businessSetting->slot_duration,$garage_time["opening_time"],$garage_time["closing_time"],$garage_time["day"],true);
 
                 GarageTime::create([
                     "garage_id" => $garage_id,
@@ -122,6 +128,26 @@ class GarageTimesController extends Controller
 
                 ]);
                }
+
+
+$busunessSetting = BusinessSetting::
+where([
+  "business_id" => auth()->user()->business_id
+])
+->first();
+
+if (!$busunessSetting) {
+    BusinessSetting::create($request_data);
+} else {
+
+
+    $busunessSetting->fill(collect($request_data)->only([
+        "slot_duration"
+      ])->toArray());
+      $busunessSetting->save();
+}
+
+
 
 
                 return response(["message" => "data inserted"], 201);
@@ -205,6 +231,20 @@ class GarageTimesController extends Controller
             $garageTimes = GarageTime::where([
                 "garage_id" => $garage_id
             ])->orderByDesc("id")->get();
+
+            $busunessSetting = BusinessSetting::
+            where([
+                "business_id" => $garage_id
+            ])
+            ->first();
+
+// Add the businessSetting data to each garageTime
+$garageTimes->each(function ($garageTime) use ($busunessSetting) {
+    // Assuming you want to add a field like 'business_setting' or any field from $businessSetting
+    $garageTime->business_setting_field = $busunessSetting->slot_duration; // Replace 'your_field_name' with the actual field
+});
+
+
             return response()->json($garageTimes, 200);
         } catch(Exception $e){
 

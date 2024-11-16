@@ -506,6 +506,10 @@ Route::get('/v1.0/services/single/get/{id}', [ServiceController::class, "getServ
 Route::post('/v1.0/sub-services', [ServiceController::class, "createSubService"]);
 Route::put('/v1.0/sub-services', [ServiceController::class, "updateSubService"]);
 Route::get('/v1.0/sub-services/{serviceId}/{perPage}', [ServiceController::class, "getSubServicesByServiceId"]);
+
+Route::get('/v1.0/sub-services/{perPage}', [ServiceController::class, "getSubServices"]);
+
+
 Route::get('/v1.0/sub-services-all/{serviceId}', [ServiceController::class, "getAllSubServicesByServiceId"]);
 Route::delete('/v1.0/sub-services/{id}', [ServiceController::class, "deleteSubServiceById"]);
 
@@ -945,7 +949,6 @@ Route::delete('/v1.0/garage-service-prices/by-garage-sub-service/{id}', [GarageS
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 Route::post('/v1.0/garage-packages', [GaragePackageController::class, "createGaragePackage"]);
-
 Route::put('/v1.0/garage-packages', [GaragePackageController::class, "updateGaragePackage"]);
 
 

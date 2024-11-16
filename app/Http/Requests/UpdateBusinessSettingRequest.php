@@ -27,7 +27,7 @@ class UpdateBusinessSettingRequest extends FormRequest
             "allow_receptionist_user_discount" => "required|boolean",
             "discount_percentage_limit" => "required|numeric",
 
-        'slot_duration' => 'required|integer',
+
 
         'stripe_enabled' => 'required|boolean',
         'STRIPE_KEY' => 'string|nullable|required_if:stripe_enabled,true',
