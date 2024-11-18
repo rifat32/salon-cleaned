@@ -875,7 +875,7 @@ class BookingController extends Controller
                     if (!empty($check_in_booking)) {
                         // Return an error response indicating that the expert already has a check-in
                         return response()->json([
-                            "message" => "Expert " . ($check_in_booking->expert->first_Name . " " . $check_in_booking->expert->last_Name) . " already has a booking checked in on " . $check_in_booking->job_start_date . " at " . $check_in_booking->booked_slots[0] . " (Booking ID: " . $check_in_booking->id . "). Please complete that booking to start a new one.",
+                            "message" => "Expert " . ($check_in_booking->expert->first_Name . " " . $check_in_booking->expert->last_Name) . " already has a booking checked in on " . $check_in_booking->job_start_date . " at " . $check_in_booking->job_start_time . " (Booking ID: " . $check_in_booking->id . "). Please complete that booking to start a new one.",
                             "current_booking_id" => $check_in_booking->id,
                         ], 409);
                     }
@@ -1251,7 +1251,7 @@ class BookingController extends Controller
                     if (!empty($check_in_booking)) {
                         // Return an error response indicating that the expert already has a check-in
                         return response()->json([
-                            "message" => "Expert " . ($check_in_booking->expert->first_Name . " " . $check_in_booking->expert->last_Name) . " already has a booking checked in on " . $check_in_booking->job_start_date . " at " . $check_in_booking->booked_slots[0] . " (Booking ID: " . $check_in_booking->id . "). Please complete that booking to start a new one.",
+                            "message" => "Expert " . ($check_in_booking->expert->first_Name . " " . $check_in_booking->expert->last_Name) . " already has a booking checked in on " . $check_in_booking->job_start_date . " at " . $check_in_booking->job_start_time . " (Booking ID: " . $check_in_booking->id . "). Please complete that booking to start a new one.",
                             "current_booking_id" => $check_in_booking->id,
                         ], 409);
                     }
@@ -2359,10 +2359,14 @@ class BookingController extends Controller
                                     });
                             });
                         })
-                        ->when(request()->filled("duration_in_minute"), function ($query) use($businessSetting) {
-                            $total_slots = request()->input("duration_in_minute") / $businessSetting->slot_duration;
-                            $query->having('total_booked_slots', '>', $total_slots);
+                        ->when(request()->filled("duration_in_minute"), function ($query) {
+                            $durationInMinutes = request()->input("duration_in_minute");
+                            $query->whereRaw("TIMESTAMPDIFF(MINUTE, job_start_time, job_end_time) > ?", [$durationInMinutes]);
                         })
+                        // ->when(request()->filled("duration_in_minute"), function ($query) use($businessSetting) {
+                        //     $total_slots = request()->input("duration_in_minute") / $businessSetting->slot_duration;
+                        //     $query->having('total_booked_slots', '>', $total_slots);
+                        // })
                         ->when(!empty($request->booking_type), function ($query) use ($request) {
                             $booking_typeArray = explode(',', $request->booking_type);
                             $query->whereIn("booking_type", $booking_typeArray);
@@ -2750,25 +2754,15 @@ class BookingController extends Controller
 
                 foreach ($expert_bookings as $expert_booking) {
 
-                    $booked_slots = $expert_booking->booked_slots;
+                   // Parse the job start time
+$job_start_time = Carbon::parse($expert_booking->job_start_time);
 
-                    // Convert time strings into Carbon objects
-                    $booked_times = array_map(function ($time) {
-                        return Carbon::parse($time);
-                    }, $booked_slots);
+// Compare the job start time with the current time
+if ($job_start_time->greaterThan(now())) {
+    // Add the booking to the upcoming bookings collection
+    $upcoming_bookings->push($expert_booking);
+}
 
-                    // Get the smallest time
-                    $smallest_time = min($booked_times);
-
-                    // Get the current time or the input "current_slot"
-                    $current_time = request()->input("current_slot")
-                        ? Carbon::parse(request()->input("current_slot"))
-                        : Carbon::now(); // Use the current time if no input is provided
-
-                    // Compare the smallest booked time with the current time
-                    if ($smallest_time->greaterThan($current_time)) {
-                        $upcoming_bookings->push($upcoming_bookings);
-                    }
                 }
 
                 $expert["upcoming_bookings_today"] = $upcoming_bookings->toArray();

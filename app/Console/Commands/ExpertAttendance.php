@@ -12,7 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
-class SendNextVisitReminders extends Command
+class ExpertAttendance extends Command
 {
     use BasicUtil;
     /**

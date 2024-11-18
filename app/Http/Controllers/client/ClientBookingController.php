@@ -722,9 +722,6 @@ class ClientBookingController extends Controller
                 }
 
 
-
-
-
                 $booking->fill(collect($request_data)->only([
                     "garage_id",
                     "additional_information",
@@ -734,8 +731,6 @@ class ClientBookingController extends Controller
                     "booked_slots",
                     "reason",
                 ])->toArray());
-
-
 
                 BookingSubService::where([
                     "booking_id" => $booking->id
@@ -761,7 +756,6 @@ class ClientBookingController extends Controller
                     $price = $this->getPrice($sub_service, $request["expert_id"]);
 
                     $total_time += $sub_service->number_of_slots * $businessSetting->slot_duration;
-
 
                     $total_price += $price;
 

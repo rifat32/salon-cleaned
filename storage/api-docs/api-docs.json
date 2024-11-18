@@ -7102,6 +7102,99 @@
                 "summary": "get all dashboard data combined",
                 "description": "get all dashboard data combined",
                 "operationId": "getBusinessOwnerDashboardData",
+                "parameters": [
+                    {
+                        "name": "today_remaining_slots",
+                        "in": "query",
+                        "description": "Today remaining slots",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "customer_date_filter",
+                        "in": "query",
+                        "description": "Customer date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "repeated_customer_date_filter",
+                        "in": "query",
+                        "description": "Repeated customer date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "booking_date_filter",
+                        "in": "query",
+                        "description": "Booking date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "expert_booking_date_filter",
+                        "in": "query",
+                        "description": "Expert booking date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "expert_revenue_date_filter",
+                        "in": "query",
+                        "description": "Expert booking date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "revenue_date_filter",
+                        "in": "query",
+                        "description": "Revenue date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "booking_distribution_date",
+                        "in": "query",
+                        "description": "Top services date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "blocked_slots_date",
+                        "in": "query",
+                        "description": "Top services date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "booking_distribution_date",
+                        "in": "query",
+                        "description": "Top services date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "booking_date_filter_date_wise",
+                        "in": "query",
+                        "description": "Top services date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "top_services_date_filter",
+                        "in": "query",
+                        "description": "Top services date filter",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "busy_slots_date",
+                        "in": "query",
+                        "description": "Top services date filter",
+                        "required": true,
+                        "example": ""
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -7167,6 +7260,138 @@
                 "summary": "get all dashboard data combined",
                 "description": "get all dashboard data combined",
                 "operationId": "getExpertReport",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "Start date for filtering bookings"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "End date for filtering bookings"
+                    },
+                    {
+                        "name": "expert_id",
+                        "in": "query",
+                        "description": "ID of the expert to filter bookings"
+                    },
+                    {
+                        "name": "slots",
+                        "in": "query",
+                        "description": "Comma-separated list of slots to filter bookings"
+                    },
+                    {
+                        "name": "is_returning_customers",
+                        "in": "query",
+                        "description": "Filter for returning customers"
+                    },
+                    {
+                        "name": "payment_type",
+                        "in": "query",
+                        "description": "Comma-separated list of payment types to filter bookings"
+                    },
+                    {
+                        "name": "discount_applied",
+                        "in": "query",
+                        "description": "Filter for bookings with or without discounts"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Comma-separated list of statuses to filter bookings"
+                    },
+                    {
+                        "name": "payment_status",
+                        "in": "query",
+                        "description": "Comma-separated list of payment statuses to filter bookings"
+                    },
+                    {
+                        "name": "sub_service_ids",
+                        "in": "query",
+                        "description": "Comma-separated list of sub-service IDs to filter bookings"
+                    },
+                    {
+                        "name": "duration_in_minute",
+                        "in": "query",
+                        "description": "Duration in minutes to filter bookings"
+                    },
+                    {
+                        "name": "booking_type",
+                        "in": "query",
+                        "description": "Comma-separated list of booking types to filter bookings"
+                    },
+                    {
+                        "name": "date_filter",
+                        "in": "query",
+                        "description": "Filter bookings by date range options"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v2.0/expert-report": {
+            "get": {
+                "tags": [
+                    "dashboard_management"
+                ],
+                "summary": "get all dashboard data combined",
+                "description": "get all dashboard data combined",
+                "operationId": "getExpertReportV2",
                 "parameters": [
                     {
                         "name": "start_date",
@@ -8970,19 +9195,105 @@
                         "name": "start_date",
                         "in": "query",
                         "description": "start_date",
-                        "required": true
+                        "required": false
                     },
                     {
                         "name": "end_date",
                         "in": "query",
                         "description": "end_date",
-                        "required": true
+                        "required": false
                     },
                     {
                         "name": "expert_id",
                         "in": "query",
                         "description": "expert_id",
-                        "required": true,
+                        "required": false,
+                        "example": "ASC"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v2.0/expert-attendances": {
+            "get": {
+                "tags": [
+                    "expert_attendances"
+                ],
+                "summary": "This method is to get expert rotas  ",
+                "description": "This method is to get expert rotas ",
+                "operationId": "getExpertAttendancesV2",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": false
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": false
+                    },
+                    {
+                        "name": "expert_id",
+                        "in": "query",
+                        "description": "expert_id",
+                        "required": false,
                         "example": "ASC"
                     }
                 ],
@@ -24722,7 +25033,7 @@
                                         "format": "number",
                                         "example": "1"
                                     },
-                                    "service_time_in_minute": {
+                                    "number_of_slots": {
                                         "type": "number",
                                         "format": "number",
                                         "example": "1"
@@ -24832,7 +25143,7 @@
                                         "format": "number",
                                         "example": "1"
                                     },
-                                    "service_time_in_minute": {
+                                    "number_of_slots": {
                                         "type": "number",
                                         "format": "number",
                                         "example": "1"
@@ -24916,6 +25227,108 @@
                         "required": true,
                         "example": "6"
                     },
+                    {
+                        "name": "perPage",
+                        "in": "path",
+                        "description": "perPage",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "search_key",
+                        "in": "query",
+                        "description": "search_key",
+                        "required": true,
+                        "example": "search_key"
+                    },
+                    {
+                        "name": "is_fixed_price",
+                        "in": "query",
+                        "description": "is_fixed_price 0 or 1 as it is string sending in request true will be catch in string like 'true'",
+                        "required": true,
+                        "example": "0"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/sub-services/{perPage}": {
+            "get": {
+                "tags": [
+                    "service_management.sub"
+                ],
+                "summary": "This method is to get automobile sub Services by service id",
+                "description": "This method is to get automobile sub Services by service id",
+                "operationId": "getSubServices",
+                "parameters": [
                     {
                         "name": "perPage",
                         "in": "path",
@@ -25940,6 +26353,16 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "allow_receptionist_user_discount": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": ""
+                                    },
+                                    "discount_percentage_limit": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": ""
+                                    },
                                     "STRIPE_KEY": {
                                         "type": "string",
                                         "format": "string",
@@ -25971,6 +26394,10 @@
                                         "example": true
                                     },
                                     "allow_expert_booking_cancel": {
+                                        "type": "boolean",
+                                        "example": false
+                                    },
+                                    "allow_expert_take_payment": {
                                         "type": "boolean",
                                         "example": false
                                     },
@@ -26073,7 +26500,7 @@
                 ]
             }
         },
-        "/v1.0/client/business-settingss": {
+        "/v1.0/client/business-settings": {
             "get": {
                 "tags": [
                     "setting"
@@ -27710,6 +28137,11 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "expert_id": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "expert_id"
+                                    },
                                     "sub_service_prices": {
                                         "type": "array",
                                         "items": {
@@ -27723,11 +28155,6 @@
                                                     "type": "string",
                                                     "format": "string",
                                                     "example": "price"
-                                                },
-                                                "expert_id": {
-                                                    "type": "string",
-                                                    "format": "string",
-                                                    "example": "expert_id"
                                                 },
                                                 "description": {
                                                     "type": "string",
@@ -31185,6 +31612,108 @@
                 ]
             }
         },
+        "/v2.0/client/blocked-dates": {
+            "get": {
+                "tags": [
+                    "client.booking"
+                ],
+                "summary": "This method is to get  bookings ",
+                "description": "This method is to get bookings",
+                "operationId": "getBlockedDatesClientV2",
+                "parameters": [
+                    {
+                        "name": "expert_id",
+                        "in": "query",
+                        "description": "expert_id",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "status",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": ""
+                    },
+                    {
+                        "name": "search_key",
+                        "in": "query",
+                        "description": "search_key",
+                        "required": true,
+                        "example": ""
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1.0/hold-slot": {
             "post": {
                 "tags": [
@@ -31319,6 +31848,140 @@
                 ]
             }
         },
+        "/v1.0/release-slot": {
+            "post": {
+                "tags": [
+                    "slot.management"
+                ],
+                "summary": "Hold slots for a customer",
+                "description": "This method allows a customer to hold slots for 90 seconds.",
+                "operationId": "releaseSlot",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "held_slots",
+                                    "customer_id",
+                                    "expert_id"
+                                ],
+                                "properties": {
+                                    "held_slots": {
+                                        "description": "Array of slot IDs",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "customer_id": {
+                                        "description": "ID of the customer",
+                                        "type": "integer"
+                                    },
+                                    "expert_id": {
+                                        "description": "ID of the expert",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Slots held successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Slots held successfully"
+                                        },
+                                        "held_until": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2024-10-30T12:00:00Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict, user already has slots held",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You already have slots held"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1.0/client/blocked-slots/{expert_id}": {
             "get": {
                 "tags": [
@@ -31327,6 +31990,108 @@
                 "summary": "This method is to get  bookings ",
                 "description": "This method is to get bookings",
                 "operationId": "getBlockedSlotsClient",
+                "parameters": [
+                    {
+                        "name": "perPage",
+                        "in": "path",
+                        "description": "perPage",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "status",
+                        "required": true,
+                        "example": "pending"
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "search_key",
+                        "in": "query",
+                        "description": "search_key",
+                        "required": true,
+                        "example": "search_key"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v2.0/client/blocked-slots/{expert_id}": {
+            "get": {
+                "tags": [
+                    "client.booking"
+                ],
+                "summary": "This method is to get  bookings ",
+                "description": "This method is to get bookings",
+                "operationId": "getBlockedSlotsClientV2",
                 "parameters": [
                     {
                         "name": "perPage",
