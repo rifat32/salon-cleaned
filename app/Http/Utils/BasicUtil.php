@@ -722,7 +722,7 @@ trait BasicUtil
         if (count($slots) != $slot_numbers) {
             return [
                 'status' => 'error',
-                'message' => ("You need exactly " . $slot_numbers . "slots."),
+                'message' => ("You need exactly " . $slot_numbers . " slots. for the total time of ".$total_time),
             ];
         }
 
