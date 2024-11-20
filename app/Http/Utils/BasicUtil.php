@@ -88,12 +88,15 @@ trait BasicUtil
 
         $availableExperts = collect();
 
+        $businessSetting = $this->get_business_setting($businessId);
+
+
         foreach ($experts as $expert) {
 
 
 
 
-            $allBusySlots = $this->getAllBusySlotsForExpert($expert, $businessId, $date);
+            $allBusySlots = $this->getAllBusySlotsForExpert($businessSetting,$expert, $businessId, $date);
 
             // Find overlapping slots between the input slots and the combined allBusySlots
             $overlappingSlots = array_intersect($slots, $allBusySlots);
@@ -134,13 +137,19 @@ trait BasicUtil
      * @param string $date
      * @return array
      */
-    protected function getAllBusySlotsForExpert($expert, $businessId, $date)
+    protected function getAllBusySlotsForExpert($businessSetting,$expert, $businessId, $date)
     {
         // Get all bookings for the provided date except the rejected ones
         $expertBookings = Booking::whereDate("job_start_date", $date)
             ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
             ->where("garage_id", $businessId)
             ->get();
+
+
+        foreach($expertBookings as $booking) {
+            $booking->booked_slots =  $this->generateSlots($businessSetting->slot_duration, $booking->job_start_time, $booking->job_end_time);
+            $booking->save();
+          }
 
         // Get all the booked slots as a flat array
         $allBusySlots = $expertBookings->pluck('booked_slots')->flatten()->toArray();
@@ -151,7 +160,15 @@ trait BasicUtil
             "date" => $date
         ])->first();
 
-        if ($expertRota && !empty($expertRota->busy_slots)) {
+         // If expertRota exists, merge its busy_slots with the booked slots
+         if (!empty($expertRota)) {
+
+            $expertRotaBusySlots = [];
+            foreach($expertRota->rota_times as $rota_time) {
+                $expertRotaBusySlots[] =  $this->generateSlots($businessSetting->slot_duration, $rota_time->start_time, $rota_time->end_time);
+              }
+            $expertRota->busy_slots = $expertRotaBusySlots;
+            $expertRota->save();
             $allBusySlots = array_merge($allBusySlots, $expertRota->busy_slots);
         }
 

@@ -2361,7 +2361,7 @@ class BookingController extends Controller
                         })
                         ->when(request()->filled("duration_in_minute"), function ($query) {
                             $durationInMinutes = request()->input("duration_in_minute");
-                            $query->whereRaw("TIMESTAMPDIFF(MINUTE, job_start_time, job_end_time) > ?", [$durationInMinutes]);
+                            $query->whereRaw("TIMESTAMPDIFF(MINUTE, job_start_time, job_end_time) = ?", [$durationInMinutes]);
                         })
                         // ->when(request()->filled("duration_in_minute"), function ($query) use($businessSetting) {
                         //     $total_slots = request()->input("duration_in_minute") / $businessSetting->slot_duration;

@@ -1859,8 +1859,8 @@ class DashboardManagementController extends Controller
         $dateRange = $this->getDateRange($range);
         $start = $dateRange['start'];
         $end = $dateRange['end'];
-        return Booking::selectRaw('COALESCE(SUM(json_length(bookings.booked_slots)), 0) as total_booked_slots')
-            ->where("status", "converted_to_job")
+        return Booking::
+            where("status", "converted_to_job")
             ->where("payment_status", "complete")
             ->when(request()->filled("payment_type"), function ($query) {
                 $payment_typeArray = explode(',', request()->payment_type);
@@ -1890,9 +1890,9 @@ class DashboardManagementController extends Controller
             ->when(auth()->user()->hasRole("business_experts"), function ($query) {
                 $query->where('bookings.expert_id', auth()->user()->id);
             })
-            ->when(request()->filled("duration_in_minute"), function ($query) use ($businessSetting) {
-                $total_slots = request()->input("duration_in_minute") / $businessSetting->slot_duration;
-                $query->having('total_booked_slots', '>', $total_slots);
+            ->when(request()->filled("duration_in_minute"), function ($query) {
+                $durationInMinutes = request()->input("duration_in_minute");
+                $query->whereRaw("TIMESTAMPDIFF(MINUTE, job_start_time, job_end_time)  ?", [$durationInMinutes]);
             })
 
             ->when(request()->filled("slots"), function ($query) {
@@ -2463,26 +2463,15 @@ $query->whereHas('booking', function ($query) use ($start, $end,$expert_id) {
 
                 foreach ($expert_bookings as $expert_booking) {
 
+// Parse the job start time
+$job_start_time = Carbon::parse($expert_booking->job_start_time);
 
-                    $booked_slots = $expert_booking->booked_slots;
+// Compare the job start time with the current time
+if ($job_start_time->greaterThan(now())) {
+    // Add the booking to the upcoming bookings collection
+    $upcoming_bookings->push($expert_booking);
+}
 
-                    // Convert time strings into Carbon objects
-                    $booked_times = array_map(function ($time) {
-                        return Carbon::parse($time);
-                    }, $booked_slots);
-
-                    // Get the smallest time
-                    $smallest_time = min($booked_times);
-
-                    // Get the current time or the input "current_slot"
-                    $current_time = request()->input("current_slot")
-                        ? Carbon::parse(request()->input("current_slot"))
-                        : Carbon::now(); // Use the current time if no input is provided
-
-                    // Compare the smallest booked time with the current time
-                    if ($smallest_time->greaterThan($current_time)) {
-                        $upcoming_bookings->push($expert_booking);
-                    }
                 }
 
                 $expert->upcoming_bookings_today = $upcoming_bookings->toArray();
@@ -2547,11 +2536,18 @@ $query->whereHas('booking', function ($query) use ($start, $end,$expert_id) {
 
                 $expert->all_booked_slots = Booking::where("garage_id", auth()->user()->business_id)
                     ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
+                    ->where("expert_id",$expert->id)
                     ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
 
-                $expert->average_booked_slots_time = Booking::where("garage_id", auth()->user()->business_id)
-                    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-                    ->avg(DB::raw('JSON_LENGTH(booked_slots)')) * $businessSetting->slot_duration;
+                    $averageDurationPerBookingInSeconds = Booking::where('garage_id', auth()->user()->business_id)
+                    ->where("expert_id",$expert->id)
+    ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+    ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, job_start_time, job_end_time)) as avg_duration')
+    ->value('avg_duration');
+
+    $expert->average_booked_slots_time  = $averageDurationPerBookingInSeconds / 60;
+
+
 
                 $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
 
@@ -2799,9 +2795,9 @@ $query->whereHas('booking', function ($query) use ($start, $end,$expert_id) {
                                         });
                                 });
                             })
-                            ->when($request->filled("duration_in_minute"), function ($query) use($businessSetting) {
-                                $total_slots = request()->input("duration_in_minute") / $businessSetting->slot_duration;
-                                $query->having('total_booked_slots', '>', $total_slots);
+                            ->when(request()->filled("duration_in_minute"), function ($query) {
+                                $durationInMinutes = request()->input("duration_in_minute");
+                                $query->whereRaw("TIMESTAMPDIFF(MINUTE, job_start_time, job_end_time) = ?", [$durationInMinutes]);
                             })
                             ->when(!empty($request->booking_type), function ($query) use ($request) {
                                 $booking_typeArray = explode(',', $request->booking_type);
@@ -2889,12 +2885,18 @@ $query->whereHas('booking', function ($query) use ($start, $end,$expert_id) {
                 $expert->last_month_revenue = $this->calculateExpertRevenue($expert->id, now()->subMonth()->month);
 
                 $expert->all_booked_slots = Booking::where("garage_id", auth()->user()->business_id)
+                ->where("expert_id",$expert->id)
                     ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
                     ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
 
-                $expert->average_booked_slots_time = Booking::where("garage_id", auth()->user()->business_id)
-                    ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-                    ->avg(DB::raw('JSON_LENGTH(booked_slots)')) * $businessSetting->slot_duration;
+                    $averageDurationPerBookingInSeconds = Booking::where('garage_id', auth()->user()->business_id)
+                    ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+                    ->where("expert_id",$expert->id)
+                    ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, job_start_time, job_end_time)) as avg_duration')
+                    ->value('avg_duration');
+
+                    $expert->average_booked_slots_time  = $averageDurationPerBookingInSeconds / 60;
+
 
                 $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
 
@@ -3191,10 +3193,10 @@ $query->whereHas('booking', function ($query) use ($start, $end,$expert_id) {
                                          });
                                  });
                              })
-                             ->when($request->filled("duration_in_minute"), function ($query) use($businessSetting) {
-                                 $total_slots = request()->input("duration_in_minute") / $businessSetting->slot_duration;
-                                 $query->having('total_booked_slots', '>', $total_slots);
-                             })
+                             ->when(request()->filled("duration_in_minute"), function ($query) {
+                                $durationInMinutes = request()->input("duration_in_minute");
+                                $query->whereRaw("TIMESTAMPDIFF(MINUTE, job_start_time, job_end_time) = ?", [$durationInMinutes]);
+                            })
                              ->when(!empty($request->booking_type), function ($query) use ($request) {
                                  $booking_typeArray = explode(',', $request->booking_type);
                                  $query->whereIn("booking_type", $booking_typeArray);
@@ -3290,9 +3292,13 @@ $query->whereHas('booking', function ($query) use ($start, $end,$expert_id) {
                      ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
                      ->sum(DB::raw('JSON_LENGTH(booked_slots)'));
 
-                 $expert->average_booked_slots_time = Booking::where("garage_id", auth()->user()->business_id)
-                     ->whereNotIn("status", ["rejected_by_client", "rejected_by_garage_owner"])
-                     ->avg(DB::raw('JSON_LENGTH(booked_slots)')) * $businessSetting->slot_duration;
+                     $averageDurationPerBookingInSeconds = Booking::where('garage_id', auth()->user()->business_id)
+                     ->where("expert_id",$expert->id)
+     ->whereNotIn('status', ['rejected_by_client', 'rejected_by_garage_owner'])
+     ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, job_start_time, job_end_time)) as avg_duration')
+     ->value('avg_duration');
+
+     $expert->average_booked_slots_time  = $averageDurationPerBookingInSeconds / 60;
 
                  $bookingTypes = ['self_booking', 'admin_panel_booking', 'walk_in_customer_booking'];
 
