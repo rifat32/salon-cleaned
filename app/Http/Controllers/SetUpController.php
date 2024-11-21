@@ -369,13 +369,7 @@ return "swagger generated ...............";
     public function roleRefresh(Request $request)
     {
 
-
-
         $this->roleRefreshFunc();
-
-
-
-
         return "You are done with setup";
 
 

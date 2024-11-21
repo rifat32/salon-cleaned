@@ -96,7 +96,7 @@ trait BasicUtil
 
 
 
-            $allBusySlots = $this->getAllBusySlotsForExpert($businessSetting,$expert, $businessId, $date);
+            $allBusySlots = $this->getAllBusySlotsForExpert($businessSetting, $expert, $businessId, $date);
 
             // Find overlapping slots between the input slots and the combined allBusySlots
             $overlappingSlots = array_intersect($slots, $allBusySlots);
@@ -137,7 +137,7 @@ trait BasicUtil
      * @param string $date
      * @return array
      */
-    protected function getAllBusySlotsForExpert($businessSetting,$expert, $businessId, $date)
+    protected function getAllBusySlotsForExpert($businessSetting, $expert, $businessId, $date)
     {
         // Get all bookings for the provided date except the rejected ones
         $expertBookings = Booking::whereDate("job_start_date", $date)
@@ -146,10 +146,10 @@ trait BasicUtil
             ->get();
 
 
-        foreach($expertBookings as $booking) {
+        foreach ($expertBookings as $booking) {
             $booking->booked_slots =  $this->generateSlots($businessSetting->slot_duration, $booking->job_start_time, $booking->job_end_time);
             $booking->save();
-          }
+        }
 
         // Get all the booked slots as a flat array
         $allBusySlots = $expertBookings->pluck('booked_slots')->flatten()->toArray();
@@ -160,13 +160,13 @@ trait BasicUtil
             "date" => $date
         ])->first();
 
-         // If expertRota exists, merge its busy_slots with the booked slots
-         if (!empty($expertRota)) {
+        // If expertRota exists, merge its busy_slots with the booked slots
+        if (!empty($expertRota)) {
 
             $expertRotaBusySlots = [];
-            foreach($expertRota->rota_times as $rota_time) {
+            foreach ($expertRota->rota_times as $rota_time) {
                 $expertRotaBusySlots[] =  $this->generateSlots($businessSetting->slot_duration, $rota_time->start_time, $rota_time->end_time);
-              }
+            }
             $expertRota->busy_slots = $expertRotaBusySlots;
             $expertRota->save();
             $allBusySlots = array_merge($allBusySlots, $expertRota->busy_slots);
@@ -526,9 +526,9 @@ trait BasicUtil
     {
         $expert = User::where([
             "id" => $expert_id
-            ])
+        ])
             ->first();
-            $businessSetting = $this->get_business_setting($expert->business_id);
+        $businessSetting = $this->get_business_setting($expert->business_id);
 
         $date = Carbon::parse($date);
         $dayOfWeek = $date->dayOfWeek;
@@ -540,7 +540,7 @@ trait BasicUtil
             ->first();
 
         if (empty($garage_time)) {
-            throw new Exception("The salon is not open on this day.",401);
+            throw new Exception("The salon is not open on this day.", 401);
         }
 
 
@@ -560,9 +560,9 @@ trait BasicUtil
         $data["bookings"] = $bookings;
 
 
-        foreach($bookings as $booking) {
-          $booking->booked_slots =  $this->generateSlots($businessSetting->slot_duration, $booking->job_start_time, $booking->job_end_time);
-          $booking->save();
+        foreach ($bookings as $booking) {
+            $booking->booked_slots =  $this->generateSlots($businessSetting->slot_duration, $booking->job_start_time, $booking->job_end_time);
+            $booking->save();
         }
 
 
@@ -580,10 +580,10 @@ trait BasicUtil
             ])
             ->get();
 
-            foreach($check_in_bookings as $check_in_booking) {
-                $check_in_booking->booked_slots =  $this->generateSlots($businessSetting->slot_duration, $check_in_booking->job_start_time, $check_in_booking->job_end_time);
-                $check_in_booking->save();
-              }
+        foreach ($check_in_bookings as $check_in_booking) {
+            $check_in_booking->booked_slots =  $this->generateSlots($businessSetting->slot_duration, $check_in_booking->job_start_time, $check_in_booking->job_end_time);
+            $check_in_booking->save();
+        }
 
         $data["check_in_slots"]  = $check_in_bookings->pluck('booked_slots')->flatten()->toArray();
 
@@ -600,9 +600,9 @@ trait BasicUtil
         if (!empty($expertRota)) {
 
             $expertRotaBusySlots = [];
-            foreach($expertRota->rota_times as $rota_time) {
+            foreach ($expertRota->rota_times as $rota_time) {
                 $expertRotaBusySlots[] =  $this->generateSlots($businessSetting->slot_duration, $rota_time->start_time, $rota_time->end_time);
-              }
+            }
             $expertRota->busy_slots = $expertRotaBusySlots;
             $expertRota->save();
             $data["busy_slots"] = $expertRota->busy_slots;
@@ -739,7 +739,7 @@ trait BasicUtil
         if (count($slots) != $slot_numbers) {
             return [
                 'status' => 'error',
-                'message' => ("You need exactly " . $slot_numbers . " slots. for the total time of ".$total_time),
+                'message' => ("You need exactly " . $slot_numbers . " slots. for the total time of " . $total_time),
             ];
         }
 
@@ -754,123 +754,126 @@ trait BasicUtil
 
 
     public function processSlots($slot_duration, $slots)
-{
-    // Step 1: Sort slots by time
-    usort($slots, function ($a, $b) {
-        return strtotime($a) - strtotime($b);
-    });
+    {
+        // Step 1: Sort slots by time
+        usort($slots, function ($a, $b) {
+            return strtotime($a) - strtotime($b);
+        });
 
-    $groups = [];
-    $currentGroup = [];
+        $groups = [];
+        $currentGroup = [];
 
-    foreach ($slots as $slot) {
-        if (empty($currentGroup)) {
-            // Start a new group with the first slot
-            $currentGroup[] = $slot;
-        } else {
-            // Calculate the difference in minutes from the last slot in the current group
-            $lastSlotTime = strtotime(end($currentGroup));
-            $currentSlotTime = strtotime($slot);
-            $diffInMinutes = ($currentSlotTime - $lastSlotTime) / 60;
-
-            if ($diffInMinutes == $slot_duration) {
-                // If the difference is exactly equal to the slot duration, add to the current group
+        foreach ($slots as $slot) {
+            if (empty($currentGroup)) {
+                // Start a new group with the first slot
                 $currentGroup[] = $slot;
-            } elseif ($diffInMinutes % $slot_duration != 0) {
-                // If the difference is not divisible by the slot duration, throw an error
-                throw new Exception("Slots must be continuous in {$slot_duration}-minute intervals. Invalid interval between '{$lastSlotTime}' and '{$currentSlotTime}'.");
             } else {
-                // Otherwise, store the current group and start a new group
-                // Add slot duration to the last slot of the current group
-                $lastSlotTime = strtotime(end($currentGroup));  // Get the time of the last slot in the current group
-                $endTime = $this->getNextMinuteInterval($slot_duration, $lastSlotTime, true);  // Add slot duration to the end time
+                // Calculate the difference in minutes from the last slot in the current group
+                $lastSlotTime = strtotime(end($currentGroup));
+                $currentSlotTime = strtotime($slot);
+                $diffInMinutes = ($currentSlotTime - $lastSlotTime) / 60;
 
-                $groups[] = [
-                    'start_time' => date('H:i:s', strtotime($currentGroup[0])), // 24-hour format
-                    'end_time' => $endTime
-                ];
-                // Start a new group with the current slot
-                $currentGroup = [$slot];
+                if ($diffInMinutes == $slot_duration) {
+                    // If the difference is exactly equal to the slot duration, add to the current group
+                    $currentGroup[] = $slot;
+                } elseif ($diffInMinutes % $slot_duration != 0) {
+                    //  If the difference is not divisible by the slot duration, throw an error
+                    $lastSlotFormatted = date('h:i A', $lastSlotTime); // Format to AM/PM
+                    $currentSlotFormatted = date('h:i A', $currentSlotTime); // Format to AM/PM
+
+                    throw new Exception("Slots must be continuous in {$slot_duration}-minute intervals. Invalid interval between '{$lastSlotFormatted}' and '{$currentSlotFormatted}'.", 400);
+                } else {
+                    // Otherwise, store the current group and start a new group
+                    // Add slot duration to the last slot of the current group
+                    $lastSlotTime = strtotime(end($currentGroup));  // Get the time of the last slot in the current group
+                    $endTime = $this->getNextMinuteInterval($slot_duration, $lastSlotTime, true);  // Add slot duration to the end time
+
+                    $groups[] = [
+                        'start_time' => date('H:i:s', strtotime($currentGroup[0])), // 24-hour format
+                        'end_time' => $endTime
+                    ];
+                    // Start a new group with the current slot
+                    $currentGroup = [$slot];
+                }
             }
         }
+
+        // Add the last group's start and end times if it's not empty
+        if (!empty($currentGroup)) {
+            // Get the last slot time and add the slot duration to it
+            $lastSlotTime = strtotime(end($currentGroup));
+            $endTime = $this->getNextMinuteInterval($slot_duration, $lastSlotTime, true); // Pass a flag to add slot duration
+
+            $groups[] = [
+                'start_time' => date('H:i:s', strtotime($currentGroup[0])), // 24-hour format
+                'end_time' => $endTime
+            ];
+        }
+
+        return $groups;
     }
 
-    // Add the last group's start and end times if it's not empty
-    if (!empty($currentGroup)) {
-        // Get the last slot time and add the slot duration to it
-        $lastSlotTime = strtotime(end($currentGroup));
-        $endTime = $this->getNextMinuteInterval($slot_duration, $lastSlotTime, true); // Pass a flag to add slot duration
+    private function getNextMinuteInterval($slot_duration, $time, $addDuration = false)
+    {
+        // If we need to add duration to the time
+        if ($addDuration) {
+            $time += $slot_duration * 60; // Add the slot duration (in seconds)
+        }
 
-        $groups[] = [
-            'start_time' => date('H:i:s', strtotime($currentGroup[0])), // 24-hour format
-            'end_time' => $endTime
+        // Round up the given time to the next multiple of the slot_duration
+        $minutes = (int)date('i', $time);
+        $roundedMinutes = ceil($minutes / $slot_duration) * $slot_duration;
+
+        // Set the next time increment
+        $nextTime = strtotime(date('Y-m-d H:', $time) . str_pad($roundedMinutes, 2, '0', STR_PAD_LEFT));
+
+        return date('H:i:s', $nextTime); // 24-hour format
+    }
+
+
+
+    public function generateSlots($slot_duration, $startTime, $endTime, $day = 0, $throwError = false)
+    {
+        // Map day number to weekday name
+        $daysOfWeek = [
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday'
         ];
-    }
 
-    return $groups;
-}
+        $slots = [];
 
-private function getNextMinuteInterval($slot_duration, $time, $addDuration = false)
-{
-    // If we need to add duration to the time
-    if ($addDuration) {
-        $time += $slot_duration * 60; // Add the slot duration (in seconds)
-    }
+        // Convert start and end times to timestamps
+        $currentSlotTime = strtotime($startTime);
+        $endSlotTime = strtotime($endTime);
 
-    // Round up the given time to the next multiple of the slot_duration
-    $minutes = (int)date('i', $time);
-    $roundedMinutes = ceil($minutes / $slot_duration) * $slot_duration;
+        // Calculate the total duration in minutes
+        $totalDuration = ($endSlotTime - $currentSlotTime) / 60;
 
-    // Set the next time increment
-    $nextTime = strtotime(date('Y-m-d H:', $time) . str_pad($roundedMinutes, 2, '0', STR_PAD_LEFT));
-
-    return date('H:i:s', $nextTime); // 24-hour format
-}
+        if (!empty($throwError)) {
+            // Check if the total duration is divisible by the slot duration
+            if ($totalDuration % $slot_duration !== 0) {
+                $errorMessage = "The total time between '" . $startTime . "' and '" . $endTime . "' on " . $daysOfWeek[$day] . " is not divisible by the slot duration of " . $slot_duration . " minutes.";
+                throw new Exception($errorMessage, 409);
+            }
+        }
 
 
-
-    public function generateSlots($slot_duration,$startTime, $endTime,$day=0, $throwError=false)
-{
-    // Map day number to weekday name
-    $daysOfWeek = [
-        0 => 'Sunday',
-        1 => 'Monday',
-        2 => 'Tuesday',
-        3 => 'Wednesday',
-        4 => 'Thursday',
-        5 => 'Friday',
-        6 => 'Saturday'
-    ];
-
-    $slots = [];
-
-    // Convert start and end times to timestamps
-    $currentSlotTime = strtotime($startTime);
-    $endSlotTime = strtotime($endTime);
-
-      // Calculate the total duration in minutes
-      $totalDuration = ($endSlotTime - $currentSlotTime) / 60;
-
-      if(!empty($throwError)) {
-// Check if the total duration is divisible by the slot duration
-if ($totalDuration % $slot_duration !== 0) {
-    $errorMessage = "The total time between '" . $startTime . "' and '" . $endTime . "' on " . $daysOfWeek[$day] . " is not divisible by the slot duration of " . $slot_duration . " minutes.";
-    throw new Exception($errorMessage,409);
-}
-      }
-
-
-    while ($currentSlotTime < $endSlotTime) {
+        while ($currentSlotTime < $endSlotTime) {
 
             // Add this slot to the slots array
             $slots[] = date("g:i A", $currentSlotTime);
 
             // Calculate the end time for this slot by adding the slot duration
             $currentSlotTime += $slot_duration * 60;
-    }
+        }
 
-    return $slots;
-}
+        return $slots;
+    }
 
 
 
@@ -970,7 +973,7 @@ if ($totalDuration % $slot_duration !== 0) {
     }
 
 
-    public function validateGarageTimes($garage_id,$job_start_date, $job_start_time, $job_end_time = null)
+    public function validateGarageTimes($garage_id, $job_start_date, $job_start_time, $job_end_time = null)
     {
 
         $date = Carbon::createFromFormat('Y-m-d', $job_start_date);
@@ -983,7 +986,7 @@ if ($totalDuration % $slot_duration !== 0) {
             ->first();
 
         if (empty($garage_time)) {
-            throw new Exception("The salon is not open on this day.",401);
+            throw new Exception("The salon is not open on this day.", 401);
         }
 
 
@@ -1007,13 +1010,11 @@ if ($totalDuration % $slot_duration !== 0) {
             if ($jobEndTime->lessThan($openingTime) || $jobEndTime->greaterThanOrEqualTo($closingTime)) {
                 throw new Exception('The end time is outside of the salon operating hours.', 401);
             }
-
         }
-
     }
 
 
-    function calculateTotalMinutes($timeIntervals, $start_time_field_name, $end_time_field_name,$adjustedCurrentTime)
+    function calculateTotalMinutes($timeIntervals, $start_time_field_name, $end_time_field_name, $adjustedCurrentTime)
     {
         $totalMinutes = 0;
         $currentTime = $adjustedCurrentTime; // Get the current time
@@ -1039,20 +1040,21 @@ if ($totalDuration % $slot_duration !== 0) {
     }
 
 
-  public function  attendanceCommand($business_id=NULL,$date=NULL) {
+    public function  attendanceCommand($business_id = NULL, $date = NULL)
+    {
         $experts = User::with("translation")
-        ->when(!empty($business_id), function($query) use($business_id) {
-             $query->where([
-                "business_id" => $business_id
-             ]);
-        })
-        ->where("users.is_active", 1)
-        ->whereHas('roles', function ($query) {
-            $query->where('roles.name', 'business_experts');
-        })
-        ->get();
+            ->when(!empty($business_id), function ($query) use ($business_id) {
+                $query->where([
+                    "business_id" => $business_id
+                ]);
+            })
+            ->where("users.is_active", 1)
+            ->whereHas('roles', function ($query) {
+                $query->where('roles.name', 'business_experts');
+            })
+            ->get();
 
-        if(!empty($date)) {
+        if (!empty($date)) {
             $date = Carbon::parse($date);
         } else {
             $date = Carbon::yesterday();
@@ -1060,46 +1062,39 @@ if ($totalDuration % $slot_duration !== 0) {
 
         $dayOfWeek = $date->dayOfWeek;
 
-        foreach($experts as $expert){
+        foreach ($experts as $expert) {
 
 
             $businessSetting = $this->get_business_setting($expert->business_id);
 
-            $garageTime = GarageTime::
-            where("garage_id", request()->input($expert->business_id))
-            ->where("day",$dayOfWeek)
-            ->first();
+            $garageTime = GarageTime::where("garage_id", request()->input($expert->business_id))
+                ->where("day", $dayOfWeek)
+                ->first();
 
-            if(!empty($garageTime)) {
+            if (!empty($garageTime)) {
                 $total_slots = count($garageTime->time_slots);
 
                 $expert_rota = ExpertRota::where('expert_rotas.business_id', $expert->business_id)
-                ->whereDate('expert_rotas.date', ">=", $date)
-                ->where('expert_rotas.expert_id', $expert->id)
-                ->orderBy("expert_rotas.id", "DESC")
-                ->first();
+                    ->whereDate('expert_rotas.date', ">=", $date)
+                    ->where('expert_rotas.expert_id', $expert->id)
+                    ->orderBy("expert_rotas.id", "DESC")
+                    ->first();
 
-                if(empty($expert_rota)) {
+                if (empty($expert_rota)) {
                     $expert_rota = ExpertRota::create([
-                    'expert_id' => $expert->id,
-                    'date' => $date ,
-                    'busy_slots' => [],
-                    "is_active" => 1,
-                    "business_id" => $expert->business_id,
-                    "created_by" => 1
-                  ]);
+                        'expert_id' => $expert->id,
+                        'date' => $date,
+                        'busy_slots' => [],
+                        "is_active" => 1,
+                        "business_id" => $expert->business_id,
+                        "created_by" => 1
+                    ]);
                 }
 
                 $expert_rota->worked_minutes = ($total_slots - count($expert_rota->busy_slots)) * $businessSetting->slot_duration;
 
                 $expert_rota->save();
             }
-
-
-
         }
-
     }
-
-
 }
