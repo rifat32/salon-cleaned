@@ -44,7 +44,7 @@ class UserCreateRequest extends FormRequest
         'weekly_minimum_days' => 'required_if:role,business_experts|integer|min:1',
         'weekly_minimum_hours' => 'required_if:role,business_experts|integer|min:1',
         'joining_date' => 'required_if:role,business_experts|date',
-        'experience' => 'required_if:role,business_experts|date',
+        'experience' => 'required_if:role,business_experts|string',
 
 
     ];

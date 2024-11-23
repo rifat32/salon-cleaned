@@ -317,6 +317,7 @@ trait BasicUtil
         )
             ->where("customer_id", $user->id)
             ->whereDate("job_start_date", "<=", now())
+            ->whereTime("job_start_time", "<=", now())
             ->get();
 
         $user->upcoming_bookings = Booking::with(
@@ -326,7 +327,8 @@ trait BasicUtil
             "payments"
         )
             ->where("customer_id", $user->id)
-            ->whereDate("job_start_date", ">", now())
+            ->whereDate("job_start_date", ">=", now())
+            ->whereTime("job_start_time", ">=", now())
             ->get();
 
         $user->reminder_bookings = Booking::with(
