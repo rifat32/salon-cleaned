@@ -1886,6 +1886,7 @@ class BookingController extends Controller
             $bookingQuery = Booking::with(
                 "sub_services.service",
                 "booking_packages.garage_package",
+                "booking_sub_services.sub_service",
                 "customer",
                 "garage",
                 "expert",
@@ -2863,6 +2864,7 @@ if ($job_start_time->greaterThan(now())) {
 
             $booking = Booking::with(
                 "sub_services.service",
+                "booking_sub_services.sub_service",
                 "booking_packages.garage_package",
                 "customer",
                 "garage",

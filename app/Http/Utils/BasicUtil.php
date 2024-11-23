@@ -1005,14 +1005,20 @@ trait BasicUtil
         }
 
         if ($job_end_time) {
-
-
             $jobEndTime = Carbon::parse($job_end_time);
 
-            if ($jobEndTime->lessThan($openingTime) || $jobEndTime->greaterThanOrEqualTo($closingTime)) {
-                throw new Exception('The end time is outside of the salon operating hours.', 401);
+            if ($jobEndTime->lessThan($openingTime) || $jobEndTime->greaterThan($closingTime)) {
+                throw new Exception(
+                    'The end time is outside of the salon operating hours. Salon time: ' .
+                    $openingTime->format('h:i A') . ' - ' . $closingTime->format('h:i A') .
+                    '. Provided end time: ' . $jobEndTime->format('h:i A'),
+                    401
+                );
             }
         }
+
+
+
     }
 
 

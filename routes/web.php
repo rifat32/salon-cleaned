@@ -34,6 +34,12 @@ Route::get("/bookings/redirect-to-stripe",[BookingController::class,"redirectUse
 
 
 Route::get('/setup2', [SetUpController::class, "setUp2"])->name("setup2");
+
+Route::get('/load-services/{business_id}', [SetUpController::class, "loadService"])->name("load_ervice");
+
+
+
+
 Route::get('/backup', [SetUpController::class, "backup"])->name("backup");
 Route::get('/backup/fuel-station-services', [SetUpController::class, "backupFuelStationService"])->name("backupFuelStationSubService");
 Route::get('/roleRefresh', [SetUpController::class, "roleRefresh"])->name("roleRefresh");

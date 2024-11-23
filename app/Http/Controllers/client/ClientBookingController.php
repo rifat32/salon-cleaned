@@ -176,34 +176,37 @@ class ClientBookingController extends Controller
 
                 $businessSetting = $this->get_business_setting($booking->garage_id);
 
+
                 $total_price = 0;
                 $total_time = 0;
-                foreach ($request_data["booking_sub_service_ids"] as $index => $sub_service_id) {
-                    $sub_service =  SubService::where([
-                        "business_id" => $booking->garage_id,
-                        "id" => $sub_service_id
-                    ])
-                        ->first();
+                if (!empty($request_data["booking_sub_service_ids"])) {
+                    foreach ($request_data["booking_sub_service_ids"] as $index => $sub_service_id) {
+                        $sub_service = SubService::where([
+                            "business_id" => $booking->garage_id,
+                            "id" => $sub_service_id
+                        ])->first();
 
-                    if (!$sub_service) {
-                        $error =  [
-                            "message" => "The given data was invalid.",
-                            "errors" => [("booking_sub_service_ids[" . $index . "]") => ["invalid service"]]
-                        ];
-                        throw new Exception(json_encode($error), 422);
+                        if (!$sub_service) {
+                            $error = [
+                                "message" => "The given data was invalid.",
+                                "errors" => [("booking_sub_service_ids[" . $index . "]") => ["invalid service"]]
+                            ];
+                            throw new Exception(json_encode($error), 422);
+                        }
+
+                        $price = $this->getPrice($sub_service, $request_data["expert_id"]);
+
+                        $total_time += $sub_service->number_of_slots * $businessSetting->slot_duration;
+
+                        $total_price += $price;
+
+                        $booking->booking_sub_services()->create([
+                            "sub_service_id" => $sub_service->id,
+                            "price" => $price
+                        ]);
                     }
-
-                    $price = $this->getPrice($sub_service, $request_data["expert_id"]);
-
-                    $total_time += $sub_service->number_of_slots * $businessSetting->slot_duration;
-
-                    $total_price += $price;
-
-                    $booking->booking_sub_services()->create([
-                        "sub_service_id" => $sub_service->id,
-                        "price" => $price
-                    ]);
                 }
+
 
                 foreach ($request_data["booking_garage_package_ids"] as $index => $garage_package_id) {
                     $garage_package =  GaragePackage::where([
@@ -224,12 +227,15 @@ class ClientBookingController extends Controller
 
                     $total_price += $garage_package->price;
                     $total_time += $garage_package->number_of_slots * $businessSetting->slot_duration;
-                    $booking->booking_packages()->create([
-                        "garage_package_id" => $garage_package->id,
-                        "price" => $garage_package->price
-                    ]);
-                }
 
+                    BookingPackage::create([
+                        "garage_package_id" => $garage_package->id,
+                        "price" => $garage_package->price,
+                        "booking_id" =>$booking->id
+                    ]);
+
+
+                }
 
 
                 $slotValidation =  $this->validateBookingSlots($businessSetting, $booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
@@ -240,6 +246,8 @@ class ClientBookingController extends Controller
                     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
                     return response()->json($slotValidation, 422);
                 }
+
+
 
                 $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration, $request["booked_slots"]);
                 if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
@@ -259,6 +267,7 @@ class ClientBookingController extends Controller
                 $booking->price = $total_price;
                 $booking->save();
 
+
                 if (!empty($request_data["coupon_code"])) {
                     $coupon = $this->getCouponDiscount(
                         $request_data["garage_id"],
@@ -267,7 +276,6 @@ class ClientBookingController extends Controller
                     );
                     $booking = $this->applyCoupon($request_data, $booking, $coupon);
                 }
-
 
                 $booking->final_price = $booking->price;
                 $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
@@ -428,6 +436,7 @@ class ClientBookingController extends Controller
                     )
                         ->send(new BookingCreateMail($booking));
                 }
+
                 $booking = $booking->load(["payments"]);
                 return response($booking, 201);
             });
@@ -1059,6 +1068,7 @@ class ClientBookingController extends Controller
                     "sub_services.service",
                     "sub_services.service.translation",
                     "booking_packages.garage_package",
+                    "booking_sub_services.sub_service",
                     "customer.translation",
                     "garage",
                     "expert.translation",

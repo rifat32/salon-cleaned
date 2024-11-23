@@ -43,6 +43,7 @@ class Kernel extends HttpKernel
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
     //  'throttle:9999999,1',
     \App\Http\Middleware\ResponseMiddleware::class,
+    \App\Http\Middleware\FormatDatesInRequest::class,
 
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
