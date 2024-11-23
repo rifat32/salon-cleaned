@@ -15,7 +15,8 @@ class GaragePackage extends Model
         "price",
         "garage_id",
         "is_active",
-        "number_of_slots"
+        "number_of_slots",
+        "is_active",
     ];
 
     public function garage(){

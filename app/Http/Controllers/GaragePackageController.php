@@ -9,6 +9,7 @@ use App\Http\Requests\GaragePackageUpdateRequest;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\UserActivityUtil;
+use App\Models\BookingPackage;
 use App\Models\GaragePackage;
 use App\Models\GaragePackageSubService;
 use App\Models\GarageSubService;
@@ -101,6 +102,8 @@ class GaragePackageController extends Controller
 
                 $request_data = $request->validated();
 
+                $request_data["is_active"] = 1;
+
 
 
 
@@ -116,12 +119,10 @@ class GaragePackageController extends Controller
 
 
                     foreach ($request_data["sub_service_ids"] as $index=>$sub_service_id) {
-
                         GaragePackageSubService::create([
                             "sub_service_id" => $sub_service_id,
                             "garage_package_id" => $garage_package->id,
                         ]);
-
                     }
 
 
@@ -251,25 +252,43 @@ class GaragePackageController extends Controller
                         "message" => "garage package not found"
                     ], 404);
                 }
-                GaragePackageSubService::where([
-                    "garage_package_id" => $garage_package->id
-                ])
-                ->delete();
 
 
-                foreach ($request_data["sub_service_ids"] as $sub_service_id) {
+// Check if a booking already exists for the given garage_package_id
+$existingBooking = BookingPackage::where('garage_package_id', $garage_package->id)->exists();
+
+// Get all sub_service_ids from GaragePackageSubService for the current garage_package_id
+$existingSubServices = GaragePackageSubService::where('garage_package_id', $garage_package->id)
+    ->pluck('sub_service_id')
+    ->toArray();
+
+// Compare the provided sub_service_ids with the existing ones
+$providedSubServiceIds = $request_data["sub_service_ids"];
+
+// If a booking exists and the provided sub_service_ids are different from the existing ones, throw an error
+if ($existingBooking && (count(array_diff($providedSubServiceIds, $existingSubServices)) > 0 || count(array_diff($existingSubServices, $providedSubServiceIds)) > 0)) {
+    return response()->json(['error' => 'Cannot change the services once a booking exists and there is a change in services.'], 400);
+}
+
+// If no booking exists, proceed to update or add the sub-services
+// First, delete the old sub-services that are no longer in the provided list
+if (!$existingBooking) {
+    GaragePackageSubService::where('garage_package_id', $garage_package->id)
+        ->whereNotIn('sub_service_id', $providedSubServiceIds)
+        ->delete();
+}
 
 
-                    GaragePackageSubService::create([
-
-                        "sub_service_id" => $sub_service_id,
-                        "garage_package_id" => $garage_package->id,
-
-                    ]);
-
-                }
-
-
+// Now create or update the new sub-service entries
+foreach ($providedSubServiceIds as $sub_service_id) {
+    // Check if the sub-service already exists, if not, create it
+    if (!in_array($sub_service_id, $existingSubServices)) {
+        GaragePackageSubService::create([
+            "sub_service_id" => $sub_service_id,
+            "garage_package_id" => $garage_package->id,
+        ]);
+    }
+}
                 return response($garage_package, 201);
             });
         } catch (Exception $e) {
@@ -903,6 +922,23 @@ class GaragePackageController extends Controller
             "message" => "garage package not found"
                 ], 404);
             }
+
+// Check if a booking already exists for the given garage_package_id
+$existingBooking = BookingPackage::where('garage_package_id', $garage_package->id)->exists();
+
+
+
+
+
+// If no booking exists, proceed to update or add the sub-services
+// First, delete the old sub-services that are no longer in the provided list
+if ($existingBooking) {
+    return response()->json([
+        "message" => "bookings are associated with this package"
+            ], 404);
+}
+
+
             $garage_package->delete();
 
 

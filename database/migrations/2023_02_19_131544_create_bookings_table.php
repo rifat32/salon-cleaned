@@ -21,7 +21,7 @@ class CreateBookingsTable extends Migration
                    $table->foreign('expert_id')->references('id')->on('users')->onDelete('cascade');
 
                    // Add the booked_slots JSON column
-                   $table->json('booked_slots');
+                   $table->json('booked_slots')->nullable();
 
                    $table->enum("booking_type", ["self_booking", "admin_panel_booking","walk_in_customer_booking"]);
 

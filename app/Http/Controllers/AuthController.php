@@ -20,6 +20,7 @@ use App\Mail\VerifyMail;
 use App\Models\AutomobileCategory;
 use App\Models\AutomobileMake;
 use App\Models\AutomobileModel;
+use App\Models\BusinessSetting;
 use App\Models\EmailTemplate;
 use App\Models\EmailTemplateWrapper;
 use App\Models\Garage;
@@ -993,7 +994,32 @@ class AuthController extends Controller
                     ->delete();
                 $timesArray = collect($request_data["times"])->unique("day");
 
-                $businessSetting = $this->get_business_setting($garage->id);
+
+                $businessSetting = BusinessSetting::create([
+                    'allow_receptionist_user_discount' => true, // Default value for this field
+                    'discount_percentage_limit' => 0, // Default value
+                    'slot_duration' => 30, // Default value
+                    'STRIPE_KEY' => '',
+                    'STRIPE_SECRET' => '',
+                    'stripe_enabled' => false, // Default value for boolean
+                    'is_expert_price' => false, // Default value
+                    'is_auto_booking_approve' => false, // Default value
+                    'allow_pay_after_service' => false,
+                    'allow_expert_booking' => true, // Default value
+                    'allow_expert_self_busy' => false,
+                    'allow_expert_booking_cancel' => true,
+                    'allow_expert_take_payment' => false,
+                    'allow_expert_view_revenue' => true,
+                    'allow_expert_view_customer_details' => true,
+                    'allow_receptionist_add_question' => false,
+                    'default_currency' => 'USD', // Default currency
+                    'default_language' => 'en', // Default language
+                    'vat_enabled' => false, // Default value
+                    'vat_percentage' => 0, // Default value
+                    'vat_number' => '',
+                    "business_id" => $garage->id
+
+                ]);
 
                 foreach ($timesArray as $garage_time) {
 
@@ -1017,20 +1043,6 @@ class AuthController extends Controller
                             "garage_id" => $garage->id,
                         ]);
                     }
-                }
-
-
-                // end garage info ##############
-
-                // create services
-                $serviceUpdate =  $this->createGarageServices($request_data['service'], $garage->id, true);
-
-                if (!$serviceUpdate["success"]) {
-                    $error =  [
-                        "message" => "The given data was invalid.",
-                        "errors" => [("service" . $serviceUpdate["type"]) => [$serviceUpdate["message"]]]
-                    ];
-                    throw new Exception(json_encode($error), 422);
                 }
 
 
@@ -1095,6 +1107,9 @@ class AuthController extends Controller
                     "last_Name" => $last_name_translation
                 ]);
 
+                AutomobileCategory::create([
+                    "name" => "hidded"
+                ]);
 
 
 

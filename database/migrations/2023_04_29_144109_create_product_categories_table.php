@@ -21,9 +21,9 @@ class CreateProductCategoriesTable extends Migration
 
             $table->longText('description');
             $table->boolean('is_active')->default(false);
-            
+
             $table->foreignId('business_id')
-            ->constrained('businesses')
+            ->constrained('garages')
             ->onDelete('cascade');
 
             $table->unsignedBigInteger("created_by");

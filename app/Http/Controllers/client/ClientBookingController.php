@@ -234,12 +234,9 @@ class ClientBookingController extends Controller
                         "booking_id" =>$booking->id
                     ]);
 
-
                 }
 
-
                 $slotValidation =  $this->validateBookingSlots($businessSetting, $booking->id, $booking->customer_id, $request["booked_slots"], $request["job_start_date"], $request["expert_id"], $total_time);
-
 
 
                 if ($slotValidation['status'] === 'error') {
@@ -247,9 +244,9 @@ class ClientBookingController extends Controller
                     return response()->json($slotValidation, 422);
                 }
 
-
-
                 $processedSlotInformation =  $this->processSlots($businessSetting->slot_duration, $request["booked_slots"]);
+
+
                 if (count($processedSlotInformation) > 1 || count($processedSlotInformation) == 0) {
                     // Return a JSON response with the overlapping slots and a 422 Unprocessable Entity status code
                     throw new Exception("Slots must be continuous");
@@ -260,8 +257,6 @@ class ClientBookingController extends Controller
 
 
                 $this->validateGarageTimes($booking->garage_id, $booking->job_start_date, $booking->job_start_time, $booking->job_end_time);
-
-
 
 
                 $booking->price = $total_price;
@@ -289,9 +284,12 @@ class ClientBookingController extends Controller
                     $booking->final_price,
                     $booking->garage_id,
                 );
+
+
                 $booking->vat_percentage = $vat_information["vat_percentage"];
                 $booking->vat_amount = $vat_information["vat_amount"];
                 $booking->final_price += $vat_information["vat_amount"];
+
 
                 $booking->final_price += $this->canculate_discount_amount(
                     $booking->price,

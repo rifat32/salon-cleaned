@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Http\Utils\BasicUtil;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Booking extends Model
 {
-    use HasFactory,SoftDeletes;
+    use HasFactory,SoftDeletes, BasicUtil;
 
-    protected $appends = ['main_price']; // Append the main_price attribute
+    protected $appends = ['main_price'];
+
 
 
     protected $fillable = [
@@ -24,7 +26,7 @@ class Booking extends Model
         "payment_status",
         "payment_method",
         "expert_id",
-        "booked_slots",
+        // "booked_slots",
         "reason",
         "pre_booking_id",
         "garage_id",
@@ -48,10 +50,16 @@ class Booking extends Model
         'booked_slots' => 'array',
       ];
 
+      public function getBookedSlotsAttribute()
+      {
+        $businessSetting = $this->get_business_setting(auth()->user()->business_id);
+
+          return  $this->generateSlots($businessSetting->slot_duration, $this->job_start_time, $this->job_end_time);
+      }
 
       public function getMainPriceAttribute()
       {
-          $finalPrice = $this->final_price;
+          $finalPrice = $this->price;
           $tipAmount = $this->tip_amount;
           $tipType = $this->tip_type;
 
@@ -104,6 +112,16 @@ class Booking extends Model
     public function booking_packages(){
         return $this->hasMany(BookingPackage::class,'booking_id', 'id');
     }
+
+
+
+
+
+
+
+
+
+
 
 
 

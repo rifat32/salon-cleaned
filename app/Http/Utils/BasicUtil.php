@@ -148,7 +148,7 @@ trait BasicUtil
 
         foreach ($expertBookings as $booking) {
             $booking->booked_slots =  $this->generateSlots($businessSetting->slot_duration, $booking->job_start_time, $booking->job_end_time);
-            $booking->save();
+            // $booking->save();
         }
 
         // Get all the booked slots as a flat array
@@ -564,7 +564,7 @@ trait BasicUtil
 
         foreach ($bookings as $booking) {
             $booking->booked_slots =  $this->generateSlots($businessSetting->slot_duration, $booking->job_start_time, $booking->job_end_time);
-            $booking->save();
+            // $booking->save();
         }
 
 
@@ -990,8 +990,6 @@ trait BasicUtil
         if (empty($garage_time)) {
             throw new Exception("The salon is not open on this day.", 401);
         }
-
-
 
 
 
