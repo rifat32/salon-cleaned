@@ -31,6 +31,7 @@ use App\Http\Controllers\GaragesController;
 use App\Http\Controllers\GarageServiceController;
 use App\Http\Controllers\GarageServicePriceController;
 use App\Http\Controllers\GarageTimesController;
+use App\Http\Controllers\GoodController;
 use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\JobBidController;
 use App\Http\Controllers\JobController;
@@ -1100,6 +1101,29 @@ Route::delete('/v1.0/suppliers/{ids}', [SupplierController::class, "deleteSuppli
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // end suppliers management section
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// goods management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+Route::post('/v1.0/goods', [GoodController::class, "createGood"]);
+Route::put('/v1.0/goods', [GoodController::class, "updateGood"]);
+
+
+
+Route::put('/v1.0/goods/toggle-active', [GoodController::class, "toggleActiveGood"]);
+
+Route::get('/v1.0/goods', [GoodController::class, "getGoods"]);
+Route::delete('/v1.0/goods/{ids}', [GoodController::class, "deleteGoodsByIds"]);
+
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// end goods management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 
 
 

@@ -199,6 +199,16 @@ return [
 
 
 
+                "good_create",
+                "good_update",
+                "good_activate",
+                "good_view",
+                "good_delete",
+
+
+
+
+
                 "service_create",
                 "service_update",
                 "service_view",
@@ -600,6 +610,12 @@ return [
         "supplier_activate",
         "supplier_view",
         "supplier_delete",
+
+        "good_create",
+        "good_update",
+        "good_activate",
+        "good_view",
+        "good_delete",
 
 
 
