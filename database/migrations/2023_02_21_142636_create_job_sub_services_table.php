@@ -22,10 +22,10 @@ class CreateJobSubServicesTable extends Migration
             $table->foreign('sub_service_id')->references('id')->on('sub_services')->onDelete('restrict');
 
 
-            $table->double("price")->default(0);
+            $table->decimal("price",10,2)->default(0);
 
             // $table->string("coupon_discount_type")->nullable();
-            // $table->double("coupon_discount_amount")->nullable();
+            // $table->decimal("coupon_discount_amount",10,2)->nullable();
 
 
             $table->timestamps();

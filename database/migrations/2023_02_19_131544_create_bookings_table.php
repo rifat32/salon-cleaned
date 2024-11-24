@@ -45,23 +45,23 @@ class CreateBookingsTable extends Migration
             $table->text("reason")->nullable();
 
             $table->enum("coupon_discount_type",['fixed', 'percentage'])->default("fixed")->nullable();
-            $table->double("coupon_discount_amount")->nullable()->default(0);
+            $table->decimal("coupon_discount_amount",10,2)->nullable()->default(0);
 
 
             $table->enum("discount_type",['fixed', 'percentage'])->default("fixed")->nullable();
-            $table->double("discount_amount")->nullable()->default(0);
+            $table->decimal("discount_amount",10,2)->nullable()->default(0);
 
             $table->enum("tip_type",['fixed', 'percentage'])->default("fixed")->nullable();
-            $table->double("tip_amount")->nullable()->default(0);
-            $table->double("vat_percentage")->nullable()->default(0);
-            $table->double("vat_amount")->nullable()->default(0);
+            $table->decimal("tip_amount",10,2)->nullable()->default(0);
+            $table->decimal("vat_percentage",10,2)->nullable()->default(0);
+            $table->decimal("vat_amount",10,2)->nullable()->default(0);
 
 
 
 
-            $table->double("price")->default(0);
+            $table->decimal("price",10,2)->default(0);
 
-            $table->double("final_price")->default(0);
+            $table->decimal("final_price",10,2)->default(0);
 
 
             $table->string("coupon_code")->nullable();

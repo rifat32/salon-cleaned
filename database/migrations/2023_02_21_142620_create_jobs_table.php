@@ -28,13 +28,13 @@ class CreateJobsTable extends Migration
             $table->string("additional_information")->nullable();
 
             $table->enum("coupon_discount_type",['fixed', 'percentage'])->default("fixed")->nullable();
-            $table->double("coupon_discount_amount")->default(0);
+            $table->decimal("coupon_discount_amount",10,2)->default(0);
 
             $table->enum("discount_type",['fixed', 'percentage'])->default("fixed")->nullable();
-            $table->double("discount_amount")->nullable()->default(0);
+            $table->decimal("discount_amount",10,2)->nullable()->default(0);
 
-            $table->double("price")->default(0);
-            $table->double("final_price")->default(0);
+            $table->decimal("price",10,2)->default(0);
+            $table->decimal("final_price",10,2)->default(0);
 
             $table->date("job_start_date")->nullable();
 

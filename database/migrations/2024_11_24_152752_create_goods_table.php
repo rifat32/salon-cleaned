@@ -30,9 +30,9 @@ class CreateGoodsTable extends Migration
             ->constrained('supplier')
             ->onDelete('cascade');
 
-            $table->double('cost_price');
+            $table->decimal('cost_price',10,2);
 
-            $table->double('retail_price');
+            $table->decimal('retail_price',10,2);
 
             $table->string('barcode');
 
@@ -44,7 +44,7 @@ class CreateGoodsTable extends Migration
         $table->boolean('is_active')->default(false);
 
             $table->foreignId('business_id')
-            ->constrained('businesses')
+            ->constrained('garages')
             ->onDelete('cascade');
 
             $table->unsignedBigInteger("created_by");

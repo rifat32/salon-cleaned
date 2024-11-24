@@ -25,7 +25,7 @@ class CreateSubServicePricesTable extends Migration
             ->constrained('sub_services')
             ->onDelete('cascade');
 
-            $table->double('price');
+            $table->decimal('price',10,2);
 
             $table->foreignId('expert_id')
 

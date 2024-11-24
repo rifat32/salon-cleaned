@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LinkGoodsToSubServicesRequest;
 use App\Http\Requests\ServiceCreateRequest;
 use App\Http\Requests\ServiceFuelTypeUpdateRequest;
 use App\Http\Requests\ServiceUpdateRequest;
@@ -23,6 +24,7 @@ use App\Models\ServiceTranslation;
 use App\Models\SubServiceTranslation;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
 
@@ -1845,6 +1847,103 @@ if(!empty($sub_service->description)) {
         }
 
     }
+
+    /**
+ *
+ * @OA\Post(
+ *      path="/v1.0/sub-services/goods",
+ *      operationId="linkGoodsToSubServices",
+ *      tags={"service_management.sub"},
+ *      security={
+ *          {"bearerAuth": {}}
+ *      },
+ *      summary="This method links goods to sub-services",
+ *      description="This method links all goods to a sub-service and removes previous links.",
+ *
+ *  @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="sub_service_id", type="integer", example=1, description="ID of the sub-service to link goods to"),
+ *             @OA\Property(property="good_ids", type="array", items={
+ *                 @OA\Property(type="integer", example=1)
+ *             }, description="Array of good IDs to link with the sub-service")
+ *         ),
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Successful operation",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="Unauthenticated",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Unprocessable Content",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=403,
+ *          description="Forbidden",
+ *          @OA\JsonContent()
+ *      ),
+ *      @OA\Response(
+ *          response=400,
+ *          description="Bad Request",
+ *          @OA\JsonContent()
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Not Found",
+ *          @OA\JsonContent()
+ *      )
+ * )
+ */
+public function linkGoodsToSubServices(LinkGoodsToSubServicesRequest $request)
+{
+    try {
+        // Start transaction
+        DB::beginTransaction();
+
+        // Check if the user has permission
+        if (!auth()->user()->hasPermissionTo('link_goods_to_sub_services')) {
+            return response()->json([
+                "message" => "You do not have permission to perform this action."
+            ], 401);
+        }
+
+        // Get the sub_service_id and validate the sub-service exists
+        $sub_service_id = $request->sub_service_id;
+        $subService = SubService::find($sub_service_id);
+
+        if (!$subService) {
+            return response()->json([
+                "message" => "Sub-service not found."
+            ], 404);
+        }
+
+        // Detach previous good links from this sub-service
+        $subService->goods()->detach();
+
+        // Link new goods to the sub-service
+        $subService->goods()->attach($request->good_ids);
+
+        // Commit the transaction
+        DB::commit();
+
+        return response()->json([
+            "message" => "Goods linked to sub-service successfully."
+        ], 200);
+    } catch (Exception $e) {
+        // Rollback transaction in case of error
+        DB::rollBack();
+
+        return $this->sendError($e, 500, $request);
+    }
+}
+
 
 
 }

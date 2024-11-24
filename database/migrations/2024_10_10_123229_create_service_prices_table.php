@@ -23,14 +23,14 @@ class CreateServicePricesTable extends Migration
             $table->foreignId('service_id')
                 ->constrained('services')
                 ->onDelete('cascade');
-            $table->double('price');
+            $table->decimal('price',10,2);
             $table->foreignId('expert_id')
                 ->constrained('users')
                 ->onDelete('cascade');
             $table->foreignId('business_id')
                 ->constrained('garages')
                 ->onDelete('cascade');
-                
+
             $table->boolean('is_active')->default(false);
             $table->unsignedBigInteger("created_by");
             $table->softDeletes();

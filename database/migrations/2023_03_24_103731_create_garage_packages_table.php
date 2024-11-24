@@ -17,9 +17,9 @@ class CreateGaragePackagesTable extends Migration
             $table->id();
             $table->string("name");
             $table->text("description")->nullable();
-            $table->double("price")->default(0);
+            $table->decimal("price",10,2)->default(0);
             $table->integer("number_of_slots")->default(0);
-           
+
 
             $table->unsignedBigInteger("garage_id");
             $table->foreign('garage_id')->references('id')->on('garages')->onDelete('cascade');

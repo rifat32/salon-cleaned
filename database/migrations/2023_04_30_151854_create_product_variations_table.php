@@ -18,7 +18,7 @@ class CreateProductVariationsTable extends Migration
 
             $table->string("sub_sku");
             $table->integer("quantity")->default(0);
-            $table->double("price")->default(0);
+            $table->decimal("price",10,2)->default(0);
 
 
             $table->unsignedBigInteger("automobile_make_id")->nullable();

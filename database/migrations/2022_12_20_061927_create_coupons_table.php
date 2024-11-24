@@ -22,17 +22,17 @@ class CreateCouponsTable extends Migration
 
 
             $table->enum("discount_type",['fixed', 'percentage'])->default("fixed")->nullable();
-            $table->double("discount_amount");
+            $table->decimal("discount_amount",10,2);
 
 
 
-            $table->double("min_total")->nullable();
-            $table->double("max_total")->nullable();
+            $table->decimal("min_total",10,2)->nullable();
+            $table->decimal("max_total",10,2)->nullable();
 
 
 
-            $table->double("redemptions")->nullable();
-            $table->double("customer_redemptions")->default(0);
+            $table->decimal("redemptions",10,2)->nullable();
+            $table->decimal("customer_redemptions",10,2)->default(0);
 
 
 

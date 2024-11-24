@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateJobPaymentsTable extends Migration
+class CreateSalesItemsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,22 +13,13 @@ class CreateJobPaymentsTable extends Migration
      */
     public function up()
     {
-        Schema::create('job_payments', function (Blueprint $table) {
+        Schema::create('sales_items', function (Blueprint $table) {
             $table->id();
-
-            $table->unsignedBigInteger("job_id");
-            $table->foreign('job_id')->references('id')->on('jobs')->onDelete('cascade');
-
-            $table->string("payment_type")->nullable();
-
-
-
-            $table->decimal("amount",10,2);
-
-
-
-
-
+            $table->foreignId('sale_id')->constrained('sales');
+            $table->foreignId('good_id')->constrained('goods');
+            $table->integer('quantity');
+            $table->decimal('price_per_unit',10,2);
+            $table->decimal('total_price',10,2);
             $table->timestamps();
         });
     }
@@ -40,6 +31,6 @@ class CreateJobPaymentsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('job_payments');
+        Schema::dropIfExists('sales_items');
     }
 }

@@ -9,13 +9,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\GoodCreateRequest;
 use App\Http\Requests\GoodUpdateRequest;
 use App\Http\Requests\GetIdRequest;
+
+use App\Http\Requests\LinkSubServicesToGoodRequest;
 use App\Http\Utils\BusinessUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Models\Good;
-use App\Models\DisabledGood;
-use App\Models\User;
-use Carbon\Carbon;
+use App\Models\ServiceGood;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -105,10 +105,6 @@ class GoodController extends Controller
 
                 $request_data["is_active"] = 1;
 
-
-
-
-
                 $request_data["created_by"] = auth()->user()->id;
                 $request_data["business_id"] = auth()->user()->business_id;
 
@@ -119,13 +115,7 @@ class GoodController extends Controller
                     }
                 }
 
-
-
-
                 $good =  Good::create($request_data);
-
-
-
 
                 return response($good, 201);
             });
@@ -134,6 +124,104 @@ class GoodController extends Controller
             return $this->sendError($e, 500, $request);
         }
     }
+
+
+    /**
+ *
+ * @OA\Post(
+ *      path="/v1.0/goods/sub-services",
+ *      operationId="linkSubServicesToGood",
+ *      tags={"goods"},
+ *      security={
+ *          {"bearerAuth": {}}
+ *      },
+ *      summary="This method links products to sub-services",
+ *      description="This method links all sub-services to a product and removes previous links.",
+ *
+ *  @OA\RequestBody(
+ *         required=true,
+ *         @OA\JsonContent(
+ *             @OA\Property(property="good_id", type="integer", example=1, description="ID of the product (good) to link sub-services to"),
+ *             @OA\Property(property="sub_service_ids", type="array", items={
+ *                 @OA\Property(type="integer", example=1)
+ *             }, description="Array of sub-service IDs to link with the product")
+ *         ),
+ *      ),
+ *      @OA\Response(
+ *          response=200,
+ *          description="Successful operation",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="Unauthenticated",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Unprocessable Content",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=403,
+ *          description="Forbidden",
+ *          @OA\JsonContent()
+ *      ),
+ *      @OA\Response(
+ *          response=400,
+ *          description="Bad Request",
+ *          @OA\JsonContent()
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Not Found",
+ *          @OA\JsonContent()
+ *      )
+ * )
+ */
+public function linkSubServicesToGood(LinkSubServicesToGoodRequest $request)
+{
+    try {
+        // Start transaction
+        DB::beginTransaction();
+
+        // Check permission
+        if (!auth()->user()->hasPermissionTo('link_sub_services')) {
+            return response()->json([
+                "message" => "You do not have permission to perform this action."
+            ], 401);
+        }
+
+        // Get the good_id and validate the good exists
+        $good_id = $request->good_id;
+        $good = Good::find($good_id);
+
+        if (!$good) {
+            return response()->json([
+                "message" => "Good not found."
+            ], 404);
+        }
+
+        // Detach previous sub-service links
+        $good->subServices()->detach();
+
+        // Link new sub-services
+        $good->subServices()->attach($request->sub_service_ids);
+
+        // Commit transaction
+        DB::commit();
+
+        return response()->json([
+            "message" => "Sub-services linked successfully."
+        ], 200);
+    } catch (Exception $e) {
+        // Rollback transaction in case of error
+        DB::rollBack();
+
+        return $this->sendError($e, 500, $request);
+    }
+}
+
     /**
      *
      * @OA\Put(
@@ -678,4 +766,77 @@ class GoodController extends Controller
             return $this->sendError($e, 500, $request);
         }
     }
+
+
+
+    /**
+ *
+ * @OA\Get(
+ *      path="/v1.0/linked-items/good-sub-services",
+ *      operationId="getLinkedGoodSubServices",
+ *      tags={"goods", "sub-services"},
+ *      security={
+ *          {"bearerAuth": {}}
+ *      },
+ *      summary="This method retrieves linked goods or sub-services based on the provided query parameter",
+ *      description="This method returns the linked sub-services for a good or the linked goods for a sub-service.",
+ *
+ *  @OA\Parameter(
+ *      name="good_id",
+ *      in="query",
+ *      description="ID of the good to retrieve linked sub-services",
+ *      required=false,
+ *      @OA\Schema(type="integer")
+ *  ),
+ *  @OA\Parameter(
+ *      name="sub_service_id",
+ *      in="query",
+ *      description="ID of the sub-service to retrieve linked goods",
+ *      required=false,
+ *      @OA\Schema(type="integer")
+ *  ),
+ *  @OA\Response(
+ *          response=200,
+ *          description="Successful operation",
+ *          @OA\JsonContent(type="array", @OA\Items(type="object")),
+ *      ),
+ *      @OA\Response(
+ *          response=401,
+ *          description="Unauthenticated",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=422,
+ *          description="Unprocessable Content",
+ *          @OA\JsonContent(),
+ *      ),
+ *      @OA\Response(
+ *          response=404,
+ *          description="Not Found",
+ *          @OA\JsonContent()
+ *      )
+ * )
+ */
+public function getLinkedGoodSubServices(Request $request)
+{
+    try {
+        // Start building the query for ServiceGood
+        $linked_items = ServiceGood::with('good', 'subService')
+        ->when(request()->has('good_id'), function ($query) {
+            return $query->where('good_id', request()->input("good_id"));
+        })
+        ->when(request()->has('sub_service_id'), function ($query)  {
+            return $query->where('sub_service_id', request()->input("sub_service_id"));
+        })
+        ->get();
+
+
+
+        // Return the linked items as a JSON response
+        return response()->json($linked_items, 200);
+
+    } catch (Exception $e) {
+        return $this->sendError($e, 500, $request);
+    }
+}
 }

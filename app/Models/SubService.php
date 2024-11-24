@@ -22,6 +22,12 @@ class SubService extends Model
 
     ];
 
+    public function goods()
+    {
+        return $this->belongsToMany(Good::class, 'service_goods', 'sub_service_id', 'good_id')
+                    ->withPivot('quantity_used')  // Include any additional fields from the pivot table
+                    ->withTimestamps();  // This ensures that created_at and updated_at are maintained
+    }
      // Accessor for default_price
      public function getPriceAttribute($value)
      {

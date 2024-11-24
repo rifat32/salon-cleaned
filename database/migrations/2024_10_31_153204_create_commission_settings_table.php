@@ -18,10 +18,10 @@ class CreateCommissionSettingsTable extends Migration
             $table->foreignId('business_id')
             ->constrained('garages')
             ->onDelete('cascade');
-            $table->decimal('target_amount', 15, 2)->default(0); // Target amount for commission
-            $table->decimal('commission_percentage', 5, 2)->default(0); // Commission percentage
+            $table->decimal('target_amount',10,2)->default(0); // Target amount for commission
+            $table->decimal('commission_percentage',10,2)->default(0); // Commission percentage
             $table->enum('frequency', ['monthly', 'quarterly', 'annually'])->default('monthly'); // Frequency of commission
-            
+
             $table->timestamps();
 
 

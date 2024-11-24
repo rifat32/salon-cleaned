@@ -44,6 +44,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServicePriceController;
 use App\Http\Controllers\ShopGalleryController;
@@ -515,6 +516,9 @@ Route::get('/v1.0/sub-services/{perPage}', [ServiceController::class, "getSubSer
 
 Route::get('/v1.0/sub-services-all/{serviceId}', [ServiceController::class, "getAllSubServicesByServiceId"]);
 Route::delete('/v1.0/sub-services/{id}', [ServiceController::class, "deleteSubServiceById"]);
+
+
+
 
 
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1109,6 +1113,8 @@ Route::delete('/v1.0/suppliers/{ids}', [SupplierController::class, "deleteSuppli
 // goods management section
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+
+Route::get('/v1.0/linked-items/good-sub-services', [GoodController::class, "getLinkedGoodSubServices"]);
 Route::post('/v1.0/goods', [GoodController::class, "createGood"]);
 Route::put('/v1.0/goods', [GoodController::class, "updateGood"]);
 
@@ -1118,6 +1124,8 @@ Route::put('/v1.0/goods/toggle-active', [GoodController::class, "toggleActiveGoo
 
 Route::get('/v1.0/goods', [GoodController::class, "getGoods"]);
 Route::delete('/v1.0/goods/{ids}', [GoodController::class, "deleteGoodsByIds"]);
+Route::post('/v1.0/goods/sub-services', [GoodController::class, "linkSubServicesToGood"]);
+
 
 
 
@@ -1141,6 +1149,25 @@ Route::delete('/v1.0/purchase-orders/{ids}', [PurchaseOrderController::class, "d
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // end purchase orders management section
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// sales management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+Route::post('/v1.0/sales', [SaleController::class, "createSale"]);
+Route::put('/v1.0/sales', [SaleController::class, "updateSale"]);
+
+Route::get('/v1.0/sales', [SaleController::class, "getSales"]);
+Route::delete('/v1.0/sales/{ids}', [SaleController::class, "deleteSalesByIds"]);
+
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// end sales management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 
 
 

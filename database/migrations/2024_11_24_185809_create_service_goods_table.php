@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateJobPaymentsTable extends Migration
+class CreateServiceGoodsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,22 +13,11 @@ class CreateJobPaymentsTable extends Migration
      */
     public function up()
     {
-        Schema::create('job_payments', function (Blueprint $table) {
+        Schema::create('service_goods', function (Blueprint $table) {
             $table->id();
-
-            $table->unsignedBigInteger("job_id");
-            $table->foreign('job_id')->references('id')->on('jobs')->onDelete('cascade');
-
-            $table->string("payment_type")->nullable();
-
-
-
-            $table->decimal("amount",10,2);
-
-
-
-
-
+            $table->foreignId('sub_service_id')->constrained('sub_services');
+            $table->foreignId('good_id')->constrained('goods');
+            $table->integer('quantity_used');
             $table->timestamps();
         });
     }
@@ -40,6 +29,6 @@ class CreateJobPaymentsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('job_payments');
+        Schema::dropIfExists('service_goods');
     }
 }

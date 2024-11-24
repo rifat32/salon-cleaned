@@ -50,7 +50,7 @@ class CreateStripeSettingsTable extends Migration
 
     // VAT settings
     $table->boolean('vat_enabled')->default(false); // Whether VAT is enabled
-    $table->decimal('vat_percentage', 5, 2)->nullable(); // VAT percentage (e.g., 15.00 for 15%)
+    $table->decimal('vat_percentage', 10,2)->nullable(); // VAT percentage (e.g., 15.00 for 15%)
     $table->string('vat_number')->nullable();
 
 

@@ -19,7 +19,7 @@ class CreateJobBidsTable extends Migration
             $table->foreign('pre_booking_id')->references('id')->on('pre_bookings')->onDelete('cascade');
             $table->unsignedBigInteger("garage_id");
             $table->foreign('garage_id')->references('id')->on('garages')->onDelete('cascade');
-            $table->double("price");
+            $table->decimal("price",10,2);
             $table->text("offer_template");
 
 

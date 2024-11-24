@@ -22,7 +22,7 @@ class CreateGarageSubServicePricesTable extends Migration
             $table->unsignedBigInteger("automobile_make_id")->nullable();
             $table->foreign('automobile_make_id')->references('id')->on('automobile_makes')->onDelete('cascade');
 
-            $table->double("price")->default(0);
+            $table->decimal("price",10,2)->default(0);
 
             $table->timestamps();
         });

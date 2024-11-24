@@ -32,10 +32,15 @@ class Good extends Model
     ];
 
     protected $casts = [
-  
+
   ];
 
-
+  public function subServices()
+  {
+      return $this->belongsToMany(SubService::class, 'service_goods', 'good_id', 'sub_service_id')
+                  ->withPivot('quantity_used')  // Include any additional fields from the pivot table
+                  ->withTimestamps();  // Ensure created_at and updated_at are maintained
+  }
 
 
 

@@ -11,8 +11,8 @@ class AddDefaultPriceToSubServicesTable extends Migration
     public function up()
     {
         Schema::table('sub_services', function (Blueprint $table) {
-            $table->double('default_price')->nullable();
-            $table->double('price')->nullable();
+            $table->decimal('default_price',10,2)->nullable();
+            $table->decimal('price',10,2)->nullable();
         });
     }
 

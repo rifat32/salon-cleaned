@@ -18,7 +18,7 @@ class CreatePurchaseOrderItemsTable extends Migration
             $table->foreignId('purchase_order_id')->constrained('purchase_orders');
             $table->foreignId('good_id')->constrained('good');
             $table->integer('quantity');
-            $table->double('cost_per_unit');
+            $table->decimal('cost_per_unit',10,2);
 
             $table->timestamps();
         });

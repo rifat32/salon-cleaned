@@ -203,6 +203,14 @@ return [
                 "purchase_order_delete",
 
 
+                "sale_create",
+                "sale_update",
+                "sale_view",
+                "sale_delete",
+
+
+
+
 
 
                 "good_create",
@@ -622,6 +630,11 @@ return [
         "purchase_order_update",
         "purchase_order_view",
         "purchase_order_delete",
+
+        "sale_create",
+        "sale_update",
+        "sale_view",
+        "sale_delete",
 
 
 

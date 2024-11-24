@@ -22,7 +22,7 @@ class CreateJobPackagesTable extends Migration
             $table->foreign('garage_package_id')->references('id')->on('garage_packages')->onDelete('restrict');
 
 
-            $table->double("price")->default(0);
+            $table->decimal("price",10,2)->default(0);
 
 
             $table->timestamps();
