@@ -48,6 +48,7 @@ use App\Http\Controllers\ShopGalleryController;
 use App\Http\Controllers\ShopsController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SubServicePriceController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserManagementController;
 use App\Models\GaragePackage;
 use App\Models\JobBid;
@@ -1066,10 +1067,10 @@ Route::get('/v1.0/shops/by-shop-owner/all', [ShopsController::class, "getAllShop
 Route::post('/v1.0/products', [ProductController::class, "createProduct"]);
 Route::put('/v1.0/products', [ProductController::class, "updateProduct"]);
 Route::patch('/v1.0/products/link-product-to-shop', [ProductController::class, "linkProductToShop"]);
-
 Route::get('/v1.0/products/{perPage}', [ProductController::class, "getProducts"]);
 Route::get('/v1.0/products/single/get/{id}', [ProductController::class, "getProductById"]);
 Route::delete('/v1.0/products/{id}', [ProductController::class, "deleteProductById"]);
+
 
 
 
@@ -1078,6 +1079,27 @@ Route::delete('/v1.0/products/{id}', [ProductController::class, "deleteProductBy
 // end product  management section
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+
+
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// suppliers management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+Route::post('/v1.0/suppliers', [SupplierController::class, "createSupplier"]);
+Route::put('/v1.0/suppliers', [SupplierController::class, "updateSupplier"]);
+
+Route::put('/v1.0/suppliers/toggle-active', [SupplierController::class, "toggleActiveSupplier"]);
+
+Route::get('/v1.0/suppliers', [SupplierController::class, "getSuppliers"]);
+Route::delete('/v1.0/suppliers/{ids}', [SupplierController::class, "deleteSuppliersByIds"]);
+
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// end suppliers management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
 

@@ -191,6 +191,13 @@ return [
                 "sub_service_price_delete",
 
 
+                "supplier_create",
+                "supplier_update",
+                "supplier_activate",
+                "supplier_view",
+                "supplier_delete",
+
+
 
                 "service_create",
                 "service_update",
@@ -584,6 +591,17 @@ return [
         "sub_service_price_update",
         "sub_service_price_view",
         "sub_service_price_delete",
+
+
+
+
+        "supplier_create",
+        "supplier_update",
+        "supplier_activate",
+        "supplier_view",
+        "supplier_delete",
+
+
 
 
 
