@@ -16603,6 +16603,544 @@
                 ]
             }
         },
+        "/v1.0/goods": {
+            "get": {
+                "tags": [
+                    "goods"
+                ],
+                "summary": "This method is to get goods  ",
+                "description": "This method is to get goods ",
+                "operationId": "getGoods",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "name",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "sku",
+                        "in": "query",
+                        "description": "sku",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "barcode",
+                        "in": "query",
+                        "description": "barcode",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "per_page",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "is_active",
+                        "required": true,
+                        "example": "1"
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "search_key",
+                        "in": "query",
+                        "description": "search_key",
+                        "required": true,
+                        "example": "search_key"
+                    },
+                    {
+                        "name": "order_by",
+                        "in": "query",
+                        "description": "order_by",
+                        "required": true,
+                        "example": "ASC"
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "id",
+                        "required": true,
+                        "example": "ASC"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "goods"
+                ],
+                "summary": "This method is to update goods ",
+                "description": "This method is to update goods ",
+                "operationId": "updateGood",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "type": "number",
+                                        "format": "number",
+                                        "example": "1"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "name"
+                                    },
+                                    "sku": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "sku"
+                                    },
+                                    "product_category_id": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "product_category_id"
+                                    },
+                                    "preferred_supplier_id": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "preferred_supplier_id"
+                                    },
+                                    "cost_price": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "cost_price"
+                                    },
+                                    "retail_price": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "retail_price"
+                                    },
+                                    "barcode": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "barcode"
+                                    },
+                                    "current_stock": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "current_stock"
+                                    },
+                                    "min_stock_level": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "min_stock_level"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "goods"
+                ],
+                "summary": "This method is to store goods",
+                "description": "This method is to store goods",
+                "operationId": "createGood",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "name"
+                                    },
+                                    "sku": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "sku"
+                                    },
+                                    "product_category_id": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "product_category_id"
+                                    },
+                                    "preferred_supplier_id": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "preferred_supplier_id"
+                                    },
+                                    "cost_price": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "cost_price"
+                                    },
+                                    "retail_price": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "retail_price"
+                                    },
+                                    "barcode": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "barcode"
+                                    },
+                                    "current_stock": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "current_stock"
+                                    },
+                                    "min_stock_level": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "min_stock_level"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/goods/toggle-active": {
+            "put": {
+                "tags": [
+                    "goods"
+                ],
+                "summary": "This method is to toggle goods",
+                "description": "This method is to toggle goods",
+                "operationId": "toggleActiveGood",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "format": "number",
+                                        "example": "1"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/goods/{ids}": {
+            "delete": {
+                "tags": [
+                    "goods"
+                ],
+                "summary": "This method is to delete good by id",
+                "description": "This method is to delete good by id",
+                "operationId": "deleteGoodsByIds",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "path",
+                        "description": "ids",
+                        "required": true,
+                        "example": "1,2,3"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1.0/holidays": {
             "get": {
                 "tags": [
@@ -21545,6 +22083,412 @@
                         "description": "id",
                         "required": true,
                         "example": "6"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/purchase-orders": {
+            "get": {
+                "tags": [
+                    "purchase_orders"
+                ],
+                "summary": "This method is to get purchase orders  ",
+                "description": "This method is to get purchase orders ",
+                "operationId": "getPurchaseOrders",
+                "parameters": [
+                    {
+                        "name": "start_order_date",
+                        "in": "query",
+                        "description": "start_order_date",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "end_order_date",
+                        "in": "query",
+                        "description": "end_order_date",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "status",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "start_received_date",
+                        "in": "query",
+                        "description": "start_received_date",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "end_received_date",
+                        "in": "query",
+                        "description": "end_received_date",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "per_page",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "is_active",
+                        "required": true,
+                        "example": "1"
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "search_key",
+                        "in": "query",
+                        "description": "search_key",
+                        "required": true,
+                        "example": "search_key"
+                    },
+                    {
+                        "name": "order_by",
+                        "in": "query",
+                        "description": "order_by",
+                        "required": true,
+                        "example": "ASC"
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "id",
+                        "required": true,
+                        "example": "ASC"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "purchase_orders"
+                ],
+                "summary": "This method is to update purchase orders ",
+                "description": "This method is to update purchase orders ",
+                "operationId": "updatePurchaseOrder",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "type": "number",
+                                        "format": "number",
+                                        "example": "1"
+                                    },
+                                    "supplier_id": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "supplier_id"
+                                    },
+                                    "order_date": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "order_date"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "status"
+                                    },
+                                    "total_amount": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "total_amount"
+                                    },
+                                    "received_date": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "received_date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "purchase_orders"
+                ],
+                "summary": "This method is to store purchase orders",
+                "description": "This method is to store purchase orders",
+                "operationId": "createPurchaseOrder",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "supplier_id": {
+                                        "type": "string",
+                                        "example": "supplier_id"
+                                    },
+                                    "order_date": {
+                                        "type": "string",
+                                        "example": "order_date"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "status"
+                                    },
+                                    "total_amount": {
+                                        "type": "string",
+                                        "example": "total_amount"
+                                    },
+                                    "received_date": {
+                                        "type": "string",
+                                        "example": "received_date"
+                                    },
+                                    "purchase_items": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "good_id": {
+                                                    "type": "integer",
+                                                    "example": "1"
+                                                },
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "example": "10"
+                                                },
+                                                "cost_per_unit": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": "15.5"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/purchase-orders/{ids}": {
+            "delete": {
+                "tags": [
+                    "purchase_orders"
+                ],
+                "summary": "This method is to delete purchase order by id",
+                "description": "This method is to delete purchase order by id",
+                "operationId": "deletePurchaseOrdersByIds",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "path",
+                        "description": "ids",
+                        "required": true,
+                        "example": "1,2,3"
                     }
                 ],
                 "responses": {
@@ -28405,6 +29349,501 @@
                 ]
             }
         },
+        "/v1.0/suppliers": {
+            "get": {
+                "tags": [
+                    "suppliers"
+                ],
+                "summary": "This method is to get suppliers  ",
+                "description": "This method is to get suppliers ",
+                "operationId": "getSuppliers",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "name",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "contact_info",
+                        "in": "query",
+                        "description": "contact_info",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "address",
+                        "in": "query",
+                        "description": "address",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "payment_terms",
+                        "in": "query",
+                        "description": "payment_terms",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "per_page",
+                        "required": true,
+                        "example": "6"
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "is_active",
+                        "required": true,
+                        "example": "1"
+                    },
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "description": "start_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "description": "end_date",
+                        "required": true,
+                        "example": "2019-06-29"
+                    },
+                    {
+                        "name": "search_key",
+                        "in": "query",
+                        "description": "search_key",
+                        "required": true,
+                        "example": "search_key"
+                    },
+                    {
+                        "name": "order_by",
+                        "in": "query",
+                        "description": "order_by",
+                        "required": true,
+                        "example": "ASC"
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "id",
+                        "required": true,
+                        "example": "ASC"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "suppliers"
+                ],
+                "summary": "This method is to update suppliers ",
+                "description": "This method is to update suppliers ",
+                "operationId": "updateSupplier",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "type": "number",
+                                        "format": "number",
+                                        "example": "1"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "name"
+                                    },
+                                    "contact_info": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "contact_info"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "address"
+                                    },
+                                    "payment_terms": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "payment_terms"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "suppliers"
+                ],
+                "summary": "This method is to store suppliers",
+                "description": "This method is to store suppliers",
+                "operationId": "createSupplier",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "name"
+                                    },
+                                    "contact_info": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "contact_info"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "address"
+                                    },
+                                    "payment_terms": {
+                                        "type": "string",
+                                        "format": "string",
+                                        "example": "payment_terms"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/suppliers/toggle-active": {
+            "put": {
+                "tags": [
+                    "suppliers"
+                ],
+                "summary": "This method is to toggle suppliers",
+                "description": "This method is to toggle suppliers",
+                "operationId": "toggleActiveSupplier",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "type": "string",
+                                        "format": "number",
+                                        "example": "1"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/v1.0/suppliers/{ids}": {
+            "delete": {
+                "tags": [
+                    "suppliers"
+                ],
+                "summary": "This method is to delete supplier by id",
+                "description": "This method is to delete supplier by id",
+                "operationId": "deleteSuppliersByIds",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "path",
+                        "description": "ids",
+                        "required": true,
+                        "example": "1,2,3"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocesseble Content",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/v1.0/user-image": {
             "post": {
                 "tags": [
@@ -34125,6 +35564,10 @@
             "description": "garage_times_management"
         },
         {
+            "name": "goods",
+            "description": "goods"
+        },
+        {
             "name": "administrator.holiday",
             "description": "administrator.holiday"
         },
@@ -34167,6 +35610,10 @@
         {
             "name": "shop_section.product_management",
             "description": "shop_section.product_management"
+        },
+        {
+            "name": "purchase_orders",
+            "description": "purchase_orders"
         },
         {
             "name": "review.setting.question",
@@ -34219,6 +35666,10 @@
         {
             "name": "sub_service_prices",
             "description": "sub_service_prices"
+        },
+        {
+            "name": "suppliers",
+            "description": "suppliers"
         },
         {
             "name": "user_management",

@@ -41,6 +41,7 @@ use App\Http\Controllers\NotificationTemplateController;
 use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\ServiceController;
@@ -1123,6 +1124,25 @@ Route::delete('/v1.0/goods/{ids}', [GoodController::class, "deleteGoodsByIds"]);
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 // end goods management section
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// purchase orders management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+Route::post('/v1.0/purchase-orders', [PurchaseOrderController::class, "createPurchaseOrder"]);
+Route::put('/v1.0/purchase-orders', [PurchaseOrderController::class, "updatePurchaseOrder"]);
+
+
+Route::get('/v1.0/purchase-orders', [PurchaseOrderController::class, "getPurchaseOrders"]);
+Route::delete('/v1.0/purchase-orders/{ids}', [PurchaseOrderController::class, "deletePurchaseOrdersByIds"]);
+
+
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// end purchase orders management section
+// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
 
 
 

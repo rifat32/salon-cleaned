@@ -197,6 +197,12 @@ return [
                 "supplier_view",
                 "supplier_delete",
 
+                "purchase_order_create",
+                "purchase_order_update",
+                "purchase_order_view",
+                "purchase_order_delete",
+
+
 
 
                 "good_create",
@@ -610,6 +616,14 @@ return [
         "supplier_activate",
         "supplier_view",
         "supplier_delete",
+
+
+        "purchase_order_create",
+        "purchase_order_update",
+        "purchase_order_view",
+        "purchase_order_delete",
+
+
 
         "good_create",
         "good_update",
