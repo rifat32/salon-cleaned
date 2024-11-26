@@ -1782,7 +1782,7 @@ class ClientBookingController extends Controller
      *         response=400,
      *         description="Bad request, validation error",
      *         @OA\JsonContent(
- 
+
      *         )
      *     ),
      *     @OA\Response(
@@ -1809,7 +1809,7 @@ class ClientBookingController extends Controller
      */
     public function releaseSlot(Request $request)
     {
-        $request_data = $request->validated();
+        $request_data = $request->toArray();
 
         $request_data["customer_id"] = auth()->user()->id;
 
