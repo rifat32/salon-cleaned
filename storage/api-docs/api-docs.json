@@ -17234,7 +17234,7 @@
                 ]
             }
         },
-        "/v1.0/linked-items": {
+        "/v1.0/linked-items/good-sub-services": {
             "get": {
                 "tags": [
                     "goods",
@@ -17242,7 +17242,7 @@
                 ],
                 "summary": "This method retrieves linked goods or sub-services based on the provided query parameter",
                 "description": "This method returns the linked sub-services for a good or the linked goods for a sub-service.",
-                "operationId": "getLinkedItems",
+                "operationId": "getLinkedGoodSubServices",
                 "parameters": [
                     {
                         "name": "good_id",
@@ -34064,15 +34064,7 @@
                         "description": "Bad request, validation error",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "The given data was invalid."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
+                                "schema": {}
                             }
                         }
                     },
