@@ -1727,7 +1727,7 @@ class ClientBookingController extends Controller
         $request_data = $request->validated();
 
         $request_data["customer_id"] = auth()->user()->id;
-        $request_data["held_until"] = Carbon::now()->addSeconds(30);
+        $request_data["held_until"] = Carbon::now()->addSeconds(47);
 
         // Delete all slots for the customer, including expired ones
         SlotHold::where('customer_id', $request_data["customer_id"])
