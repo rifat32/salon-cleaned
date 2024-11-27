@@ -108,7 +108,7 @@ class GarageTimesController extends Controller
 
 
                $timesArray = collect($request_data["times"])->unique("day");
-               $businessSetting = $this->get_business_setting($garage_id);
+               
 
                GarageTime::where([
                 "garage_id" => $garage_id
@@ -116,7 +116,7 @@ class GarageTimesController extends Controller
                ->delete();
 
                foreach($timesArray as $garage_time) {
-                $processedSlots = $this->generateSlots($businessSetting->slot_duration,$garage_time["opening_time"],$garage_time["closing_time"],$garage_time["day"],true);
+                $processedSlots = $this->generateSlots($request_data["slot_duration"],$garage_time["opening_time"],$garage_time["closing_time"],$garage_time["day"],true);
 
                 GarageTime::create([
                     "garage_id" => $garage_id,

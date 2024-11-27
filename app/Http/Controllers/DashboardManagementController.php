@@ -2718,7 +2718,7 @@ if ($job_start_time->greaterThan(now())) {
                 ])
                 ->where("users.is_active", 1)
                 ->when($request->hasAny([
-                    'expert_id',
+                    // 'expert_id',
                     'slots',
                     'is_returning_customers',
                     'payment_type',
