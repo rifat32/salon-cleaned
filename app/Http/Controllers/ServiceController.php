@@ -1114,6 +1114,8 @@ if(!empty($service->description)) {
      *    @OA\Property(property="service_id", type="string", format="number",example="1"),
      *    @OA\Property(property="is_fixed_price", type="number", format="number",example="1"),
      *    *    @OA\Property(property="default_price", type="number", format="number",example="1"),
+        *    *    @OA\Property(property="discounted_price", type="number", format="number",example="1"),
+     *
      *    @OA\Property(property="number_of_slots", type="number", format="number",example="1")
      *
      *
@@ -1244,6 +1246,7 @@ if(!empty($sub_service->description)) {
      *             @OA\Property(property="description", type="string", format="string",example="description"),
      *             @OA\Property(property="is_fixed_price", type="number", format="number",example="1"),
      *              @OA\Property(property="default_price", type="number", format="number",example="1"),
+    *              @OA\Property(property="discounted_price", type="number", format="number",example="1"),
      *
      *            @OA\Property(property="number_of_slots", type="number", format="number",example="1")
      *         ),
@@ -1311,6 +1314,7 @@ if(!empty($sub_service->description)) {
                     "service_id",
                     "is_fixed_price",
                     "default_price",
+                    "discounted_price",
                     "number_of_slots"
                     // "automobile_category_id"
                 ])->toArray()

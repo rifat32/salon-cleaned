@@ -388,6 +388,9 @@ return "swagger generated ...............";
                     'business_id' => $business_id,
                     'service_id' => $service->id,
                     'default_price' => 10,
+                    'discounted_price' => 0,
+
+
                     'is_fixed_price' => 1,
                     'number_of_slots' => 2,
                 ]);

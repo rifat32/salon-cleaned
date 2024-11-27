@@ -1016,7 +1016,6 @@ Route::get('/v1.0/superadmin-dashboard', [DashboardManagementController::class, 
 Route::get('/v1.0/data-collector-dashboard', [DashboardManagementController::class, "getDataCollectorDashboardData"]);
 
 
-
 Route::get('/v1.0/business-owner-dashboard', [DashboardManagementController::class, "getBusinessOwnerDashboardData"]);
 
 Route::get("/v1.0/expert-report",[DashboardManagementController::class, "getExpertReport"]);
@@ -1321,8 +1320,6 @@ Route::get('/v1.0/client/coupons/single/{id}', [ClientCouponController::class, "
 Route::get('/v1.0/client/coupons/get-discount/{garage_id}/{code}/{amount}', [ClientCouponController::class, "getCouponDiscountClient"]);
 
 Route::get('/v1.0/client/coupons/all-auto-applied-coupons/{garage_id}', [ClientCouponController::class, "getAutoAppliedCouponsByGarageIdClient"]);
-
-
 
 
 

@@ -30,7 +30,9 @@ class SubServiceCreateRequest extends FormRequest
             "service_id" => "required|numeric",
             "is_fixed_price" => "nullable|numeric",
             "number_of_slots" => "required|numeric",
-            "default_price" => "required|numeric"
+            "default_price" => "required|numeric",
+            "discounted_price" => "required|numeric",
+
 
         ];
     }

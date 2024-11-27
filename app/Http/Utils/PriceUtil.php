@@ -18,7 +18,9 @@ trait PriceUtil
     public function getPrice($sub_service, $expert_id)
     {
 
-        $price = $sub_service->default_price;
+
+        $price = !empty($sub_service->discounted_price)?$sub_service->discounted_price:$sub_service->default_price;
+
 
         $user = User::where("id", $expert_id)->first();
 
@@ -29,14 +31,14 @@ trait PriceUtil
         $businessSetting = BusinessSetting::where([
             "business_id" => $user->business_id
         ])->first();
-        
+
 
         if(empty($businessSetting)) {
-            return number_format($price, 2); // Format as
+            return $price; // Format as
         }
 
         if(empty($businessSetting->is_expert_price)) {
-            return number_format($price, 2); // Format as
+            return $price; // Format as
         }
 
 
@@ -51,8 +53,8 @@ trait PriceUtil
             $price = $sub_service_price->price;
         }
 
+        $price = !empty($sub_service->discounted_price)?$sub_service->discounted_price:$price;
 
-
-        return number_format($price, 2); // Format as currency
+        return $price; // Format as currency
     }
 }
