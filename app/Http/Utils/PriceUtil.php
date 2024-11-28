@@ -25,7 +25,7 @@ trait PriceUtil
         $user = User::where("id", $expert_id)->first();
 
         if(empty($user)){
-          return number_format($price, 2); // Format as
+          return $price; // Format as
         }
 
         $businessSetting = BusinessSetting::where([
@@ -53,7 +53,7 @@ trait PriceUtil
             $price = $sub_service_price->price;
         }
 
-        $price = !empty($sub_service->discounted_price)?$sub_service->discounted_price:$price;
+
 
         return $price; // Format as currency
     }

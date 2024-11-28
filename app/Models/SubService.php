@@ -30,9 +30,10 @@ class SubService extends Model
                     ->withTimestamps();  // This ensures that created_at and updated_at are maintained
     }
      // Accessor for default_price
-     public function getPriceAttribute($value)
+     public function getPriceAttribute()
      {
-        $price = $this->default_price;
+        $price = !empty($this->discounted_price)?$this->discounted_price:$this->default_price;
+        
         if(request()->filled("expert_id")) {
             $user = User::where("id", request()->input("expert_id"))->first();
 
@@ -62,8 +63,10 @@ class SubService extends Model
                   }
 
         }
-         return number_format($price, 2); // Format as currency
+         return $price; // Format as currency
      }
+
+
 
     public function service(){
         return $this->belongsTo(Service::class,'service_id', 'id');
