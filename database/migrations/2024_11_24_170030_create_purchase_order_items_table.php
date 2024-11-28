@@ -16,7 +16,7 @@ class CreatePurchaseOrderItemsTable extends Migration
         Schema::create('purchase_order_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('purchase_order_id')->constrained('purchase_orders');
-            $table->foreignId('good_id')->constrained('good');
+            $table->foreignId('good_id')->constrained('goods');
             $table->integer('quantity');
             $table->decimal('cost_per_unit',10,2);
 

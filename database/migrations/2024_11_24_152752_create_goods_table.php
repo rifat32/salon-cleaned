@@ -27,7 +27,7 @@ class CreateGoodsTable extends Migration
             ->onDelete('cascade');
 
             $table->foreignId('preferred_supplier_id')
-            ->constrained('supplier')
+            ->constrained('suppliers')
             ->onDelete('cascade');
 
             $table->decimal('cost_price',10,2);
@@ -36,12 +36,11 @@ class CreateGoodsTable extends Migration
 
             $table->string('barcode');
 
-
             $table->integer('current_stock');
 
             $table->integer('min_stock_level');
 
-        $table->boolean('is_active')->default(false);
+            $table->boolean('is_active')->default(false);
 
             $table->foreignId('business_id')
             ->constrained('garages')

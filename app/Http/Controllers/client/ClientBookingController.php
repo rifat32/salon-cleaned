@@ -272,8 +272,13 @@ class ClientBookingController extends Controller
                     $booking = $this->applyCoupon($request_data, $booking, $coupon);
                 }
 
+
+
+
+
                 $booking->final_price = $booking->price;
                 $booking->final_price -= $this->canculate_discount_amount($booking->price, $booking->discount_type, $booking->discount_amount);
+
                 $booking->final_price -= $this->canculate_discount_amount(
                     $booking->price,
                     $booking->coupon_discount_type,
