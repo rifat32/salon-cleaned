@@ -18,17 +18,11 @@ use App\Http\Utils\UserActivityUtil;
 use App\Mail\ForgetPasswordMail;
 use App\Mail\VerifyMail;
 use App\Models\AutomobileCategory;
-use App\Models\AutomobileMake;
-use App\Models\AutomobileModel;
 use App\Models\BusinessSetting;
 use App\Models\EmailTemplate;
 use App\Models\EmailTemplateWrapper;
 use App\Models\Garage;
-use App\Models\GarageAutomobileMake;
-use App\Models\GarageAutomobileModel;
 use App\Models\GarageGallery;
-use App\Models\GarageService;
-use App\Models\GarageSubService;
 use App\Models\GarageTime;
 use App\Models\Service;
 use App\Models\SubService;
@@ -904,14 +898,7 @@ class AuthController extends Controller
      *  "sub_services":{{"id":1,"checked":true},{"id":2,"checked":false}}
      * }
      *},
-     *"automobile_makes":{
-     *{
-     *"id":1,
-     *"checked":true,
-     *  "models":{{"id":1,"checked":true},{"id":2,"checked":false}}
-     * }
-     *}
-     *
+
 
      *}
 

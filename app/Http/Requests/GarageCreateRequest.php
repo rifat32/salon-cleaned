@@ -84,10 +84,7 @@ class GarageCreateRequest extends FormRequest
             'service.*.services.*.id' => "required|numeric",
             'service.*.services.*.checked' => "required|boolean",
 
-            'service.*.automobile_makes' => ["required","array",new SomeTimes],
-            'service.*.automobile_makes.*.id' => "required|numeric",
-            'service.*.automobile_makes.*.checked' => ["required","boolean"],
-            // 'service.automobile_categories' => "array|required",
+
 
 
         ];
@@ -164,12 +161,7 @@ class GarageCreateRequest extends FormRequest
             'service.*.services.*.id.numeric' => 'The service ID must be a numeric value.',
             'service.*.services.*.checked.required' => 'The checked field for services is required.',
             'service.*.services.*.checked.boolean' => 'The checked field for services must be a boolean.',
-            'service.*.automobile_makes.required' => 'The automobile makes field is required.',
-            'service.*.automobile_makes.array' => 'The automobile makes field must be an array.',
-            'service.*.automobile_makes.*.id.required' => 'The automobile make ID field is required.',
-            'service.*.automobile_makes.*.id.numeric' => 'The automobile make ID must be a numeric value.',
-            'service.*.automobile_makes.*.checked.required' => 'The checked field for automobile makes is required.',
-            'service.*.automobile_makes.*.checked.boolean' => 'The checked field for automobile makes must be a boolean.',
+
         ];
     }
 

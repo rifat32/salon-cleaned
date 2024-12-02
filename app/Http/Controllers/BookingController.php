@@ -20,13 +20,9 @@ use App\Mail\DynamicMail;
 use App\Models\Booking;
 use App\Models\BookingPackage;
 use App\Models\BookingSubService;
-use App\Models\Coupon;
-use App\Models\Garage;
-use App\Models\GarageAutomobileMake;
-use App\Models\GarageAutomobileModel;
+
 use App\Models\GaragePackage;
-use App\Models\GarageSubService;
-use App\Models\GarageTime;
+
 use App\Models\Holiday;
 use App\Models\Job;
 use App\Models\JobBid;

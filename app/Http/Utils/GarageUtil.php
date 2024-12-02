@@ -3,11 +3,7 @@
 namespace App\Http\Utils;
 
 use App\Models\AutomobileCategory;
-use App\Models\AutomobileMake;
-use App\Models\AutomobileModel;
 use App\Models\Garage;
-use App\Models\GarageAutomobileMake;
-use App\Models\GarageAutomobileModel;
 use App\Models\GarageService;
 use App\Models\GarageSubService;
 use App\Models\Question;
@@ -85,71 +81,7 @@ trait GarageUtil
             // @@@@@@@@@@@@@@@@@@@@@@@@@@@@ services ends @@@@@@@@@@@@@@@@@@@@@@@@@@@@
             // error_log(json_encode($service));
 
-            // @@@@@@@@@@@@@@@@@@@@@@@@@@@ makes starts @@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            foreach ($services["automobile_makes"] as $automobile_make) {
 
-
-                if ($automobile_make["checked"]) {
-                    $automobile_make_db = AutomobileMake::where([
-                        "id" => $automobile_make["id"],
-                        "automobile_category_id" => $automobile_category_db->id
-
-                    ])
-                        ->first();
-                    if (!$automobile_make_db) {
-
-                        return [
-                            "type" => "automobile_makes",
-                            "success" => false,
-                            "message" => "please provile valid automobile make id: " . $automobile_make["id"]
-                        ];
-                    }
-                    $garage_automobile_make =  GarageAutomobileMake::create([
-                        "garage_id" => $garage_id,
-                        "automobile_make_id" => $automobile_make_db->id,
-                    ]);
-
-                    if($auto_model){
-                        foreach (AutomobileModel::where([
-                          "automobile_make_id" => $automobile_make_db->id
-                        ])->get()
-                         as
-                        $model) {
-
-
-                                $garage_model =  GarageAutomobileModel::create([
-                                    "garage_automobile_make_id" => $garage_automobile_make->id,
-                                    "automobile_model_id" => $model->id,
-                                ]);
-
-                        }
-                    }     else {
-                        foreach ($automobile_make["models"] as $model) {
-                            if ($model["checked"]) {
-                                $automobile_model_db = AutomobileModel::where([
-                                    "id" => $model["id"],
-                                    "automobile_make_id" => $automobile_make_db->id
-                                ])
-                                    ->first();
-                                if (!$automobile_model_db) {
-
-                                    return [
-                                        "type" => "automobile_makes",
-                                        "success" => false,
-                                        "message" => "please provile valid automobile model id"
-                                    ];
-                                }
-                                $garage_model =  GarageAutomobileModel::create([
-                                    "garage_automobile_make_id" => $garage_automobile_make->id,
-                                    "automobile_model_id" => $automobile_model_db->id,
-                                ]);
-                            }
-                        }
-                    }
-
-                }
-            }
-            // @@@@@@@@@@@@@@@@@@@@@@@@@@@@ makes ends @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
         }

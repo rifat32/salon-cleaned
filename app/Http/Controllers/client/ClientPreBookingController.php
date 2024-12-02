@@ -13,8 +13,6 @@ use App\Http\Utils\DiscountUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\PriceUtil;
 use App\Http\Utils\UserActivityUtil;
-use App\Models\AutomobileMake;
-use App\Models\AutomobileModel;
 use App\Models\Booking;
 use App\Models\GarageSubService;
 use App\Models\Job;
@@ -379,35 +377,6 @@ $request_data["file_links"] = json_encode($request_data["file_links"]) ;
 
 
 
-                $automobile_make = AutomobileMake::where([
-                    "id" =>  $request_data["automobile_make_id"]
-                ])
-                    ->first();
-                if (!$automobile_make) {
-
-                    $error =  [
-                        "message" => "The given data was invalid.",
-                        "errors" => ["automobile_make_id"=>["invalid automobile make id"]]
-                 ];
-                    throw new Exception(json_encode($error),422);
-                }
-                $automobile_model = AutomobileModel::where([
-                    "id" => $request_data["automobile_model_id"],
-                    "automobile_make_id" => $automobile_make->id
-                ])
-                    ->first();
-                if (!$automobile_model) {
-                    $error =  [
-                        "message" => "The given data was invalid.",
-                        "errors" => ["automobile_model_id"=>["invalid automobile model id"]]
-                 ];
-                    throw new Exception(json_encode($error),422);
-                }
-
-
-
-
-
 
                 $pre_booking =  PreBooking::create($request_data);
 
@@ -558,30 +527,7 @@ $request_data["file_links"] = json_encode($request_data["file_links"]) ;
 
 
 
-                $automobile_make = AutomobileMake::where([
-                    "id" =>  $request_data["automobile_make_id"]
-                ])
-                    ->first();
-                if (!$automobile_make) {
-                    $error =  [
-                        "message" => "The given data was invalid.",
-                        "errors" => ["automobile_make_id"=>["invalid automobile make id"]]
-                 ];
-                    throw new Exception(json_encode($error),422);
-                }
-                $automobile_model = AutomobileModel::where([
-                    "id" => $request_data["automobile_model_id"],
-                    "automobile_make_id" => $automobile_make->id
-                ])
-                    ->first();
-                if (!$automobile_model) {
-                    $error =  [
-                        "message" => "The given data was invalid.",
-                        "errors" => ["automobile_model_id"=>["invalid automobile model id"]]
-                 ];
-                    throw new Exception(json_encode($error),422);
-                }
-
+             
 
 
 

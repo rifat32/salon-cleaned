@@ -88,7 +88,7 @@ class AuthRegisterGarageRequest extends FormRequest
          "times.*.closing_time" => ['required','date_format:H:i', new TimeValidation, new TimeOrderRule
         ],
            "times.*.is_closed" => ['required',"boolean"],
-          
+
 
 
 
@@ -99,9 +99,7 @@ class AuthRegisterGarageRequest extends FormRequest
             'service.*.services.*.id' => "required|numeric",
             'service.*.services.*.checked' => "required|boolean",
 
-            'service.*.automobile_makes' => ["required","array",new SomeTimes],
-            'service.*.automobile_makes.*.id' => "required|numeric",
-            'service.*.automobile_makes.*.checked' => ["required","boolean"],
+
             // 'service.automobile_categories' => "array|required",
 
 
@@ -175,12 +173,7 @@ class AuthRegisterGarageRequest extends FormRequest
             'service.*.services.*.id.numeric' => 'The service id must be a number.',
             'service.*.services.*.checked.required' => 'The checked field is required.',
             'service.*.services.*.checked.boolean' => 'The checked must be a boolean.',
-            'service.*.automobile_makes.required' => 'The automobile makes field is required.',
-            'service.*.automobile_makes.array' => 'The automobile makes must be an array.',
-            'service.*.automobile_makes.*.id.required' => 'The automobile make id field is required.',
-            'service.*.automobile_makes.*.id.numeric' => 'The automobile make id must be a number.',
-            'service.*.automobile_makes.*.checked.required' => 'The checked field is required.',
-            'service.*.automobile_makes.*.checked.boolean' => 'The checked must be a boolean.',
+          
         ];
     }
 

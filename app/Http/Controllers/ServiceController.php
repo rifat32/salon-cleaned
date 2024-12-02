@@ -12,8 +12,7 @@ use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Models\AutomobileCategory;
-use App\Models\AutomobileMake;
-use App\Models\AutomobileModel;
+
 use App\Models\BookingSubService;
 use App\Models\FuelStationService;
 use App\Models\GaragePackage;
@@ -375,7 +374,7 @@ if(!empty($service->description)) {
                 ],401);
            }
 
-            // $automobilesQuery = AutomobileMake::with("makes");
+
 
             $servicesQuery = Service::
             withCount("subServices")
@@ -581,7 +580,7 @@ if(!empty($service->description)) {
         //         ],401);
         //    }
 
-            // $automobilesQuery = AutomobileMake::with("makes");
+
 
             $servicesQuery = Service::with("category","subServices",'translation')->where([
                 "automobile_category_id" => $categoryId
@@ -1471,7 +1470,7 @@ if(!empty($sub_service->description)) {
                    "message" => "You can not perform this action"
                 ],401);
            }
-            // $automobilesQuery = AutomobileMake::with("makes");
+
             $servicesQuery = SubService::with("service.category", 'translation')
             ->where("business_id",auth()->user()->business_id)
             ->where("service_id" , $serviceId);
@@ -1592,7 +1591,7 @@ if(!empty($sub_service->description)) {
                    "message" => "You can not perform this action"
                 ],401);
            }
-            // $automobilesQuery = AutomobileMake::with("makes");
+
             $servicesQuery = SubService::with("service.category", 'translation')
             ->where("business_id",auth()->user()->business_id)
             ->when(request()->filled("service_id"), function($query) {
@@ -1716,7 +1715,7 @@ if(!empty($sub_service->description)) {
                 ],401);
            }
 
-            // $automobilesQuery = AutomobileMake::with("makes");
+   
 
             $servicesQuery = SubService::with("service", 'translation')->where([
                 "service_id" => $serviceId

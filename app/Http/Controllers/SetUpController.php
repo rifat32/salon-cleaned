@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\AutomobileCategory;
 use App\Models\AutomobileFuelType;
-use App\Models\AutomobileMake;
-use App\Models\AutomobileModel;
-use App\Models\AutomobileModelVariant;
+
+
 use App\Models\ErrorLog;
 use App\Models\Service;
 use App\Models\ServiceTranslation;
@@ -100,10 +99,6 @@ class SetUpController extends Controller
     public function automobileRefresh() {
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         AutomobileCategory::truncate();
-        AutomobileMake::truncate();
-        AutomobileModel::truncate();
-        AutomobileModelVariant::truncate();
-        AutomobileFuelType::truncate();
         Service::truncate();
         SubService::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
@@ -566,14 +561,7 @@ return "swagger generated ...............";
         //        }
         //     }
 
-        //     foreach(DB::connection('backup_database')->table('automobile_makes')->get() as $backup_data){
-        //         $data_exists = DB::connection('mysql')->table('automobile_makes')->where([
-        //             "id" => $backup_data->id
-        //            ])->first();
-        //            if(!$data_exists) {
-        //             DB::connection('mysql')->table('automobile_makes')->insert(get_object_vars($backup_data));
-        //            }
-        //         }
+
 
         //         foreach(DB::connection('backup_database')->table('automobile_models')->get() as $backup_data){
         //             $data_exists = DB::connection('mysql')->table('automobile_models')->where([
@@ -614,14 +602,7 @@ return "swagger generated ...............";
                                    }
                                 }
 
-                                foreach(DB::connection('backup_database')->table('garage_automobile_makes')->get() as $backup_data){
-                                    $data_exists = DB::connection('mysql')->table('garage_automobile_makes')->where([
-                                        "id" => $backup_data->id
-                                       ])->first();
-                                       if(!$data_exists) {
-                                        DB::connection('mysql')->table('garage_automobile_makes')->insert(get_object_vars($backup_data));
-                                       }
-                                    }
+
 
                                     foreach(DB::connection('backup_database')->table('garage_automobile_models')->get() as $backup_data){
                                         $data_exists = DB::connection('mysql')->table('garage_automobile_models')->where([

@@ -15,10 +15,8 @@ use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\UserActivityUtil;
 use App\Mail\SendPassword;
-use App\Mail\VerifyMail;
 use App\Models\Garage;
-use App\Models\GarageAutomobileMake;
-use App\Models\GarageAutomobileModel;
+
 use App\Models\GarageGallery;
 use App\Models\GarageService;
 use App\Models\GarageSubService;
@@ -351,13 +349,7 @@ public function createGarageImageV2(ImageUploadRequestInBase64 $request)
      *  "sub_services":{{"id":1,"checked":true},{"id":2,"checked":false}}
      * }
      *},
-     *"automobile_makes":{
-     *{
-     *"id":1,
-     *"checked":true,
-     *  "models":{{"id":1,"checked":true},{"id":2,"checked":false}}
-     * }
-     *}
+
      *
 
      *}
@@ -622,13 +614,7 @@ if(!$user->hasRole('garage_owner')) {
      *  "sub_services":{{"id":1,"checked":true},{"id":2,"checked":false}}
      * }
      *},
-     *"automobile_makes":{
-     *{
-     *"id":1,
-     *"checked":true,
-     *  "models":{{"id":1,"checked":true},{"id":2,"checked":false}}
-     * }
-     *}
+
      *
 
      *}
@@ -908,13 +894,7 @@ if(!$user->hasRole('garage_owner')) {
      *  "sub_services":{{"id":1,"checked":true},{"id":2,"checked":false}}
      * }
      *},
-     *"automobile_makes":{
-     *{
-     *"id":1,
-     *"checked":true,
-     *  "models":{{"id":1,"checked":true},{"id":2,"checked":false}}
-     * }
-     *}
+
      *
 
      *}
@@ -1103,16 +1083,7 @@ if(!$user->hasRole('garage_owner')) {
             }
 
 
-  // end garage info ##############
 
-  GarageService::where([
-    "garage_id" => $garage->id
-  ])
-  ->delete();
-  GarageAutomobileMake::where([
-    "garage_id" => $garage->id
-    ])
-    ->delete();
 
   // create services
   $this->createGarageServices($request_data['service'],$garage->id);
@@ -1328,13 +1299,7 @@ UserTranslation::create([
      *  "sub_services":{{"id":1,"checked":true},{"id":2,"checked":false}}
      * }
      *},
-     *"automobile_makes":{
-     *{
-     *"id":1,
-     *"checked":true,
-     *  "models":{{"id":1,"checked":true},{"id":2,"checked":false}}
-     * }
-     *}
+
      *
 
      *}
@@ -1448,16 +1413,7 @@ UserTranslation::create([
             }
 
 
-  // end garage info ##############
 
-  GarageService::where([
-    "garage_id" => $garage->id
-  ])
-  ->delete();
-  GarageAutomobileMake::where([
-    "garage_id" => $garage->id
-    ])
-    ->delete();
 
   // create services
   $this->createGarageServices($request_data['service'],$garage->id);
@@ -1717,7 +1673,6 @@ UserTranslation::create([
 
             $garagesQuery = Garage::with(
                 "owner",
-                "garageAutomobileMakes.garageAutomobileModels",
                 "garageServices.garageSubServices.garage_sub_service_prices"
             );
 
@@ -2077,8 +2032,6 @@ UserTranslation::create([
 
             $garage = Garage::with(
                 "owner",
-                "garageAutomobileMakes.automobileMake",
-                "garageAutomobileMakes.garageAutomobileModels.automobileModel",
                 "garageServices.service",
                 "garageServices.garageSubServices.garage_sub_service_prices",
                 "garageServices.garageSubServices.subService",
@@ -2090,14 +2043,9 @@ UserTranslation::create([
                 "id" => $id
             ])
             ->first();
-            $data["garage_automobile_make_ids"] =  GarageAutomobileMake::where(["garage_id"=>$garage->id])->pluck("automobile_make_id");
-            $data["garage_service_ids"] =  GarageService::where(["garage_id"=>$garage->id])->pluck("service_id");
 
-            $data["garage_automobile_models_ids"] =  GarageAutomobileModel::
-            whereHas("garageAutomobileMake", function($query) use ($garage) {
-                  $query->where("garage_automobile_makes.garage_id",$garage->id);
-            })
-            ->pluck("automobile_model_id");
+
+
 
 
             $data["garage_sub_service_ids"] =  GarageSubService::
@@ -2188,13 +2136,6 @@ UserTranslation::create([
             $garage = Garage::with(
                 [
                 "owner",
-                "automobile_makes",
-                "automobile_makes.automobile_models" => function($query) use($id) {
-                    $query->whereHas("garage_automobile_models.garageAutomobileMake", function($query) use($id) {
-                       $query->where("garage_automobile_makes.garage_id",$id);
-                    });
-                },
-
                 "services",
                 "services.automobile_sub_services" => function($query) use($id) {
                     $query->whereHas("garage_automobile_sub_services.garageService", function($query) use($id) {
@@ -2213,12 +2154,10 @@ UserTranslation::create([
                 "id" => $id
             ])
             ->first();
-       $garage_automobile_make_ids =  GarageAutomobileMake::where(["garage_id"=>$garage->id])->pluck("automobile_make_id");
-        $garage_service_ids =   GarageService::where(["garage_id"=>$garage->id])->pluck("service_id");
+
 
         $data["garage"] = $garage;
-        $data["garage_automobile_make_ids"] = $garage_automobile_make_ids;
-        $data["garage_service_ids"] = $garage_service_ids;
+        
         return response()->json($data, 200);
         } catch(Exception $e){
 

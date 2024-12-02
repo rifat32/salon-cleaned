@@ -425,39 +425,8 @@ Route::get('/v1.0/automobile-categories/single/get/{id}', [AutomobilesController
 Route::delete('/v1.0/automobile-categories/{id}', [AutomobilesController::class, "deleteAutomobileCategoryById"]);
 
 
-// ********************************************
-// automobile management section --make
-// ********************************************
-Route::post('/v1.0/automobile-makes', [AutomobilesController::class, "createAutomobileMake"]);
-Route::put('/v1.0/automobile-makes', [AutomobilesController::class, "updateAutomobileMake"]);
-Route::get('/v1.0/automobile-makes/{categoryId}/{perPage}', [AutomobilesController::class, "getAutomobileMakes"]);
-Route::get('/v1.0/automobile-makes/single/get/{id}', [AutomobilesController::class, "getAutomobileMakeById"]);
-Route::delete('/v1.0/automobile-makes/{id}', [AutomobilesController::class, "deleteAutomobileMakeById"]);
 
 
-
-
-
-// ********************************************
-// automobile management section --model
-// ********************************************
-Route::post('/v1.0/automobile-models', [AutomobilesController::class, "createAutomobileModel"]);
-Route::put('/v1.0/automobile-models', [AutomobilesController::class, "updateAutomobileModel"]);
-Route::get('/v1.0/automobile-models/{makeId}/{perPage}', [AutomobilesController::class, "getAutomobileModel"]);
-Route::get('/v1.0/automobile-models/single/get/{id}', [AutomobilesController::class, "getAutomobileModelById"]);
-Route::delete('/v1.0/automobile-models/{id}', [AutomobilesController::class, "deleteAutomobileModelById"]);
-
-
-
-
-// ********************************************
-// automobile management section --model variant
-// ********************************************
-Route::post('/v1.0/automobile-model-variants', [AutomobilesController::class, "createAutomobileModelVariant"]);
-Route::put('/v1.0/automobile-model-variants', [AutomobilesController::class, "updateAutomobileModelVariant"]);
-Route::get('/v1.0/automobile-model-variants/{modelId}/{perPage}', [AutomobilesController::class, "getAutomobileModelVariant"]);
-Route::get('/v1.0/automobile-model-variants/single/get/{id}', [AutomobilesController::class, "getAutomobileModelVariantById"]);
-Route::delete('/v1.0/automobile-model-variants/{id}', [AutomobilesController::class, "deleteAutomobileModelVariantById"]);
 
 
 // ********************************************
@@ -476,16 +445,6 @@ Route::delete('/v1.0/automobile-fuel-types/{id}', [AutomobilesController::class,
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// garage automobile management section
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-Route::get('/v1.0/garage-automobile-makes/all/{garage_id}', [GarageAutomobilesController::class, "getGarageAutomobileMakesAll"]);
-
-
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// end garage automobile management section
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -1285,10 +1244,6 @@ Route::get('/v1.0/client/garages/single/{id}', [ClientBasicController::class, "g
 Route::get('/v2.0/client/garages/single/{id}', [ClientBasicController::class, "getGarageByIdClient2"]);
 
 Route::get('/v1.0/client/garages/service-model-details/{garage_id}', [ClientBasicController::class, "getGarageServiceModelDetailsByIdClient"]);
-
-Route::get('/v1.0/client/garages/garage-automobile-models/{garage_id}/{automobile_make_id}', [ClientBasicController::class, "getGarageAutomobileModelsByAutomobileMakeId"]);
-
-Route::get('/v1.0/client/garage-affiliations/get/all/{garage_id}', [ClientBasicController::class, "getGarageAffiliationsAllByGarageIdClient"]);
 
 
 

@@ -6,11 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\UserActivityUtil;
-use App\Models\AutomobileModel;
+
 use App\Models\Garage;
 use App\Models\GarageAffiliation;
-use App\Models\GarageAutomobileMake;
-use App\Models\GarageAutomobileModel;
+
 use App\Models\GarageService;
 use App\Models\GarageSubService;
 use App\Models\ReviewValueNew;
@@ -55,18 +54,10 @@ class ClientBasicController extends Controller
 
             ]
 
-            // "garageAutomobileMakes.automobileMake",
-            // "garageAutomobileMakes.garageAutomobileModels.automobileModel",
-            // "garageServices.service",
-            // "garageServices.garageSubServices.garage_sub_service_prices",
-            // "garageServices.garageSubServices.subService",
-            // "garage_times",
-            // "garageGalleries",
-            // "garage_packages",
+
 
         )
-            ->leftJoin('garage_automobile_makes', 'garage_automobile_makes.garage_id', '=', 'garages.id')
-            ->leftJoin('garage_automobile_models', 'garage_automobile_models.garage_automobile_make_id', '=', 'garage_automobile_makes.id')
+
 
 
 
@@ -116,13 +107,7 @@ class ClientBasicController extends Controller
 
 
 
-        if (!empty($request->automobile_make_ids)) {
-            $null_filter = collect(array_filter($request->automobile_make_ids))->values();
-            $automobile_make_ids =  $null_filter->all();
-            if (count($automobile_make_ids)) {
-                $garagesQuery =   $garagesQuery->whereIn("garage_automobile_makes.automobile_make_id", $automobile_make_ids);
-            }
-        }
+
         if (!empty($request->automobile_model_ids)) {
 
             $null_filter = collect(array_filter($request->automobile_model_ids))->values();
@@ -216,13 +201,7 @@ class ClientBasicController extends Controller
     public function getGarageSearchQuery2(Request $request)
     {
 
-        $garagesQuery = Garage::
-            leftJoin('garage_automobile_makes', 'garage_automobile_makes.garage_id', '=', 'garages.id')
-            ->leftJoin('garage_automobile_models', 'garage_automobile_models.garage_automobile_make_id', '=', 'garage_automobile_makes.id')
-
-
-
-            ->leftJoin('garage_times', 'garage_times.garage_id', '=', 'garages.id')
+        $garagesQuery = Garage::leftJoin('garage_times', 'garage_times.garage_id', '=', 'garages.id')
             ->where('garages.is_active', true);
 
         if (!empty($request->search_key)) {
@@ -262,21 +241,7 @@ class ClientBasicController extends Controller
 
 
 
-        if (!empty($request->automobile_make_ids)) {
-            $null_filter = collect(array_filter($request->automobile_make_ids))->values();
-            $automobile_make_ids =  $null_filter->all();
-            if (count($automobile_make_ids)) {
-                $garagesQuery =   $garagesQuery->whereIn("garage_automobile_makes.automobile_make_id", $automobile_make_ids);
-            }
-        }
-        if (!empty($request->automobile_model_ids)) {
 
-            $null_filter = collect(array_filter($request->automobile_model_ids))->values();
-            $automobile_model_ids =  $null_filter->all();
-            if (count($automobile_model_ids)) {
-                $garagesQuery =   $garagesQuery->whereIn("garage_automobile_models.automobile_model_id", $automobile_model_ids);
-            }
-        }
 
         if (!empty($request->service_ids)) {
 
@@ -1246,8 +1211,6 @@ class ClientBasicController extends Controller
             $this->storeActivity($request, "");
             $garagesQuery = Garage::with(
                 "owner",
-                "garageAutomobileMakes.automobileMake",
-                "garageAutomobileMakes.garageAutomobileModels.automobileModel",
                 "garageServices.service",
                 "garageServices.garageSubServices.garage_sub_service_prices",
                 "garageServices.garageSubServices.subService",
@@ -1276,7 +1239,7 @@ class ClientBasicController extends Controller
             }
 
 
-            $garage_automobile_make_ids =  GarageAutomobileMake::where(["garage_id" => $garage->id])->pluck("automobile_make_id");
+
             $garage_service_ids =   GarageService::where(["garage_id" => $garage->id])->pluck("service_id");
 
             $data["garage"] = $garage;
@@ -1394,9 +1357,7 @@ class ClientBasicController extends Controller
                 'owner' => function ($query) {
                     $query->select('users.id', 'users.first_name', 'users.last_name', 'users.image', 'users.phone', 'users.email');
                 },
-                'automobile_makes' => function ($query) {
-                    $query->select("automobile_makes.*");
-                },
+
                 'services' => function ($query) {
                     $query->select('services.*');
                 },
@@ -1460,13 +1421,9 @@ class ClientBasicController extends Controller
             })->get();
             $garage->sub_services = $sub_services;
 
-            $automobile_models = AutomobileModel::whereHas("make.garageAutoMobileMake.garage", function ($query) use ($id) {
-                $query->where([
-                    "garages.id" => $id
-                ]);
-            })->get();
+
             $garage->sub_services = $sub_services;
-            $garage->automobile_models = $automobile_models;
+
 
             if (!$garage) {
 
@@ -1528,217 +1485,6 @@ class ClientBasicController extends Controller
 
 
 
-
-    /**
-     *
-     * @OA\Get(
-     *      path="/v1.0/client/garages/service-model-details/{garage_id}",
-     *      operationId="getGarageServiceModelDetailsByIdClient",
-     *      tags={"client.basics"},
-     *       security={
-     *           {"bearerAuth": {}}
-     *       },
-     *              @OA\Parameter(
-     *         name="garage_id",
-     *         in="path",
-     *         description="garage_id",
-     *         required=true,
-     *  example="1"
-     *      ),
-     *      summary="This method is to get garage service-model-details by garage id by id",
-     *      description="This method is to get garage service-model-details by garage id by id",
-     *
-
-     *      @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *       @OA\JsonContent(),
-     *       ),
-     *      @OA\Response(
-     *          response=401,
-     *          description="Unauthenticated",
-     * @OA\JsonContent(),
-     *      ),
-     *        @OA\Response(
-     *          response=422,
-     *          description="Unprocesseble Content",
-     *    @OA\JsonContent(),
-     *      ),
-     *      @OA\Response(
-     *          response=403,
-     *          description="Forbidden",
-     *   @OA\JsonContent()
-     * ),
-     *  * @OA\Response(
-     *      response=400,
-     *      description="Bad Request",
-     *   *@OA\JsonContent()
-     *   ),
-     * @OA\Response(
-     *      response=404,
-     *      description="not found",
-     *   *@OA\JsonContent()
-     *   )
-     *      )
-     *     )
-     */
-
-    public function getGarageServiceModelDetailsByIdClient($garage_id, Request $request)
-    {
-
-        try {
-            $this->storeActivity($request, "");
-            $garage = Garage::where([
-                "id" => $garage_id
-            ])->first();
-
-
-            if (!$garage) {
-
-
-                return response()->json([
-                    "message" => "no garage found"
-                ], 404);
-            }
-            $data["garage_services"] = GarageService::with("service")
-                ->where([
-                    "garage_id" => $garage->id
-                ])
-                ->get();
-
-            $data["garage_sub_services"] = GarageSubService::with("subService")
-                ->leftJoin('garage_services', 'garage_sub_services.garage_service_id', '=', 'garage_services.id')
-                ->where([
-                    "garage_services.garage_id" => $garage->id
-                ])
-                ->select(
-                    "garage_sub_services.*"
-                )
-
-                ->get();
-
-            $data["garage_automobile_makes"] = GarageAutomobileMake::with("automobileMake")
-                ->where([
-                    "garage_id" => $garage->id
-                ])
-                ->get();
-
-            $data["garage_automobile_models"] = GarageAutomobileModel::with("automobileModel")
-                ->leftJoin('garage_automobile_makes', 'garage_automobile_models.garage_automobile_make_id', '=', 'garage_automobile_makes.id')
-                ->where([
-                    "garage_automobile_makes.garage_id" => $garage->id
-                ])
-                ->select(
-                    "garage_automobile_models.*"
-                )
-                ->get();
-
-
-
-
-            return response()->json($data, 200);
-        } catch (Exception $e) {
-
-            return $this->sendError($e, 500, $request);
-        }
-    }
-    /**
-     *
-     * @OA\Get(
-     *      path="/v1.0/client/garages/garage-automobile-models/{garage_id}/{automobile_make_id}",
-     *      operationId="getGarageAutomobileModelsByAutomobileMakeId",
-     *      tags={"client.basics"},
-     *       security={
-     *           {"bearerAuth": {}}
-     *       },
-     *              @OA\Parameter(
-     *         name="garage_id",
-     *         in="path",
-     *         description="garage_id",
-     *         required=true,
-     *  example="1"
-     *      ),
-     *   *              @OA\Parameter(
-     *         name="automobile_make_id",
-     *         in="path",
-     *         description="automobile_make_id",
-     *         required=true,
-     *  example="1"
-     *      ),
-     *      summary="This method is to get garage service-model-details by garage id by id",
-     *      description="This method is to get garage service-model-details by garage id by id",
-     *
-
-     *      @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *       @OA\JsonContent(),
-     *       ),
-     *      @OA\Response(
-     *          response=401,
-     *          description="Unauthenticated",
-     * @OA\JsonContent(),
-     *      ),
-     *        @OA\Response(
-     *          response=422,
-     *          description="Unprocesseble Content",
-     *    @OA\JsonContent(),
-     *      ),
-     *      @OA\Response(
-     *          response=403,
-     *          description="Forbidden",
-     *   @OA\JsonContent()
-     * ),
-     *  * @OA\Response(
-     *      response=400,
-     *      description="Bad Request",
-     *   *@OA\JsonContent()
-     *   ),
-     * @OA\Response(
-     *      response=404,
-     *      description="not found",
-     *   *@OA\JsonContent()
-     *   )
-     *      )
-     *     )
-     */
-
-    public function getGarageAutomobileModelsByAutomobileMakeId($garage_id, $automobile_make_id, Request $request)
-    {
-
-        try {
-            $this->storeActivity($request, "");
-            $garage = Garage::where([
-                "id" => $garage_id
-            ])->first();
-
-
-            if (!$garage) {
-
-                return response()->json([
-                    "message" => "no garage found"
-                ], 404);
-            }
-            $data = GarageAutomobileModel::with("automobileModel")
-                ->leftJoin('garage_automobile_makes', 'garage_automobile_models.garage_automobile_make_id', '=', 'garage_automobile_makes.id')
-                ->where([
-                    "garage_automobile_makes.automobile_make_id" => $automobile_make_id,
-                    "garage_automobile_makes.garage_id" => $garage->id
-                ])
-                ->select(
-                    "garage_automobile_models.*"
-                )
-                ->get();
-
-
-
-
-            return response()->json($data, 200);
-        } catch (Exception $e) {
-
-            return $this->sendError($e, 500, $request);
-        }
-    }
 
 
 
@@ -1834,7 +1580,7 @@ class ClientBasicController extends Controller
 
 
 
-            // $automobilesQuery = AutomobileMake::with("makes");
+
 
             $affiliationQuery =  GarageAffiliation::with("affiliation", "garage")
                 ->leftJoin('affiliations', 'affiliations.id', '=', 'garage_affiliations.affiliation_id')

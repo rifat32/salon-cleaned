@@ -93,10 +93,7 @@ class AuthRegisterGarageRequestClient extends FormRequest
             'service.*.services.*.id' => "required|numeric",
             'service.*.services.*.checked' => "required|boolean",
 
-            'service.*.automobile_makes' => ["required", "array", new SomeTimes],
-            'service.*.automobile_makes.*.id' => "required|numeric",
-            'service.*.automobile_makes.*.checked' => ["required", "boolean"],
-            // 'service.automobile_categories' => "array|required",
+
 
 
         ];
@@ -165,10 +162,7 @@ class AuthRegisterGarageRequestClient extends FormRequest
             'service.*.services.array' => 'The services field must be an array.',
             'service.*.services.*.id.numeric' => 'Each service ID in the services field must be numeric.',
             'service.*.services.*.checked.boolean' => 'Each checked value in the services field must be a boolean.',
-            'service.*.automobile_makes.required' => 'The automobile makes field is required.',
-            'service.*.automobile_makes.array' => 'The automobile makes field must be an array.',
-            'service.*.automobile_makes.*.id.numeric' => 'Each automobile make ID in the automobile makes field must be numeric.',
-            'service.*.automobile_makes.*.checked.boolean' => 'Each checked value in the automobile makes field must be a boolean.',
+          
         ];
     }
 }

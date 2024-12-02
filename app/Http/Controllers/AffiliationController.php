@@ -399,7 +399,7 @@ class AffiliationController extends Controller
                 ], 401);
             }
 
-            // $automobilesQuery = AutomobileMake::with("makes");
+      
 
             $affiliationQuery = new Affiliation();
 

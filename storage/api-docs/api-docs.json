@@ -1237,22 +1237,6 @@
                                                             }
                                                         ]
                                                     }
-                                                ],
-                                                "automobile_makes": [
-                                                    {
-                                                        "id": 1,
-                                                        "checked": true,
-                                                        "models": [
-                                                            {
-                                                                "id": 1,
-                                                                "checked": true
-                                                            },
-                                                            {
-                                                                "id": 2,
-                                                                "checked": false
-                                                            }
-                                                        ]
-                                                    }
                                                 ]
                                             }
                                         ]
@@ -12171,80 +12155,6 @@
                 ]
             }
         },
-        "/v1.0/garage-automobile-makes/all/{garage_id}": {
-            "get": {
-                "tags": [
-                    "garage_automobile_management.make"
-                ],
-                "summary": "This method is to get automobile makes  by garage  id",
-                "description": "This method is to get automobile makes by  garage id",
-                "operationId": "getGarageAutomobileMakesAll",
-                "parameters": [
-                    {
-                        "name": "garage_id",
-                        "in": "path",
-                        "description": "garage_id",
-                        "required": true,
-                        "example": "1"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocesseble Content",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/v1.0/garage-background-image": {
             "get": {
                 "tags": [
@@ -15277,22 +15187,6 @@
                                                             }
                                                         ]
                                                     }
-                                                ],
-                                                "automobile_makes": [
-                                                    {
-                                                        "id": 1,
-                                                        "checked": true,
-                                                        "models": [
-                                                            {
-                                                                "id": 1,
-                                                                "checked": true
-                                                            },
-                                                            {
-                                                                "id": 2,
-                                                                "checked": false
-                                                            }
-                                                        ]
-                                                    }
                                                 ]
                                             }
                                         ]
@@ -15435,22 +15329,6 @@
                                                         "id": 1,
                                                         "checked": true,
                                                         "sub_services": [
-                                                            {
-                                                                "id": 1,
-                                                                "checked": true
-                                                            },
-                                                            {
-                                                                "id": 2,
-                                                                "checked": false
-                                                            }
-                                                        ]
-                                                    }
-                                                ],
-                                                "automobile_makes": [
-                                                    {
-                                                        "id": 1,
-                                                        "checked": true,
-                                                        "models": [
                                                             {
                                                                 "id": 1,
                                                                 "checked": true
@@ -26579,6 +26457,11 @@
                                         "format": "number",
                                         "example": "1"
                                     },
+                                    "discounted_price": {
+                                        "type": "number",
+                                        "format": "number",
+                                        "example": "1"
+                                    },
                                     "number_of_slots": {
                                         "type": "number",
                                         "format": "number",
@@ -26685,6 +26568,11 @@
                                         "example": "1"
                                     },
                                     "default_price": {
+                                        "type": "number",
+                                        "format": "number",
+                                        "example": "1"
+                                    },
+                                    "discounted_price": {
                                         "type": "number",
                                         "format": "number",
                                         "example": "1"
@@ -32797,87 +32685,6 @@
                 ]
             }
         },
-        "/v1.0/client/garages/garage-automobile-models/{garage_id}/{automobile_make_id}": {
-            "get": {
-                "tags": [
-                    "client.basics"
-                ],
-                "summary": "This method is to get garage service-model-details by garage id by id",
-                "description": "This method is to get garage service-model-details by garage id by id",
-                "operationId": "getGarageAutomobileModelsByAutomobileMakeId",
-                "parameters": [
-                    {
-                        "name": "garage_id",
-                        "in": "path",
-                        "description": "garage_id",
-                        "required": true,
-                        "example": "1"
-                    },
-                    {
-                        "name": "automobile_make_id",
-                        "in": "path",
-                        "description": "automobile_make_id",
-                        "required": true,
-                        "example": "1"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocesseble Content",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {}
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
         "/v1.0/client/garage-affiliations/get/all/{garage_id}": {
             "get": {
                 "tags": [
@@ -36205,10 +36012,6 @@
         {
             "name": "garage_affiliation_management",
             "description": "garage_affiliation_management"
-        },
-        {
-            "name": "garage_automobile_management.make",
-            "description": "garage_automobile_management.make"
         },
         {
             "name": "garage_background_image",

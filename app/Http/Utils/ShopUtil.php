@@ -2,18 +2,9 @@
 
 namespace App\Http\Utils;
 
-use App\Models\AutomobileCategory;
-use App\Models\AutomobileMake;
-use App\Models\AutomobileModel;
-use App\Models\Garage;
-use App\Models\GarageAutomobileMake;
-use App\Models\GarageAutomobileModel;
-use App\Models\GarageService;
-use App\Models\GarageSubService;
-use App\Models\Service;
+
 use App\Models\Shop;
-use App\Models\SubService;
-use Exception;
+
 
 trait ShopUtil
 {
