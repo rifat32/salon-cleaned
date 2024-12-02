@@ -630,31 +630,9 @@ return "swagger generated ...............";
                                                     DB::connection('mysql')->table('garage_sub_services')->insert(get_object_vars($backup_data));
                                                    }
                                                 }
-                                                foreach(DB::connection('backup_database')->table('fuel_stations')->get() as $backup_data){
-                                                    $data_exists = DB::connection('mysql')->table('fuel_stations')->where([
-                                                        "id" => $backup_data->id
-                                                       ])->first();
-                                                       if(!$data_exists) {
-                                                        DB::connection('mysql')->table('fuel_stations')->insert(get_object_vars($backup_data));
-                                                       }
-                                                    }
-
-                                                return response()->json("done",200);
-    }
-    public function backupFuelStationService() {
-        foreach(DB::connection('backup_database')->table('fuel_station_services')->get() as $backup_data){
-
-        $data_exists = DB::connection('mysql')->table('fuel_station_services')->where([
-            "id" => $backup_data->id
-           ])->first();
-           if(!$data_exists) {
-            DB::connection('mysql')->table('fuel_station_services')->insert(get_object_vars($backup_data));
-           }
-        }
-
-
 
 
                                                 return response()->json("done",200);
     }
+  
 }

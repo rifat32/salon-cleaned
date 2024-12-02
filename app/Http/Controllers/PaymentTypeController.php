@@ -316,8 +316,8 @@ class PaymentTypeController extends Controller
      *         required=true,
      *  example="1"
      *      ),
-     *      summary="This method is to delete fuel station by id",
-     *      description="This method is to delete fuel station by id",
+     *      summary="This method is to delete payment by id",
+     *      description="This method is to delete payment by id",
      *
 
      *      @OA\Response(

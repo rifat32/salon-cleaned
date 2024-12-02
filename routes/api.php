@@ -17,9 +17,7 @@ use App\Http\Controllers\DashboardManagementController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\EmailTemplateWrapperController;
 use App\Http\Controllers\ExpertRotaController;
-use App\Http\Controllers\FuelStationController;
-use App\Http\Controllers\FuelStationGalleryController;
-use App\Http\Controllers\FuelStationServiceController;
+
 use App\Http\Controllers\GarageAffiliationController;
 use App\Http\Controllers\GarageAutomobilesController;
 
@@ -497,36 +495,9 @@ Route::get('/v1.0/garage-sub-services/{garage_id}/{garage_service_id}/{perPage}'
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// fuel station services management section
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-Route::post('/v1.0/fuel-station-services', [FuelStationServiceController::class, "createFuelStationService"]);
-
-Route::put('/v1.0/fuel-station-services', [FuelStationServiceController::class, "updateFuelStationService"]);
-
-Route::get('/v1.0/fuel-station-services/{perPage}', [FuelStationServiceController::class, "getFuelStationServices"]);
-
-Route::get('/v1.0/fuel-station-services/get/all', [FuelStationServiceController::class, "getFuelStationServicesAll"]);
-
-Route::delete('/v1.0/fuel-station-services/{id}', [FuelStationServiceController::class, "deleteFuelStationServiceById"]);
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// fuel station services management section
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// fuel station management section
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-Route::post('/v1.0/fuel-station', [FuelStationController::class, "createFuelStation"]);
-Route::put('/v1.0/fuel-station', [FuelStationController::class, "updateFuelStation"]);
-Route::post('/v1.0/fuel-station-image-multiple', [FuelStationController::class, "createFuelStationImageMultiple"]);
-Route::put('/v1.0/fuel-station/toggle-active', [FuelStationController::class, "toggleActiveFuelStation"]);
-Route::get('/v1.0/fuel-station/{perPage}', [FuelStationController::class, "getFuelStations"]);
-Route::get('/v2.0/fuel-station/single/{id}', [FuelStationController::class, "getFuelStationByIdV2"]);
-Route::delete('/v1.0/fuel-station/{id}', [FuelStationController::class, "deleteFuelStationById"]);
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// fuel station management section
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 
 
@@ -598,12 +569,6 @@ Route::post('/review-new/{bookingId}', [ReviewController::class, "storeReview"])
 
 Route::post('/review-action/{reviewId}', [ReviewController::class, "reviewAction"]);
 
-
-
-
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// fuel station management section
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
@@ -726,16 +691,6 @@ Route::delete('/v1.0/shop-galleries/{shop_id}/{id}', [ShopGalleryController::cla
 // shop garage gallery management section
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// fuel station gallery management section
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-Route::post('/v1.0/fuel-stations-galleries/{fuel_station_id}', [FuelStationGalleryController::class, "createFuelStationGallery"]);
-Route::post('/v1.0/fuel-stations-galleries-by-url/{garage_id}', [FuelStationGalleryController::class, "createFuelStationGalleryByUrl"]);
-Route::get('/v1.0/fuel-stations-galleries/{fuel_station_id}', [FuelStationGalleryController::class, "getFuelStationGalleries"]);
-Route::delete('/v1.0/fuel-stations-galleries/{fuel_station_id}/{id}', [FuelStationGalleryController::class, "deleteFuelStationGalleryById"]);
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// end fuel station gallery management section
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 
@@ -1212,28 +1167,17 @@ Route::get('/v1.0/client/garage-packages/single/{garage_id}/{id}', [GaragePackag
 
 
 Route::get('/v1.0/client/expert-rotas', [ExpertRotaController::class, "getExpertRotasClient"]);
-Route::get('/v1.0/client/garage-services/get/all/{garage_id}', [GarageServiceController::class, "getGarageServicesAll"]);
-
-
-Route::get('/v1.0/client/fuel-station/{perPage}', [FuelStationController::class, "getFuelStationsClient"]);
-
-
-Route::get('/v3.0/client/fuel-station/{perPage}', [FuelStationController::class, "getFuelStationsClientV3"]);
 
 
 
-Route::get('/v2.0/client/fuel-station', [FuelStationController::class, "getFuelStationsClient2"]);
 
 
 
-Route::get('/v1.0/client/fuel-station/get/single/{id}', [FuelStationController::class, "getFuelStationByIdClient"]);
 
-
-Route::get('/v1.0/client/fuel-station-services/get/all', [FuelStationServiceController::class, "getFuelStationServicesAllClient"]);
 
 
 Route::get('/v1.0/client/garage-galleries/{garage_id}', [GarageGalleryController::class, "getGarageGalleriesClient"]);
-Route::get('/v1.0/client/fuel-stations-galleries/{fuel_station_id}', [FuelStationGalleryController::class, "getFuelStationGalleriesClient"]);
+
 
 
 Route::get('/v1.0/client/garages/{perPage}', [ClientBasicController::class, "getGaragesClient"]);

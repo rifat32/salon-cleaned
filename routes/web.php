@@ -41,7 +41,7 @@ Route::get('/load-services/{business_id}', [SetUpController::class, "loadService
 
 
 Route::get('/backup', [SetUpController::class, "backup"])->name("backup");
-Route::get('/backup/fuel-station-services', [SetUpController::class, "backupFuelStationService"])->name("backupFuelStationSubService");
+
 Route::get('/roleRefresh', [SetUpController::class, "roleRefresh"])->name("roleRefresh");
 Route::get('/swagger-refresh', [SetUpController::class, "swaggerRefresh"]);
 Route::get('/automobile-refresh', [SetUpController::class, "automobileRefresh"]);

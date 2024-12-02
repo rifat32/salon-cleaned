@@ -6,10 +6,10 @@ use App\Http\Utils\BasicUtil;
 use App\Http\Utils\ErrorUtil;
 use App\Http\Utils\GarageUtil;
 use App\Http\Utils\UserActivityUtil;
-use App\Models\Affiliation;
+
 use App\Models\Booking;
 use App\Models\ExpertRota;
-use App\Models\FuelStation;
+
 use App\Models\Garage;
 use App\Models\GarageAffiliation;
 use App\Models\Job;
@@ -1318,75 +1318,7 @@ class DashboardManagementController extends Controller
         $data["previous_month_data_count"] = $data["previous_month_data"]->count();
         return $data;
     }
-    public function fuel_stations($created_by_filter = 0)
-    {
-        $startDateOfThisMonth = Carbon::now()->startOfMonth();
-        $endDateOfThisMonth = Carbon::now()->endOfMonth();
-        $startDateOfPreviousMonth = Carbon::now()->startOfMonth()->subMonth(1);
-        $endDateOfPreviousMonth = Carbon::now()->endOfMonth()->subMonth(1);
 
-        $startDateOfThisWeek = Carbon::now()->startOfWeek();
-        $endDateOfThisWeek = Carbon::now()->endOfWeek();
-        $startDateOfPreviousWeek = Carbon::now()->startOfWeek()->subWeek(1);
-        $endDateOfPreviousWeek = Carbon::now()->endOfWeek()->subWeek(1);
-
-
-        $total_data_count_query = new FuelStation();
-        if ($created_by_filter) {
-            $total_data_count_query =  $total_data_count_query->where([
-                "created_by" => auth()->user()->id
-            ]);
-        }
-        $data["total_data_count"] = $total_data_count_query->count();
-
-
-        $this_week_data_query = FuelStation::whereBetween('created_at', [$startDateOfThisWeek, $endDateOfThisWeek]);
-        if ($created_by_filter) {
-            $this_week_data_query =  $this_week_data_query->where([
-                "created_by" => auth()->user()->id
-            ]);
-        }
-        $data["this_week_data"] = $this_week_data_query->select("id", "created_at", "updated_at")
-            ->get();
-
-
-        $previous_week_data_query = FuelStation::whereBetween('created_at', [$startDateOfPreviousWeek, $endDateOfPreviousWeek]);
-        if ($created_by_filter) {
-            $previous_week_data_query =  $previous_week_data_query->where([
-                "created_by" => auth()->user()->id
-            ]);
-        }
-        $data["previous_week_data"] = $previous_week_data_query->select("id", "created_at", "updated_at")
-            ->get();
-
-
-        $this_month_data_query =  FuelStation::whereBetween('created_at', [$startDateOfThisMonth, $endDateOfThisMonth]);
-        if ($created_by_filter) {
-            $this_month_data_query =  $this_month_data_query->where([
-                "created_by" => auth()->user()->id
-            ]);
-        }
-        $data["this_month_data"] = $this_month_data_query->select("id", "created_at", "updated_at")
-            ->get();
-
-        $previous_month_data_query =  FuelStation::whereBetween('created_at', [$startDateOfPreviousMonth, $endDateOfPreviousMonth]);
-        if ($created_by_filter) {
-            $previous_month_data_query =  $previous_month_data_query->where([
-                "created_by" => auth()->user()->id
-            ]);
-        }
-        $data["previous_month_data"] = $previous_month_data_query->select("id", "created_at", "updated_at")
-            ->get();
-
-
-
-
-        $data["this_week_data_count"] = $data["this_week_data"]->count();
-        $data["previous_week_data_count"] = $data["previous_week_data"]->count();
-        $data["this_month_data_count"] = $data["this_month_data"]->count();
-        $data["previous_month_data_count"] = $data["previous_month_data"]->count();
-        return $data;
-    }
 
     public function customers()
     {
@@ -3563,7 +3495,7 @@ if ($job_start_time->greaterThan(now())) {
 
             $data["garages"] = $this->garages();
 
-            $data["fuel_stations"] = $this->fuel_stations();
+
 
             $data["customers"] = $this->customers();
 
@@ -3648,7 +3580,7 @@ if ($job_start_time->greaterThan(now())) {
 
             $data["garages"] = $this->garages(1);
 
-            $data["fuel_stations"] = $this->fuel_stations(1);
+         
 
             $data["overall_bookings"] = $this->overall_bookings(1);
 

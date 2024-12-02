@@ -38,15 +38,6 @@ return [
                 "service_view",
                 "service_delete",
 
-                "fuel_station_create",
-                "fuel_station_update",
-                "fuel_station_view",
-                "fuel_station_delete",
-
-                "fuel_station_service_create",
-                "fuel_station_service_update",
-                "fuel_station_service_view",
-                "fuel_station_service_delete",
 
                 "template_create",
                 "template_update",
@@ -92,9 +83,7 @@ return [
                 "shop_gallery_view",
                 "shop_gallery_delete",
 
-                "fuel_station_gallery_create",
-                "fuel_station_gallery_view",
-                "fuel_station_gallery_delete",
+
 
 
 
@@ -128,15 +117,6 @@ return [
                 "shop_delete",
 
 
-                "fuel_station_create",
-                "fuel_station_update",
-                "fuel_station_view",
-                "fuel_station_delete",
-
-                "fuel_station_service_create",
-                "fuel_station_service_update",
-                "fuel_station_service_view",
-                "fuel_station_service_delete",
 
 
                 "affiliation_create",
@@ -160,9 +140,7 @@ return [
                 "shop_gallery_view",
                 "shop_gallery_delete",
 
-                "fuel_station_gallery_create",
-                "fuel_station_gallery_view",
-                "fuel_station_gallery_delete",
+
 
             ],
         ],
@@ -696,15 +674,6 @@ return [
         "service_view",
         "service_delete",
 
-        "fuel_station_create",
-        "fuel_station_update",
-        "fuel_station_view",
-        "fuel_station_delete",
-
-        "fuel_station_service_create",
-        "fuel_station_service_update",
-        "fuel_station_service_view",
-        "fuel_station_service_delete",
 
 
         "template_create",
@@ -729,9 +698,7 @@ return [
         "shop_gallery_view",
         "shop_gallery_delete",
 
-        "fuel_station_gallery_create",
-        "fuel_station_gallery_view",
-        "fuel_station_gallery_delete",
+
 
         "garage_services_create",
         "garage_services_update",
@@ -841,7 +808,7 @@ return [
     "garage_gallery_location" => "garage_gallery",
 
     "shop_gallery_location" => "shop_gallery",
-    "fuel_station_gallery_location" => "fuel_station_gallery",
+ 
 
     "affiliation_logo_location" => "affiliation_logo",
 

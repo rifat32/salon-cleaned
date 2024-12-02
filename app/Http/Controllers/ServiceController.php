@@ -14,7 +14,6 @@ use App\Http\Utils\UserActivityUtil;
 use App\Models\AutomobileCategory;
 
 use App\Models\BookingSubService;
-use App\Models\FuelStationService;
 use App\Models\GaragePackage;
 use App\Models\Service;
 use App\Models\SubService;
@@ -1715,7 +1714,7 @@ if(!empty($sub_service->description)) {
                 ],401);
            }
 
-   
+
 
             $servicesQuery = SubService::with("service", 'translation')->where([
                 "service_id" => $serviceId
