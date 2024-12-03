@@ -11,7 +11,7 @@ use App\Models\Garage;
 use App\Models\GarageAffiliation;
 
 use App\Models\GarageService;
-use App\Models\GarageSubService;
+
 use App\Models\ReviewValueNew;
 use App\Models\Star;
 use App\Models\SubService;
@@ -45,11 +45,15 @@ class ClientBasicController extends Controller
                         ->where([
                             "garage_times.day" => $dayNumber
                         ])
-                        ->select("garage_times.id", "garage_times.opening_time",
-                        "garage_times.time_slots",
+                        ->select(
+                            "garage_times.id",
+                            "garage_times.opening_time",
+                            "garage_times.time_slots",
 
 
-                        "garage_times.closing_time", "garage_times.garage_id");
+                            "garage_times.closing_time",
+                            "garage_times.garage_id"
+                        );
                 }
 
             ]
@@ -134,21 +138,7 @@ class ClientBasicController extends Controller
         }
 
 
-        if (!empty($request->sub_service_ids)) {
-            $null_filter = collect(array_filter($request->sub_service_ids))->values();
-            $sub_service_ids =  $null_filter->all();
-            if (count($sub_service_ids)) {
 
-                $count = count($sub_service_ids);
-                $garagesQuery = $garagesQuery->whereHas('garageServices.garageSubServices', function ($query) use ($sub_service_ids, $count) {
-                    $query
-                        ->whereIn('sub_service_id', $sub_service_ids) // Filter to only the specified sub_service_ids
-                        ->selectRaw('garage_service_id')           // Select the garage_service_id (essential for grouping)
-                        ->groupBy('garage_service_id')            // Group by garage_service_id
-                        ->havingRaw('COUNT(DISTINCT sub_service_id) = ?', [$count]); // Ensure the count of distinct sub_service_ids matches the expected count
-                });
-            }
-        }
 
         $start_lat = $request->start_lat;
         $end_lat = $request->end_lat;
@@ -160,7 +150,6 @@ class ClientBasicController extends Controller
             $start_lat_temp = $start_lat;
             $start_lat = $end_lat;
             $end_lat = $start_lat_temp;
-
         }
 
         if ($start_long < 0 && $end_long < 0) {
@@ -260,21 +249,7 @@ class ClientBasicController extends Controller
         }
 
 
-        if (!empty($request->sub_service_ids)) {
-            $null_filter = collect(array_filter($request->sub_service_ids))->values();
-            $sub_service_ids =  $null_filter->all();
-            if (count($sub_service_ids)) {
 
-                $count = count($sub_service_ids);
-                $garagesQuery = $garagesQuery->whereHas('garageServices.garageSubServices', function ($query) use ($sub_service_ids, $count) {
-                    $query
-                        ->whereIn('sub_service_id', $sub_service_ids) // Filter to only the specified sub_service_ids
-                        ->selectRaw('garage_service_id')           // Select the garage_service_id (essential for grouping)
-                        ->groupBy('garage_service_id')            // Group by garage_service_id
-                        ->havingRaw('COUNT(DISTINCT sub_service_id) = ?', [$count]); // Ensure the count of distinct sub_service_ids matches the expected count
-                });
-            }
-        }
 
         if (!empty($request->start_lat)) {
             $garagesQuery = $garagesQuery->where('lat', ">=", $request->start_lat);
@@ -757,19 +732,19 @@ class ClientBasicController extends Controller
 
 
             // Make an HTTP request to the ipinfo.io API
-          $location = Http::get("https://ipinfo.io/{$ip}/json");
+            $location = Http::get("https://ipinfo.io/{$ip}/json");
 
-          if ($location->successful()) {
-              $data = $location->json();
+            if ($location->successful()) {
+                $data = $location->json();
 
-              // Extract country and city
-              $country = $data['country'] ?? '';
-              $city = $data['city'] ?? '';
-          }
+                // Extract country and city
+                $country = $data['country'] ?? '';
+                $city = $data['city'] ?? '';
+            }
 
             // $location = $this->getCountryAndCity($request->lat, $request->long);
 
-            if (!empty($country) && !empty($city) && empty(request()->start_lat) && empty(request()->end_lat)  && empty(request()->start_long) && empty(request()->end_long) ) {
+            if (!empty($country) && !empty($city) && empty(request()->start_lat) && empty(request()->end_lat)  && empty(request()->start_long) && empty(request()->end_long)) {
 
 
                 $garages = $this->getGarageSearchQuery($request)
@@ -1070,83 +1045,83 @@ class ClientBasicController extends Controller
      *     )
      */
 
-     public function getGaragesClient3(Request $request)
-     {
+    public function getGaragesClient3(Request $request)
+    {
 
-         try {
-             $this->storeActivity($request, "");
+        try {
+            $this->storeActivity($request, "");
 
-             $info = [];
+            $info = [];
 
 
-             if (!empty($request->address)) {
-                 $garages = $this->getGarageSearchQuery2($request)
-                     ->where("garages.city", $request->address)
-                     ->groupBy("garages.id")
+            if (!empty($request->address)) {
+                $garages = $this->getGarageSearchQuery2($request)
+                    ->where("garages.city", $request->address)
+                    ->groupBy("garages.id")
 
-                     ->orderByDesc("garages.id")
-                     ->select(
+                    ->orderByDesc("garages.id")
+                    ->select(
                         "garages.id",
                         "garages.name",
                         "garages.lat",
                         "garages.long",
-                     )
-                     ->get();
+                    )
+                    ->get();
 
-                 $info["is_result_by_city"] = true;
-                 $info["is_result_by_country"] = false;
+                $info["is_result_by_city"] = true;
+                $info["is_result_by_country"] = false;
 
-                 if (count($garages->items()) == 0) {
-                     $info["is_result_by_city"] = false;
-                     $info["is_result_by_country"] = true;
+                if (count($garages->items()) == 0) {
+                    $info["is_result_by_city"] = false;
+                    $info["is_result_by_country"] = true;
 
-                     $garages = $this->getGarageSearchQuery2($request)
-                         ->where("garages.country", $request->address)
-                         ->groupBy("garages.id")
+                    $garages = $this->getGarageSearchQuery2($request)
+                        ->where("garages.country", $request->address)
+                        ->groupBy("garages.id")
 
-                         ->orderByDesc("garages.id")
-                         ->select(
-                             "garages.id",
-                             "garages.name",
-                             "garages.lat",
-                             "garages.long",
+                        ->orderByDesc("garages.id")
+                        ->select(
+                            "garages.id",
+                            "garages.name",
+                            "garages.lat",
+                            "garages.long",
 
-                         )
-                         ->get();
-                 }
-                 if (count($garages->items()) == 0) {
-                     $info["is_result_by_city"] = false;
-                     $info["is_result_by_country"] = false;
-                 }
-             } else {
+                        )
+                        ->get();
+                }
+                if (count($garages->items()) == 0) {
+                    $info["is_result_by_city"] = false;
+                    $info["is_result_by_country"] = false;
+                }
+            } else {
 
-                 array_splice($info, 0);
+                array_splice($info, 0);
 
-                 $garages = $this->getGarageSearchQuery2($request)
+                $garages = $this->getGarageSearchQuery2($request)
 
 
-                     ->groupBy("garages.id")
+                    ->groupBy("garages.id")
 
-                     ->orderByDesc("garages.id")
-                     ->select(
+                    ->orderByDesc("garages.id")
+                    ->select(
                         "garages.id",
                         "garages.name",
                         "garages.lat",
                         "garages.long",
-                     )
+                    )
 
-                     ->get();
-             }
+                    ->get();
+            }
 
-             return response()->json([
-                 "info" => $info,
-                 "data" => $garages
-             ], 200);
-         } catch (Exception $e) {
+            return response()->json([
+                "info" => $info,
+                "data" => $garages
+            ], 200);
+        } catch (Exception $e) {
 
-             return $this->sendError($e, 500, $request);
-         }
-     }
+            return $this->sendError($e, 500, $request);
+        }
+    }
 
 
 
@@ -1211,9 +1186,6 @@ class ClientBasicController extends Controller
             $this->storeActivity($request, "");
             $garagesQuery = Garage::with(
                 "owner",
-                "garageServices.service",
-                "garageServices.garageSubServices.garage_sub_service_prices",
-                "garageServices.garageSubServices.subService",
                 "garage_times",
                 "garageGalleries",
                 "garage_packages",
@@ -1680,26 +1652,24 @@ class ClientBasicController extends Controller
         try {
             $this->storeActivity($request, "");
             $user = $request->user();
-            $data = SubService::
-            with("translation")->
-            select(
-                "sub_services.*",
-                DB::raw('(SELECT COUNT(job_sub_services.sub_service_id)
+            $data = SubService::with("translation")->select(
+                    "sub_services.*",
+                    DB::raw('(SELECT COUNT(job_sub_services.sub_service_id)
             FROM
             job_sub_services
             LEFT JOIN jobs ON job_sub_services.job_id = jobs.id
 
 
             WHERE jobs.customer_id = '
-                    .
-                    $user->id
-                    .
-                    '
+                        .
+                        $user->id
+                        .
+                        '
             AND
             job_sub_services.sub_service_id = sub_services.id
 
             ) AS sub_service_id_count'),
-            )
+                )
                 ->orderByRaw('sub_service_id_count desc')
                 ->havingRaw('sub_service_id_count > 0')
                 ->paginate($perPage);

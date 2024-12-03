@@ -18,8 +18,7 @@ use App\Mail\SendPassword;
 use App\Models\Garage;
 
 use App\Models\GarageGallery;
-use App\Models\GarageService;
-use App\Models\GarageSubService;
+
 use App\Models\GarageTime;
 use App\Models\User;
 use App\Models\UserTranslation;
@@ -1672,8 +1671,7 @@ UserTranslation::create([
            }
 
             $garagesQuery = Garage::with(
-                "owner",
-                "garageServices.garageSubServices.garage_sub_service_prices"
+                "owner"
             );
 
 
@@ -2032,9 +2030,6 @@ UserTranslation::create([
 
             $garage = Garage::with(
                 "owner",
-                "garageServices.service",
-                "garageServices.garageSubServices.garage_sub_service_prices",
-                "garageServices.garageSubServices.subService",
                 "garage_times",
                 "garageGalleries",
                 "garage_packages",
@@ -2048,11 +2043,7 @@ UserTranslation::create([
 
 
 
-            $data["garage_sub_service_ids"] =  GarageSubService::
-            whereHas("garageService", function($query) use ($garage) {
-                  $query->where("garage_services.garage_id",$garage->id);
-            })
-            ->pluck("sub_service_id");
+           
 
         $data["garage"] = $garage;
 
@@ -2157,7 +2148,7 @@ UserTranslation::create([
 
 
         $data["garage"] = $garage;
-        
+
         return response()->json($data, 200);
         } catch(Exception $e){
 

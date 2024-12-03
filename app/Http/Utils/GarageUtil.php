@@ -5,7 +5,6 @@ namespace App\Http\Utils;
 use App\Models\AutomobileCategory;
 use App\Models\Garage;
 use App\Models\GarageService;
-use App\Models\GarageSubService;
 use App\Models\Question;
 use App\Models\QusetionStar;
 use App\Models\Service;
@@ -16,84 +15,10 @@ use Exception;
 trait GarageUtil
 {
     // this function do all the task and returns transaction id or -1
-    public function createGarageServices($service_data, $garage_id,$auto_model=false)
-    {
-        foreach ($service_data as $services) {
-            $automobile_category_db = AutomobileCategory::where([
-                "id" => $services["automobile_category_id"]
-            ])
-                ->first();
-            if (!$automobile_category_db) {
-                return [
-                    "type" => "services",
-                    "success" => false,
-                    "message" => "please provile valid automobile category id"
-                ];
 
-            }
-            // @@@@@@@@@@@@@@@@@@@@@@@@@@@ services starts @@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            foreach ($services["services"] as $service) {
-
-
-                if ($service["checked"]) {
-                    $service_db = Service::where([
-                        "id" => $service["id"],
-                        "automobile_category_id" => $automobile_category_db->id
-
-                    ])
-                        ->first();
-
-                    if (!$service_db) {
-
-                        return [
-                            "type" => "services",
-                            "success" => false,
-                            "message" => "please provile valid service id"
-                        ];
-                    }
-                    $garage_service =  GarageService::create([
-                        "garage_id" => $garage_id,
-                        "service_id" => $service_db->id,
-                    ]);
-                    foreach ($service["sub_services"] as $sub_service) {
-                        if ($sub_service["checked"]) {
-                            $sub_service_db = SubService::where([
-                                "id" => $sub_service["id"],
-                                "service_id" => $service_db->id
-                            ])
-                                ->first();
-                            if (!$sub_service_db) {
-
-                                return [
-                                    "type" => "services",
-                                    "success" => false,
-                                    "message" => "please provile valid sub service id"
-                                ];
-                            }
-                            $garage_sub_service =  GarageSubService::create([
-                                "garage_service_id" => $garage_service->id,
-                                "sub_service_id" => $sub_service_db->id,
-                            ]);
-                        }
-                    }
-                }
-            }
-            // @@@@@@@@@@@@@@@@@@@@@@@@@@@@ services ends @@@@@@@@@@@@@@@@@@@@@@@@@@@@
-            // error_log(json_encode($service));
-
-
-
-
-        }
-
-        return [
-            "success" => true
-        ];
-    }
 
 
     public function garageOwnerCheck($garage_id) {
-
 
         $garageQuery  = Garage::where(["id" => $garage_id])
         ->orWhere("id",auth()->user()->business_id);

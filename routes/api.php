@@ -106,7 +106,8 @@ Route::get('/v1.0/automobile-categories/get/all', [AutomobilesController::class,
 Route::get('/v1.0/services-all/{categoryId}', [ServiceController::class, "getAllServicesByCategoryId"]);
 Route::get('/v2.0/services-all/{categoryId}', [ServiceController::class, "getAllServicesByCategoryIdV2"]);
 Route::get('/v1.0/sub-services-all', [ServiceController::class, "getSubServicesAll"]);
-Route::get('/v1.0/garage-sub-services-all/{garage_id}', [GarageServiceController::class, "getGarageSubServicesAll"]);
+
+
 
 
 
@@ -480,13 +481,7 @@ Route::delete('/v1.0/sub-services/{id}', [ServiceController::class, "deleteSubSe
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// garage service management section
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-Route::get('/v1.0/garage-services/{garage_id}/{perPage}', [GarageServiceController::class, "getGarageServices"]);
 
-
-Route::get('/v1.0/garage-sub-services/{garage_id}/{garage_service_id}/{perPage}', [GarageServiceController::class, "getGarageSubServices"]);
 
 
 
@@ -841,24 +836,6 @@ Route::delete('/v1.0/garage-affiliations/{id}', [GarageAffiliationController::cl
 // %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// price management section
-// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-Route::post('/v1.0/garage-sub-service-prices', [GarageServicePriceController::class, "createGarageSubServicePrice"]);
-
-Route::put('/v1.0/garage-service-prices', [GarageServicePriceController::class, "updateGarageSubServicePrice"]);
-
-
-
-Route::delete('/v1.0/garage-service-prices/{id}', [GarageServicePriceController::class, "deleteGarageSubServicePriceById"]);
-
-Route::delete('/v1.0/garage-service-prices/by-garage-sub-service/{id}', [GarageServicePriceController::class, "deleteGarageSubServicePriceByGarageSubServiceId"]);
-
-
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// price management section
-// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 

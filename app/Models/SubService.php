@@ -33,7 +33,7 @@ class SubService extends Model
      public function getPriceAttribute()
      {
         $price = !empty($this->discounted_price)?$this->discounted_price:$this->default_price;
-        
+
         if(request()->filled("expert_id")) {
             $user = User::where("id", request()->input("expert_id"))->first();
 
@@ -90,10 +90,7 @@ class SubService extends Model
         return $this->hasMany(SubServicePrice::class,'sub_service_id', 'id');
     }
 
-    public function garage_automobile_sub_services () {
-        return $this->hasMany(GarageSubService::class,"sub_service_id","id");
-   }
-
+   
 
 
 
